@@ -15,9 +15,9 @@ form.addEventListener("submit", function (e) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Accept: "application/json"
+      Accept: "application/json",
     },
-    body: json
+    body: json,
   })
     .then(async (response) => {
       let json = await response.json();
