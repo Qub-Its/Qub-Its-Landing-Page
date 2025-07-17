@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", function () {
     toastContainer.style.pointerEvents = "none";
   }
 
-  var eventSource = new EventSource("http://localhost:3000/pop?id=687971535bbd0e03ccd5caa8");
+  var eventSource = new EventSource("https://snapup-easy-production.up.railway.app/pop?id=687971535bbd0e03ccd5caa8");
   
   eventSource.onopen = function() {
     console.log("SnapUp client connected successfully");
