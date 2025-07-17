@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", function () {
     toastContainer.style.pointerEvents = "none";
   }
 
-  var eventSource = new EventSource("https://snapup-easy-production.up.railway.app/pop?id=687971535bbd0e03ccd5caa8");
+  var eventSource = new EventSource("http://localhost:3000/pop?id=687971535bbd0e03ccd5caa8");
   
   eventSource.onopen = function() {
     console.log("SnapUp client connected successfully");
@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var notification = document.createElement("div");
     
     notification.style.cssText = [
-      "background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      "background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)",
       "border-radius: 16px",
       "color: white",
       "display: flex",
