@@ -1,0 +1,3 @@
+// add basic node js ignore extensions
+node_modules
+.vscode
