@@ -1,0 +1,26 @@
+[
+  {
+    "image": "/images/work-1.png",
+    "title": "V-Health",
+    "description": "Tele-health remote diagnosis platform",
+    "link": "https://vhealth-web.vercel.app/"
+  },
+  {
+    "image": "/images/work-2.png",
+    "title": "Customized Podcast",
+    "description": "App for internal business transmissions",
+    "link": "#"
+  },
+  {
+    "image": "/images/work-3.png",
+    "title": "BBOP Home Sharing",
+    "description": "Home Sharing Platform",
+    "link": "https://dev-bbop-web.herokuapp.com/"
+  },
+  {
+    "image": "/images/work-4.png",
+    "title": "E-Commerce",
+    "description": "Online Convenience Store",
+    "link": "https://adanfarmacia.com/"
+  }
+]

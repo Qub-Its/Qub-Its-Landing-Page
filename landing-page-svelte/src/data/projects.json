@@ -1,0 +1,8 @@
+[
+  {
+    "icon": "/images/icon_localert.png",
+    "title": "LocAlert",
+    "description": "Aplicación móvil para notificaciones de proximidad en Google Maps.",
+    "link": "locAlert_policy.html"
+  }
+]
