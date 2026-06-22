@@ -1,0 +1,1515 @@
+<!doctype html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <title>Qub-its — Suite de Biometría Móvil</title>
+        <style>
+            @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap");
+            body,
+            table,
+            td,
+            a {
+                -webkit-text-size-adjust: 100%;
+                -ms-text-size-adjust: 100%;
+            }
+            table,
+            td {
+                mso-table-lspace: 0;
+                mso-table-rspace: 0;
+            }
+            img {
+                -ms-interpolation-mode: bicubic;
+                border: 0;
+                outline: none;
+                text-decoration: none;
+            }
+            body {
+                margin: 0;
+                padding: 0;
+                background: #e5e9f0;
+            }
+            * {
+                box-sizing: border-box;
+            }
+            a {
+                color: inherit;
+            }
+            @media only screen and (max-width: 640px) {
+                .email-container {
+                    width: 100% !important;
+                }
+                .col-half {
+                    display: block !important;
+                    width: 100% !important;
+                    padding: 0 !important;
+                }
+                .col-half + .col-half {
+                    padding-top: 14px !important;
+                }
+                .pad-mobile {
+                    padding-left: 24px !important;
+                    padding-right: 24px !important;
+                }
+            }
+        </style>
+    </head>
+    <body
+        style="
+            margin: 0;
+            padding: 0;
+            background: #e5e9f0;
+            font-family: &quot;DM Sans&quot;, Arial, Helvetica, sans-serif;
+        "
+    >
+        <!-- Preheader oculto -->
+        <div
+            style="
+                display: none;
+                max-height: 0;
+                overflow: hidden;
+                mso-hide: all;
+                font-size: 1px;
+                color: #e5e9f0;
+                line-height: 1px;
+            "
+        >
+            Suite de Biometría Móvil — Verifique la identidad de sus clientes
+            sin hardware
+            adicional.&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+        </div>
+
+        <!-- Wrapper -->
+        <table
+            width="100%"
+            cellpadding="0"
+            cellspacing="0"
+            border="0"
+            style="background: #e5e9f0"
+        >
+            <tr>
+                <td align="center" style="padding: 40px 20px 60px">
+                    <!-- Email container -->
+                    <table
+                        class="email-container"
+                        width="640"
+                        cellpadding="0"
+                        cellspacing="0"
+                        border="0"
+                        style="max-width: 640px; width: 100%"
+                    >
+                        <!-- ── HEADER ── -->
+                        <tr>
+                            <td
+                                style="
+                                    background: #1e3150;
+                                    border-radius: 14px 14px 0 0;
+                                    padding: 26px 48px;
+                                "
+                                class="pad-mobile"
+                            >
+                                <table
+                                    width="100%"
+                                    cellpadding="0"
+                                    cellspacing="0"
+                                    border="0"
+                                >
+                                    <tr>
+                                        <td style="vertical-align: middle">
+                                            <table
+                                                cellpadding="0"
+                                                cellspacing="0"
+                                                border="0"
+                                            >
+                                                <tr>
+                                                    <td
+                                                        style="
+                                                            padding-right: 14px;
+                                                            vertical-align: middle;
+                                                        "
+                                                    >
+                                                        <img
+                                                            src="data:image/png;base64,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"
+                                                            alt="Qub-its"
+                                                            width="44"
+                                                            height="44"
+                                                            style="
+                                                                display: block;
+                                                                width: 44px;
+                                                                height: 44px;
+                                                            "
+                                                        />
+                                                    </td>
+                                                    <td
+                                                        style="
+                                                            vertical-align: middle;
+                                                        "
+                                                    >
+                                                        <div
+                                                            style="
+                                                                color: #ffffff;
+                                                                font-size: 18px;
+                                                                font-weight: 700;
+                                                                letter-spacing: -0.4px;
+                                                                line-height: 1;
+                                                                font-family:
+                                                                    &quot;DM Sans&quot;,
+                                                                    Arial,
+                                                                    sans-serif;
+                                                            "
+                                                        >
+                                                            Qub-its
+                                                        </div>
+                                                        <div
+                                                            style="
+                                                                color: #7a9cb8;
+                                                                font-size: 10px;
+                                                                font-weight: 600;
+                                                                letter-spacing: 1.8px;
+                                                                text-transform: uppercase;
+                                                                margin-top: 3px;
+                                                                font-family:
+                                                                    &quot;DM Sans&quot;,
+                                                                    Arial,
+                                                                    sans-serif;
+                                                            "
+                                                        >
+                                                            Software Factory
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td
+                                            align="right"
+                                            style="vertical-align: middle"
+                                        >
+                                            <a
+                                                href="https://www.qub-its.com"
+                                                style="
+                                                    color: #5a7a96;
+                                                    font-size: 12px;
+                                                    text-decoration: none;
+                                                    font-weight: 500;
+                                                    font-family:
+                                                        &quot;DM Sans&quot;,
+                                                        Arial, sans-serif;
+                                                "
+                                                >www.qub-its.com</a
+                                            >
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+
+                        <!-- ── HERO ── -->
+                        <tr>
+                            <td
+                                style="
+                                    background: #ffffff;
+                                    padding: 48px 48px 36px;
+                                "
+                                class="pad-mobile"
+                            >
+                                <div
+                                    style="
+                                        display: inline-block;
+                                        background: #f0e8ec;
+                                        color: #b8637a;
+                                        font-size: 10px;
+                                        font-weight: 700;
+                                        letter-spacing: 1.6px;
+                                        text-transform: uppercase;
+                                        padding: 6px 14px;
+                                        border-radius: 100px;
+                                        margin-bottom: 24px;
+                                        font-family:
+                                            &quot;DM Sans&quot;, Arial,
+                                            sans-serif;
+                                    "
+                                >
+                                    &#9679;&nbsp; Suite de Biometría Móvil
+                                </div>
+                                <h1
+                                    style="
+                                        color: #182438;
+                                        font-size: 26px;
+                                        font-weight: 700;
+                                        line-height: 1.3;
+                                        letter-spacing: -0.5px;
+                                        margin: 0 0 16px;
+                                        font-family:
+                                            &quot;DM Sans&quot;, Arial,
+                                            sans-serif;
+                                    "
+                                >
+                                    Verifique la identidad de sus clientes sin
+                                    hardware adicional
+                                </h1>
+                                <p
+                                    style="
+                                        color: #55687a;
+                                        font-size: 15px;
+                                        line-height: 1.7;
+                                        margin: 0;
+                                        font-family:
+                                            &quot;DM Sans&quot;, Arial,
+                                            sans-serif;
+                                    "
+                                >
+                                    Capture huellas dactilares con la cámara del
+                                    móvil, al mismo estándar que un lector
+                                    USB/Bluetooth — 100% digital, sin inversión
+                                    en equipos.
+                                </p>
+                            </td>
+                        </tr>
+
+                        <!-- ── INTRO ── -->
+                        <tr>
+                            <td
+                                style="
+                                    background: #ffffff;
+                                    padding: 0 48px 36px;
+                                    border-top: 1px solid #edf1f7;
+                                "
+                                class="pad-mobile"
+                            >
+                                <p
+                                    style="
+                                        color: #2e3e50;
+                                        font-size: 15px;
+                                        line-height: 1.8;
+                                        margin: 0 0 12px;
+                                        font-family:
+                                            &quot;DM Sans&quot;, Arial,
+                                            sans-serif;
+                                    "
+                                >
+                                    Estimado/a —
+                                </p>
+                                <p
+                                    style="
+                                        color: #2e3e50;
+                                        font-size: 15px;
+                                        line-height: 1.8;
+                                        margin: 0 0 12px;
+                                        font-family:
+                                            &quot;DM Sans&quot;, Arial,
+                                            sans-serif;
+                                    "
+                                >
+                                    En
+                                    <strong
+                                        style="color: #182438; font-weight: 600"
+                                        >Qub-its</strong
+                                    >
+                                    hemos desarrollado una suite de biometría
+                                    móvil que permite a empresas como
+                                    <strong
+                                        style="color: #182438; font-weight: 600"
+                                        >Netxus Business Solutions.</strong
+                                    >
+                                    cumplir con las normativas KYC/AML vigentes
+                                    — de forma 100% digital, sin necesidad de
+                                    instalar equipos en sucursales ni depender
+                                    de hardware externo.
+                                </p>
+                                <p
+                                    style="
+                                        color: #2e3e50;
+                                        font-size: 15px;
+                                        line-height: 1.8;
+                                        margin: 0;
+                                        font-family:
+                                            &quot;DM Sans&quot;, Arial,
+                                            sans-serif;
+                                    "
+                                >
+                                    Todo funciona desde la cámara del smartphone
+                                    del usuario final.
+                                </p>
+                            </td>
+                        </tr>
+
+                        <!-- ── FEATURES HEADER ── -->
+                        <tr>
+                            <td
+                                style="
+                                    background: #f5f7fa;
+                                    padding: 40px 48px 0;
+                                    border-top: 1px solid #e8edf5;
+                                "
+                                class="pad-mobile"
+                            >
+                                <p
+                                    style="
+                                        color: #8facc8;
+                                        font-size: 10px;
+                                        font-weight: 700;
+                                        letter-spacing: 2px;
+                                        text-transform: uppercase;
+                                        margin: 0 0 5px;
+                                        font-family:
+                                            &quot;DM Sans&quot;, Arial,
+                                            sans-serif;
+                                    "
+                                >
+                                    Lo que incluye
+                                </p>
+                                <h2
+                                    style="
+                                        color: #182438;
+                                        font-size: 18px;
+                                        font-weight: 700;
+                                        letter-spacing: -0.3px;
+                                        margin: 0 0 22px;
+                                        font-family:
+                                            &quot;DM Sans&quot;, Arial,
+                                            sans-serif;
+                                    "
+                                >
+                                    ¿Qué incluye nuestra Suite?
+                                </h2>
+                            </td>
+                        </tr>
+
+                        <!-- ── FEATURES ROW 1 ── -->
+                        <tr>
+                            <td
+                                style="background: #f5f7fa; padding: 0 40px"
+                                class="pad-mobile"
+                            >
+                                <table
+                                    width="100%"
+                                    cellpadding="0"
+                                    cellspacing="0"
+                                    border="0"
+                                >
+                                    <tr>
+                                        <td
+                                            class="col-half"
+                                            width="50%"
+                                            style="
+                                                padding: 0 8px 14px 0;
+                                                vertical-align: top;
+                                            "
+                                        >
+                                            <table
+                                                width="100%"
+                                                cellpadding="0"
+                                                cellspacing="0"
+                                                border="0"
+                                                style="
+                                                    background: #ffffff;
+                                                    border-radius: 10px;
+                                                    border: 1px solid #e4eaf4;
+                                                "
+                                            >
+                                                <tr>
+                                                    <td style="padding: 20px">
+                                                        <div
+                                                            style="
+                                                                width: 36px;
+                                                                height: 36px;
+                                                                background: #f0e8ec;
+                                                                border-radius: 8px;
+                                                                display: inline-flex;
+                                                                align-items: center;
+                                                                justify-content: center;
+                                                                margin-bottom: 12px;
+                                                            "
+                                                        >
+                                                            <svg
+                                                                width="18"
+                                                                height="18"
+                                                                viewBox="0 0 18 18"
+                                                                fill="none"
+                                                                xmlns="http://www.w3.org/2000/svg"
+                                                            >
+                                                                <rect
+                                                                    x="2"
+                                                                    y="1"
+                                                                    width="14"
+                                                                    height="16"
+                                                                    rx="2"
+                                                                    stroke="#B8637A"
+                                                                    stroke-width="1.5"
+                                                                />
+                                                                <rect
+                                                                    x="5"
+                                                                    y="4"
+                                                                    width="8"
+                                                                    height="3.5"
+                                                                    rx="1"
+                                                                    fill="#F0E8EC"
+                                                                    stroke="#B8637A"
+                                                                    stroke-width="1"
+                                                                />
+                                                                <line
+                                                                    x1="5"
+                                                                    y1="10.5"
+                                                                    x2="13"
+                                                                    y2="10.5"
+                                                                    stroke="#B8637A"
+                                                                    stroke-width="1.4"
+                                                                    stroke-linecap="round"
+                                                                />
+                                                                <line
+                                                                    x1="5"
+                                                                    y1="13.5"
+                                                                    x2="9.5"
+                                                                    y2="13.5"
+                                                                    stroke="#B8637A"
+                                                                    stroke-width="1.4"
+                                                                    stroke-linecap="round"
+                                                                />
+                                                            </svg>
+                                                        </div>
+                                                        <h3
+                                                            style="
+                                                                color: #182438;
+                                                                font-size: 13px;
+                                                                font-weight: 700;
+                                                                margin: 0 0 6px;
+                                                                font-family:
+                                                                    &quot;DM Sans&quot;,
+                                                                    Arial,
+                                                                    sans-serif;
+                                                            "
+                                                        >
+                                                            OCR de Documentos
+                                                        </h3>
+                                                        <p
+                                                            style="
+                                                                color: #6b7d90;
+                                                                font-size: 12.5px;
+                                                                line-height: 1.65;
+                                                                margin: 0;
+                                                                font-family:
+                                                                    &quot;DM Sans&quot;,
+                                                                    Arial,
+                                                                    sans-serif;
+                                                            "
+                                                        >
+                                                            Extracción
+                                                            automática desde
+                                                            cédulas, pasaportes
+                                                            y licencias.
+                                                            Validación de
+                                                            autenticidad y zona
+                                                            MRZ en tiempo real.
+                                                        </p>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td
+                                            class="col-half"
+                                            width="50%"
+                                            style="
+                                                padding: 0 0 14px 8px;
+                                                vertical-align: top;
+                                            "
+                                        >
+                                            <table
+                                                width="100%"
+                                                cellpadding="0"
+                                                cellspacing="0"
+                                                border="0"
+                                                style="
+                                                    background: #ffffff;
+                                                    border-radius: 10px;
+                                                    border: 1px solid #e4eaf4;
+                                                "
+                                            >
+                                                <tr>
+                                                    <td style="padding: 20px">
+                                                        <div
+                                                            style="
+                                                                width: 36px;
+                                                                height: 36px;
+                                                                background: #e6eef8;
+                                                                border-radius: 8px;
+                                                                text-align: center;
+                                                                line-height: 36px;
+                                                                font-size: 18px;
+                                                                margin-bottom: 12px;
+                                                            "
+                                                        >
+                                                            &#128065;
+                                                        </div>
+                                                        <h3
+                                                            style="
+                                                                color: #182438;
+                                                                font-size: 13px;
+                                                                font-weight: 700;
+                                                                margin: 0 0 6px;
+                                                                font-family:
+                                                                    &quot;DM Sans&quot;,
+                                                                    Arial,
+                                                                    sans-serif;
+                                                            "
+                                                        >
+                                                            Liveness Detection
+                                                        </h3>
+                                                        <p
+                                                            style="
+                                                                color: #6b7d90;
+                                                                font-size: 12.5px;
+                                                                line-height: 1.65;
+                                                                margin: 0;
+                                                                font-family:
+                                                                    &quot;DM Sans&quot;,
+                                                                    Arial,
+                                                                    sans-serif;
+                                                            "
+                                                        >
+                                                            Previene fraude por
+                                                            suplantación. Cumple
+                                                            ISO/IEC 30107-3 para
+                                                            prueba de vida
+                                                            activa y pasiva.
+                                                        </p>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+
+                        <!-- ── FEATURES ROW 2 ── -->
+                        <tr>
+                            <td
+                                style="
+                                    background: #f5f7fa;
+                                    padding: 0 40px 40px;
+                                "
+                                class="pad-mobile"
+                            >
+                                <table
+                                    width="100%"
+                                    cellpadding="0"
+                                    cellspacing="0"
+                                    border="0"
+                                >
+                                    <tr>
+                                        <td
+                                            class="col-half"
+                                            width="50%"
+                                            style="
+                                                padding: 0 8px 0 0;
+                                                vertical-align: top;
+                                            "
+                                        >
+                                            <table
+                                                width="100%"
+                                                cellpadding="0"
+                                                cellspacing="0"
+                                                border="0"
+                                                style="
+                                                    background: #ffffff;
+                                                    border-radius: 10px;
+                                                    border: 1px solid #e4eaf4;
+                                                "
+                                            >
+                                                <tr>
+                                                    <td style="padding: 20px">
+                                                        <div
+                                                            style="
+                                                                width: 36px;
+                                                                height: 36px;
+                                                                background: #f0e8ec;
+                                                                border-radius: 8px;
+                                                                display: inline-flex;
+                                                                align-items: center;
+                                                                justify-content: center;
+                                                                margin-bottom: 12px;
+                                                            "
+                                                        >
+                                                            <svg
+                                                                width="18"
+                                                                height="18"
+                                                                viewBox="0 0 18 18"
+                                                                fill="none"
+                                                                xmlns="http://www.w3.org/2000/svg"
+                                                            >
+                                                                <path
+                                                                    d="M9 2C5.69 2 3 4.69 3 8"
+                                                                    stroke="#B8637A"
+                                                                    stroke-width="1.5"
+                                                                    stroke-linecap="round"
+                                                                />
+                                                                <path
+                                                                    d="M9 5C6.79 5 5 6.79 5 9"
+                                                                    stroke="#B8637A"
+                                                                    stroke-width="1.5"
+                                                                    stroke-linecap="round"
+                                                                />
+                                                                <path
+                                                                    d="M9 8C8.45 8 8 8.45 8 9c0 1.2-.2 2.4-.6 3.5"
+                                                                    stroke="#B8637A"
+                                                                    stroke-width="1.5"
+                                                                    stroke-linecap="round"
+                                                                />
+                                                                <path
+                                                                    d="M15 8c0-3.31-2.69-6-6-6"
+                                                                    stroke="#B8637A"
+                                                                    stroke-width="1.5"
+                                                                    stroke-linecap="round"
+                                                                />
+                                                                <path
+                                                                    d="M13 9c0-2.21-1.79-4-4-4"
+                                                                    stroke="#B8637A"
+                                                                    stroke-width="1.5"
+                                                                    stroke-linecap="round"
+                                                                />
+                                                                <path
+                                                                    d="M11 9c0 1.5-.5 3-1.5 4.5"
+                                                                    stroke="#B8637A"
+                                                                    stroke-width="1.5"
+                                                                    stroke-linecap="round"
+                                                                />
+                                                                <path
+                                                                    d="M13 11.5c-.3 1.2-.9 2.3-1.7 3.2"
+                                                                    stroke="#B8637A"
+                                                                    stroke-width="1.5"
+                                                                    stroke-linecap="round"
+                                                                />
+                                                            </svg>
+                                                        </div>
+                                                        <h3
+                                                            style="
+                                                                color: #182438;
+                                                                font-size: 13px;
+                                                                font-weight: 700;
+                                                                margin: 0 0 6px;
+                                                                font-family:
+                                                                    &quot;DM Sans&quot;,
+                                                                    Arial,
+                                                                    sans-serif;
+                                                            "
+                                                        >
+                                                            Huella Dactilar —
+                                                            Sin Hardware
+                                                        </h3>
+                                                        <p
+                                                            style="
+                                                                color: #6b7d90;
+                                                                font-size: 12.5px;
+                                                                line-height: 1.65;
+                                                                margin: 0;
+                                                                font-family:
+                                                                    &quot;DM Sans&quot;,
+                                                                    Arial,
+                                                                    sans-serif;
+                                                            "
+                                                        >
+                                                            Mismo estándar que
+                                                            los capturahuellas
+                                                            físicos, usando
+                                                            únicamente la cámara
+                                                            trasera. SDK o API
+                                                            REST.
+                                                        </p>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td
+                                            class="col-half"
+                                            width="50%"
+                                            style="
+                                                padding: 0 0 0 8px;
+                                                vertical-align: top;
+                                            "
+                                        >
+                                            <table
+                                                width="100%"
+                                                cellpadding="0"
+                                                cellspacing="0"
+                                                border="0"
+                                                style="
+                                                    background: #ffffff;
+                                                    border-radius: 10px;
+                                                    border: 1px solid #e4eaf4;
+                                                "
+                                            >
+                                                <tr>
+                                                    <td style="padding: 20px">
+                                                        <div
+                                                            style="
+                                                                width: 36px;
+                                                                height: 36px;
+                                                                background: #e6eef8;
+                                                                border-radius: 8px;
+                                                                text-align: center;
+                                                                line-height: 36px;
+                                                                font-size: 18px;
+                                                                margin-bottom: 12px;
+                                                            "
+                                                        >
+                                                            &#128279;
+                                                        </div>
+                                                        <h3
+                                                            style="
+                                                                color: #182438;
+                                                                font-size: 13px;
+                                                                font-weight: 700;
+                                                                margin: 0 0 6px;
+                                                                font-family:
+                                                                    &quot;DM Sans&quot;,
+                                                                    Arial,
+                                                                    sans-serif;
+                                                            "
+                                                        >
+                                                            Integración Total
+                                                        </h3>
+                                                        <p
+                                                            style="
+                                                                color: #6b7d90;
+                                                                font-size: 12.5px;
+                                                                line-height: 1.65;
+                                                                margin: 0;
+                                                                font-family:
+                                                                    &quot;DM Sans&quot;,
+                                                                    Arial,
+                                                                    sans-serif;
+                                                            "
+                                                        >
+                                                            API REST + SDK móvil
+                                                            (iOS/Android).
+                                                            Compatible con
+                                                            sistemas core
+                                                            bancarios y flujos
+                                                            de onboarding.
+                                                        </p>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+
+                        <!-- ── BENEFITS HEADER ── -->
+                        <tr>
+                            <td
+                                style="
+                                    background: #ffffff;
+                                    padding: 40px 48px 0;
+                                    border-top: 1px solid #e8edf5;
+                                "
+                                class="pad-mobile"
+                            >
+                                <p
+                                    style="
+                                        color: #8facc8;
+                                        font-size: 10px;
+                                        font-weight: 700;
+                                        letter-spacing: 2px;
+                                        text-transform: uppercase;
+                                        margin: 0 0 5px;
+                                        font-family:
+                                            &quot;DM Sans&quot;, Arial,
+                                            sans-serif;
+                                    "
+                                >
+                                    Ventajas clave
+                                </p>
+                                <h2
+                                    style="
+                                        color: #182438;
+                                        font-size: 18px;
+                                        font-weight: 700;
+                                        letter-spacing: -0.3px;
+                                        margin: 0 0 24px;
+                                        font-family:
+                                            &quot;DM Sans&quot;, Arial,
+                                            sans-serif;
+                                    "
+                                >
+                                    ¿Por qué elegir Qub-its?
+                                </h2>
+                            </td>
+                        </tr>
+
+                        <!-- ── BENEFITS ROW 1 ── -->
+                        <tr>
+                            <td
+                                style="background: #ffffff; padding: 0 40px"
+                                class="pad-mobile"
+                            >
+                                <table
+                                    width="100%"
+                                    cellpadding="0"
+                                    cellspacing="0"
+                                    border="0"
+                                >
+                                    <tr>
+                                        <td
+                                            class="col-half"
+                                            width="50%"
+                                            style="
+                                                padding: 0 16px 20px 0;
+                                                vertical-align: top;
+                                            "
+                                        >
+                                            <table
+                                                cellpadding="0"
+                                                cellspacing="0"
+                                                border="0"
+                                            >
+                                                <tr>
+                                                    <td
+                                                        style="
+                                                            padding-right: 12px;
+                                                            vertical-align: top;
+                                                        "
+                                                    >
+                                                        <div
+                                                            style="
+                                                                width: 32px;
+                                                                height: 32px;
+                                                                background: #f0e8ec;
+                                                                border-radius: 7px;
+                                                                text-align: center;
+                                                                line-height: 32px;
+                                                                font-size: 16px;
+                                                            "
+                                                        >
+                                                            &#128176;
+                                                        </div>
+                                                    </td>
+                                                    <td
+                                                        style="
+                                                            vertical-align: top;
+                                                        "
+                                                    >
+                                                        <h4
+                                                            style="
+                                                                color: #182438;
+                                                                font-size: 13px;
+                                                                font-weight: 700;
+                                                                margin: 0 0 4px;
+                                                                font-family:
+                                                                    &quot;DM Sans&quot;,
+                                                                    Arial,
+                                                                    sans-serif;
+                                                            "
+                                                        >
+                                                            Reduce costos de
+                                                            hardware
+                                                        </h4>
+                                                        <p
+                                                            style="
+                                                                color: #6b7d90;
+                                                                font-size: 12.5px;
+                                                                line-height: 1.6;
+                                                                margin: 0;
+                                                                font-family:
+                                                                    &quot;DM Sans&quot;,
+                                                                    Arial,
+                                                                    sans-serif;
+                                                            "
+                                                        >
+                                                            Elimine la inversión
+                                                            en dispositivos
+                                                            físicos en
+                                                            sucursales y agentes
+                                                            de campo.
+                                                        </p>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td
+                                            class="col-half"
+                                            width="50%"
+                                            style="
+                                                padding: 0 0 20px 0;
+                                                vertical-align: top;
+                                            "
+                                        >
+                                            <table
+                                                cellpadding="0"
+                                                cellspacing="0"
+                                                border="0"
+                                            >
+                                                <tr>
+                                                    <td
+                                                        style="
+                                                            padding-right: 12px;
+                                                            vertical-align: top;
+                                                        "
+                                                    >
+                                                        <div
+                                                            style="
+                                                                width: 32px;
+                                                                height: 32px;
+                                                                background: #e6eef8;
+                                                                border-radius: 7px;
+                                                                text-align: center;
+                                                                line-height: 32px;
+                                                                font-size: 16px;
+                                                            "
+                                                        >
+                                                            &#128241;
+                                                        </div>
+                                                    </td>
+                                                    <td
+                                                        style="
+                                                            vertical-align: top;
+                                                        "
+                                                    >
+                                                        <h4
+                                                            style="
+                                                                color: #182438;
+                                                                font-size: 13px;
+                                                                font-weight: 700;
+                                                                margin: 0 0 4px;
+                                                                font-family:
+                                                                    &quot;DM Sans&quot;,
+                                                                    Arial,
+                                                                    sans-serif;
+                                                            "
+                                                        >
+                                                            Onboarding 100%
+                                                            digital
+                                                        </h4>
+                                                        <p
+                                                            style="
+                                                                color: #6b7d90;
+                                                                font-size: 12.5px;
+                                                                line-height: 1.6;
+                                                                margin: 0;
+                                                                font-family:
+                                                                    &quot;DM Sans&quot;,
+                                                                    Arial,
+                                                                    sans-serif;
+                                                            "
+                                                        >
+                                                            Sus clientes se
+                                                            verifican desde
+                                                            cualquier lugar con
+                                                            su propio celular.
+                                                        </p>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+
+                        <!-- ── BENEFITS ROW 2 ── -->
+                        <tr>
+                            <td
+                                style="
+                                    background: #ffffff;
+                                    padding: 0 40px 36px;
+                                "
+                                class="pad-mobile"
+                            >
+                                <table
+                                    width="100%"
+                                    cellpadding="0"
+                                    cellspacing="0"
+                                    border="0"
+                                >
+                                    <tr>
+                                        <td
+                                            class="col-half"
+                                            width="50%"
+                                            style="
+                                                padding: 0 16px 0 0;
+                                                vertical-align: top;
+                                            "
+                                        >
+                                            <table
+                                                cellpadding="0"
+                                                cellspacing="0"
+                                                border="0"
+                                            >
+                                                <tr>
+                                                    <td
+                                                        style="
+                                                            padding-right: 12px;
+                                                            vertical-align: top;
+                                                        "
+                                                    >
+                                                        <div
+                                                            style="
+                                                                width: 32px;
+                                                                height: 32px;
+                                                                background: #f0e8ec;
+                                                                border-radius: 7px;
+                                                                text-align: center;
+                                                                line-height: 32px;
+                                                                font-size: 16px;
+                                                            "
+                                                        >
+                                                            &#9878;
+                                                        </div>
+                                                    </td>
+                                                    <td
+                                                        style="
+                                                            vertical-align: top;
+                                                        "
+                                                    >
+                                                        <h4
+                                                            style="
+                                                                color: #182438;
+                                                                font-size: 13px;
+                                                                font-weight: 700;
+                                                                margin: 0 0 4px;
+                                                                font-family:
+                                                                    &quot;DM Sans&quot;,
+                                                                    Arial,
+                                                                    sans-serif;
+                                                            "
+                                                        >
+                                                            Cumplimiento
+                                                            regulatorio
+                                                        </h4>
+                                                        <p
+                                                            style="
+                                                                color: #6b7d90;
+                                                                font-size: 12.5px;
+                                                                line-height: 1.6;
+                                                                margin: 0;
+                                                                font-family:
+                                                                    &quot;DM Sans&quot;,
+                                                                    Arial,
+                                                                    sans-serif;
+                                                            "
+                                                        >
+                                                            Diseñado para SUGEF,
+                                                            SBP, SSF y
+                                                            normativas KYC/AML
+                                                            de Centroamérica.
+                                                        </p>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td
+                                            class="col-half"
+                                            width="50%"
+                                            style="
+                                                padding: 0;
+                                                vertical-align: top;
+                                            "
+                                        >
+                                            <table
+                                                cellpadding="0"
+                                                cellspacing="0"
+                                                border="0"
+                                            >
+                                                <tr>
+                                                    <td
+                                                        style="
+                                                            padding-right: 12px;
+                                                            vertical-align: top;
+                                                        "
+                                                    >
+                                                        <div
+                                                            style="
+                                                                width: 32px;
+                                                                height: 32px;
+                                                                background: #e6eef8;
+                                                                border-radius: 7px;
+                                                                text-align: center;
+                                                                line-height: 32px;
+                                                                font-size: 16px;
+                                                            "
+                                                        >
+                                                            &#9889;
+                                                        </div>
+                                                    </td>
+                                                    <td
+                                                        style="
+                                                            vertical-align: top;
+                                                        "
+                                                    >
+                                                        <h4
+                                                            style="
+                                                                color: #182438;
+                                                                font-size: 13px;
+                                                                font-weight: 700;
+                                                                margin: 0 0 4px;
+                                                                font-family:
+                                                                    &quot;DM Sans&quot;,
+                                                                    Arial,
+                                                                    sans-serif;
+                                                            "
+                                                        >
+                                                            Implementación
+                                                            rápida
+                                                        </h4>
+                                                        <p
+                                                            style="
+                                                                color: #6b7d90;
+                                                                font-size: 12.5px;
+                                                                line-height: 1.6;
+                                                                margin: 0;
+                                                                font-family:
+                                                                    &quot;DM Sans&quot;,
+                                                                    Arial,
+                                                                    sans-serif;
+                                                            "
+                                                        >
+                                                            SDK y API REST con
+                                                            documentación
+                                                            completa. Soporte
+                                                            técnico dedicado
+                                                            durante la
+                                                            integración.
+                                                        </p>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+
+                        <!-- ── CTA ── -->
+                        <tr>
+                            <td
+                                style="
+                                    background: #1e3150;
+                                    padding: 48px 48px;
+                                    border-top: 3px solid #c97585;
+                                "
+                                class="pad-mobile"
+                            >
+                                <p
+                                    style="
+                                        color: #c97585;
+                                        font-size: 10px;
+                                        font-weight: 700;
+                                        letter-spacing: 2px;
+                                        text-transform: uppercase;
+                                        margin: 0 0 10px;
+                                        font-family:
+                                            &quot;DM Sans&quot;, Arial,
+                                            sans-serif;
+                                    "
+                                >
+                                    Demo gratuita &middot; 30 minutos
+                                </p>
+                                <h2
+                                    style="
+                                        color: #ffffff;
+                                        font-size: 21px;
+                                        font-weight: 700;
+                                        letter-spacing: -0.3px;
+                                        line-height: 1.3;
+                                        margin: 0 0 14px;
+                                        font-family:
+                                            &quot;DM Sans&quot;, Arial,
+                                            sans-serif;
+                                    "
+                                >
+                                    ¿Le gustaría ver la suite en acción?
+                                </h2>
+                                <p
+                                    style="
+                                        color: #7a9cb8;
+                                        font-size: 14px;
+                                        line-height: 1.7;
+                                        margin: 0 0 30px;
+                                        font-family:
+                                            &quot;DM Sans&quot;, Arial,
+                                            sans-serif;
+                                    "
+                                >
+                                    Le mostraremos el flujo completo de
+                                    verificación biométrica — desde el OCR del
+                                    documento hasta la captura de huella —
+                                    usando únicamente un smartphone.
+                                </p>
+                                <table
+                                    cellpadding="0"
+                                    cellspacing="0"
+                                    border="0"
+                                >
+                                    <tr>
+                                        <td
+                                            style="
+                                                border-radius: 8px;
+                                                background: #c97585;
+                                            "
+                                        >
+                                            <a
+                                                href="https://calendar.app.google/A4jrFp4inRSPnpa88"
+                                                style="
+                                                    display: inline-block;
+                                                    background: #c97585;
+                                                    color: #ffffff;
+                                                    font-size: 14px;
+                                                    font-weight: 700;
+                                                    padding: 14px 32px;
+                                                    border-radius: 8px;
+                                                    text-decoration: none;
+                                                    letter-spacing: -0.1px;
+                                                    font-family:
+                                                        &quot;DM Sans&quot;,
+                                                        Arial, sans-serif;
+                                                "
+                                                >Agendar Demo Gratuita &rarr;</a
+                                            >
+                                        </td>
+                                    </tr>
+                                </table>
+                                <p
+                                    style="
+                                        color: #4a6880;
+                                        font-size: 13px;
+                                        margin: 16px 0 8px;
+                                        font-family:
+                                            &quot;DM Sans&quot;, Arial,
+                                            sans-serif;
+                                    "
+                                >
+                                    O responda directamente a este correo para
+                                    coordinar una reunión.
+                                </p>
+                                <p
+                                    style="
+                                        color: #354e65;
+                                        font-size: 11px;
+                                        margin: 0;
+                                        word-break: break-all;
+                                        font-family:
+                                            &quot;DM Sans&quot;, Arial,
+                                            sans-serif;
+                                    "
+                                >
+                                    https://calendar.app.google/A4jrFp4inRSPnpa88
+                                </p>
+                            </td>
+                        </tr>
+
+                        <!-- ── ABOUT ── -->
+                        <tr>
+                            <td
+                                style="
+                                    background: #f5f7fa;
+                                    padding: 30px 48px;
+                                    border-top: 1px solid #e8edf5;
+                                "
+                                class="pad-mobile"
+                            >
+                                <p
+                                    style="
+                                        color: #8facc8;
+                                        font-size: 10px;
+                                        font-weight: 700;
+                                        letter-spacing: 2px;
+                                        text-transform: uppercase;
+                                        margin: 0 0 8px;
+                                        font-family:
+                                            &quot;DM Sans&quot;, Arial,
+                                            sans-serif;
+                                    "
+                                >
+                                    Sobre Qub-its Inc.
+                                </p>
+                                <p
+                                    style="
+                                        color: #55687a;
+                                        font-size: 12.5px;
+                                        line-height: 1.75;
+                                        margin: 0;
+                                        font-family:
+                                            &quot;DM Sans&quot;, Arial,
+                                            sans-serif;
+                                    "
+                                >
+                                    Somos una software factory con más de 15
+                                    años de experiencia desarrollando soluciones
+                                    tecnológicas para empresas. Nos
+                                    especializamos en soluciones a medida que
+                                    combinan innovación con cumplimiento
+                                    regulatorio, ayudando a nuestros clientes a
+                                    alcanzar sus objetivos y crear ventajas
+                                    competitivas sostenibles.
+                                </p>
+                            </td>
+                        </tr>
+
+                        <!-- ── FOOTER ── -->
+                        <tr>
+                            <td
+                                style="
+                                    background: #152540;
+                                    border-radius: 0 0 14px 14px;
+                                    padding: 26px 48px;
+                                "
+                                class="pad-mobile"
+                            >
+                                <table
+                                    width="100%"
+                                    cellpadding="0"
+                                    cellspacing="0"
+                                    border="0"
+                                >
+                                    <tr>
+                                        <td style="vertical-align: middle">
+                                            <table
+                                                cellpadding="0"
+                                                cellspacing="0"
+                                                border="0"
+                                            >
+                                                <tr>
+                                                    <td
+                                                        style="
+                                                            padding-right: 10px;
+                                                            vertical-align: middle;
+                                                        "
+                                                    >
+                                                        <img
+                                                            src="data:image/png;base64,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"
+                                                            alt="Qub-its"
+                                                            width="26"
+                                                            height="26"
+                                                            style="
+                                                                display: block;
+                                                                width: 26px;
+                                                                height: 26px;
+                                                                opacity: 0.85;
+                                                            "
+                                                        />
+                                                    </td>
+                                                    <td
+                                                        style="
+                                                            vertical-align: middle;
+                                                        "
+                                                    >
+                                                        <span
+                                                            style="
+                                                                color: #ffffff;
+                                                                font-size: 13px;
+                                                                font-weight: 600;
+                                                                font-family:
+                                                                    &quot;DM Sans&quot;,
+                                                                    Arial,
+                                                                    sans-serif;
+                                                            "
+                                                            >Qub-its Inc.</span
+                                                        >
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td
+                                            align="right"
+                                            style="vertical-align: middle"
+                                        >
+                                            <span
+                                                style="
+                                                    color: #3d5a75;
+                                                    font-size: 11px;
+                                                    font-family:
+                                                        &quot;DM Sans&quot;,
+                                                        Arial, sans-serif;
+                                                "
+                                                >Miami, Florida</span
+                                            >
+                                        </td>
+                                    </tr>
+                                </table>
+                                <div
+                                    style="
+                                        height: 1px;
+                                        background: #1e3450;
+                                        margin: 14px 0;
+                                    "
+                                ></div>
+                                <table
+                                    cellpadding="0"
+                                    cellspacing="0"
+                                    border="0"
+                                >
+                                    <tr>
+                                        <td style="padding-right: 18px">
+                                            <a
+                                                href="https://www.qub-its.com"
+                                                style="
+                                                    color: #6a90ae;
+                                                    font-size: 12px;
+                                                    text-decoration: none;
+                                                    font-family:
+                                                        &quot;DM Sans&quot;,
+                                                        Arial, sans-serif;
+                                                "
+                                                >www.qub-its.com</a
+                                            >
+                                        </td>
+                                        <td>
+                                            <a
+                                                href="/cdn-cgi/l/email-protection#f5868085859a8781b5848097d89c8186db969a98"
+                                                style="
+                                                    color: #6a90ae;
+                                                    font-size: 12px;
+                                                    text-decoration: none;
+                                                    font-family:
+                                                        &quot;DM Sans&quot;,
+                                                        Arial, sans-serif;
+                                                "
+                                                ><span
+                                                    class="__cf_email__"
+                                                    data-cfemail="e4979194948b9690a4959186c98d9097ca878b89"
+                                                    >[email&#160;protected]</span
+                                                ></a
+                                            >
+                                        </td>
+                                    </tr>
+                                </table>
+                                <p
+                                    style="
+                                        color: #2e4a62;
+                                        font-size: 11px;
+                                        margin: 14px 0 0;
+                                        line-height: 1.65;
+                                        font-family:
+                                            &quot;DM Sans&quot;, Arial,
+                                            sans-serif;
+                                    "
+                                >
+                                    &copy; 2026 Qub-its Inc. Todos los derechos
+                                    reservados. &middot; Recibió este correo
+                                    porque su empresa puede beneficiarse de
+                                    nuestra suite de biometría móvil.
+                                    <a
+                                        href="#"
+                                        style="
+                                            color: #4a6880;
+                                            text-decoration: underline;
+                                        "
+                                        >Darse de baja</a
+                                    >
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                    <!-- /Email container -->
+                </td>
+            </tr>
+        </table>
+
+        <script
+            data-cfasync="false"
+            src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"
+        ></script>
+    </body>
+</html>
