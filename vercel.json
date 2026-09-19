@@ -1,0 +1,8 @@
+{
+  "installCommand": "npm --prefix landing-page-svelte ci",
+  "buildCommand": "npm --prefix landing-page-svelte run build",
+  "outputDirectory": "landing-page-svelte/dist",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
