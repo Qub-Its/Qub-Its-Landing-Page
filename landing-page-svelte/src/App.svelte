@@ -12,7 +12,15 @@
   };
   const policy = policies[path];
   const services = [['01','Estrategia de producto','Alineamos oportunidad, tecnología y métricas antes de escribir una línea de código.'],['02','Experiencias web','Interfaces rápidas, accesibles y con sistemas visuales que reflejan su negocio.'],['03','Plataformas a medida','Productos escalables que conectan operaciones, equipos y clientes.'],['04','Equipos extendidos','Ingeniería senior que se integra con claridad, autonomía y comunicación constante.']];
-  const work = [['VHealth','Telemedicina','Una plataforma de diagnóstico remoto pensada para dar continuidad a la atención.','https://vhealth-web.vercel.app/'],['Adán Farmacia','Comercio digital','Una experiencia de compra farmacéutica enfocada en velocidad y confianza.','https://adanfarmacia.com/'],['Billium','Fintech','Una presencia digital clara para una propuesta financiera contemporánea.','https://billium-landing.vercel.app/']];
+  const work = [
+    ['BabyGunGuin', 'Salud digital', 'Seguimiento del embarazo, ecografías y herramientas de IA informativa para Android.', '/baby_gun_guin_privacy_policy.html'],
+    ['LocAlert', 'Movilidad', 'Alarmas de proximidad para llegar a cada destino sin perder de vista la privacidad.', '/locAlert_policy.html'],
+    ['Telemedicina HCG', 'Healthtech', 'Consultas remotas, gestión de pacientes y servicios digitales para HCG Consulting Group.', 'https://hcgconsulting.net'],
+    ['Chrome Site Stats', 'Extensión Chrome', 'Métricas y hábitos de navegación almacenados localmente en el navegador.', '/chrome_site_stats_policy.html'],
+    ['Qubits Cargo', 'SaaS logística', 'Gestión de envíos, seguimiento y operaciones para empresas de courier y cargo.', '#contact'],
+    ['Qub-its Biometric', 'Verificación + OCR', 'OCR de documentos, validación de autenticidad y lectura MRZ en tiempo real.', '/biometric-landing.html'],
+    ['Billium', 'Fintech', 'Una aplicación móvil para mantener las suscripciones organizadas en un solo lugar.', 'https://billium-landing.vercel.app']
+  ];
 </script>
 
 <svelte:head>
