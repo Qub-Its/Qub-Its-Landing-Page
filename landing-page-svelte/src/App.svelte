@@ -1,5 +1,6 @@
 <script>
   const logo = '/images/logo.png';
+  const siteUrl = 'https://www.qub-its.com';
   let menuOpen = false;
   const path = window.location.pathname.split('/').pop() || '';
   const policies = {
@@ -11,6 +12,10 @@
     'biometric-landing.html': ['Qub-its Biometric', 'PRODUCTO / BIOMETRÍA', 'Identidad digital, diseñada para personas.', 'Una experiencia digital segura para simplificar la gestión biométrica y reducir la fricción operativa.', [['Diseño centrado en confianza', 'Flujos claros, interfaces accesibles y decisiones basadas en privacidad desde el inicio.'], ['Hablemos', 'Cuéntanos sobre tu operación y diseñaremos el producto adecuado para tu equipo.']]]
   };
   const policy = policies[path];
+  const pageTitle = policy ? `${policy[0]} | Qub-its` : 'Desarrollo de software a medida | Qub-its';
+  const pageDescription = policy ? policy[3] : 'Qub-its crea software a medida, productos digitales y plataformas web para empresas que quieren crecer con tecnología.';
+  const canonicalUrl = `${siteUrl}${policy ? `/${path}` : '/'}`;
+  const robots = policy ? 'noindex, follow' : 'index, follow, max-image-preview:large, max-snippet:-1';
   const services = [['01','Estrategia de producto','Alineamos oportunidad, tecnología y métricas antes de escribir una línea de código.'],['02','Experiencias web','Interfaces rápidas, accesibles y con sistemas visuales que reflejan su negocio.'],['03','Plataformas a medida','Productos escalables que conectan operaciones, equipos y clientes.'],['04','Equipos extendidos','Ingeniería senior que se integra con claridad, autonomía y comunicación constante.']];
   const work = [
     ['BabyGunGuin', 'Salud digital', 'Seguimiento del embarazo, ecografías y herramientas de IA informativa para Android.', '/baby_gun_guin_privacy_policy.html'],
@@ -24,8 +29,22 @@
 </script>
 
 <svelte:head>
-  <title>{policy ? `${policy[0]} · Qub-its` : 'Qub-its — Software that moves business forward'}</title>
-  <meta name="description" content={policy ? policy[3] : 'Qub-its creates digital products, web experiences and custom software for ambitious teams.'} />
+  <title>{pageTitle}</title>
+  <meta name="description" content={pageDescription} />
+  <meta name="robots" content={robots} />
+  <link rel="canonical" href={canonicalUrl} />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Qub-its" />
+  <meta property="og:locale" content="es_ES" />
+  <meta property="og:title" content={pageTitle} />
+  <meta property="og:description" content={pageDescription} />
+  <meta property="og:url" content={canonicalUrl} />
+  <meta property="og:image" content={`${siteUrl}/images/logo.png`} />
+  <meta property="og:image:alt" content="Logo de Qub-its" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content={pageTitle} />
+  <meta name="twitter:description" content={pageDescription} />
+  <meta name="twitter:image" content={`${siteUrl}/images/logo.png`} />
 </svelte:head>
 
 {#if policy}
