@@ -1,28 +1,33 @@
 <script>
-  import Header from "./components/Header.svelte";
-  import Hero from "./components/Hero.svelte";
-  import About from "./components/About.svelte";
-  import Services from "./components/Services.svelte";
-  import Portfolio from "./components/Portfolio.svelte";
-  import Projects from "./components/Projects.svelte";
-  import Contact from "./components/Contact.svelte";
-  import Footer from "./components/Footer.svelte";
+  const logo = '/images/logo.png';
+  let menuOpen = false;
+  const path = window.location.pathname.split('/').pop() || '';
+  const policies = {
+    'locAlert_policy.html': ['LocAlert', 'PRIVACIDAD / LOCALIZACIÓN', 'Tu ubicación se queda contigo.', 'LocAlert utiliza la ubicación del dispositivo para activar alarmas de proximidad. Esa información se procesa localmente y no se almacena en servidores de Qub-its.', [['Información que no recopilamos', 'No recopilamos ni almacenamos historial de ubicaciones, perfiles personales ni datos de uso identificables.'], ['Permisos', 'Puedes administrar los permisos de ubicación y notificaciones desde los ajustes de tu dispositivo.'], ['Terceros', 'Los servicios de mapas pueden aplicar sus propias políticas. Qub-its no conserva los datos procesados por ellos.']]],
+    'locAlarm_policy.html': ['LocAlarm', 'PRIVACIDAD / LOCALIZACIÓN', 'Alarmas cercanas, datos privados.', 'LocAlarm procesa temporalmente la ubicación en tu dispositivo para avisarte al llegar a un destino. No transmite ni guarda esa información en servidores externos.', [['Procesamiento local', 'La ubicación se usa exclusivamente para calcular alarmas de proximidad en tu dispositivo.'], ['Tus controles', 'Puedes revocar permisos de ubicación o notificaciones desde la configuración del sistema.'], ['Contacto', 'Para consultas sobre privacidad, escríbenos a team@qub-its.com.']]],
+    'baby_gun_guin_privacy_policy.html': ['BabyGunGuin', 'PRIVACIDAD / SALUD', 'Privacidad para cada etapa.', 'BabyGunGuin es una herramienta informativa y de organización; no ofrece diagnóstico ni consejo médico. Trataremos la información necesaria para proporcionar las funciones que elijas usar.', [['Información tratada', 'Según las funciones utilizadas, pueden incluirse datos de cuenta, seguimiento, imágenes y datos técnicos de diagnóstico.'], ['Uso y proveedores', 'Usamos la información para operar y proteger el servicio. Algunos proveedores, como Firebase e IA solicitada por ti, pueden procesar datos para esas funciones.'], ['Conservación y derechos', 'Puedes solicitar acceso, corrección o eliminación escribiendo a team@qub-its.com.']]],
+    'baby_gun_guin_delete_account.html': ['BabyGunGuin', 'CUENTA / ELIMINACIÓN', 'Solicita la eliminación de tu cuenta.', 'Puedes pedir la eliminación de tu cuenta y los datos asociados. Revisaremos la solicitud y responderemos conforme a los requisitos aplicables.', [['Cómo solicitarla', 'Envía un correo desde la dirección asociada a tu cuenta a team@qub-its.com con el asunto “Eliminar cuenta BabyGunGuin”.'], ['Qué puede eliminarse', 'La solicitud puede abarcar datos de cuenta, seguimiento, imágenes y otra información asociada. Algunas copias pueden conservarse temporalmente por razones legales o de seguridad.']]],
+    'chrome_site_stats_policy.html': ['Chrome Site Stats', 'PRIVACIDAD / EXTENSIÓN', 'Métricas útiles. Control local.', 'Chrome Site Stats fue diseñada con privacidad por defecto. La información que necesita para sus funciones se procesa localmente en tu navegador.', [['Datos personales', 'La extensión no requiere credenciales, información financiera ni datos personales identificables para sus funciones principales.'], ['Tus decisiones', 'Tú controlas los datos guardados localmente y puedes eliminarlos desde la extensión o el navegador.'], ['Seguridad', 'Aplicamos medidas razonables para proteger el funcionamiento local de la extensión.']]],
+    'biometric-landing.html': ['Qub-its Biometric', 'PRODUCTO / BIOMETRÍA', 'Identidad digital, diseñada para personas.', 'Una experiencia digital segura para simplificar la gestión biométrica y reducir la fricción operativa.', [['Diseño centrado en confianza', 'Flujos claros, interfaces accesibles y decisiones basadas en privacidad desde el inicio.'], ['Hablemos', 'Cuéntanos sobre tu operación y diseñaremos el producto adecuado para tu equipo.']]]
+  };
+  const policy = policies[path];
+  const services = [['01','Estrategia de producto','Alineamos oportunidad, tecnología y métricas antes de escribir una línea de código.'],['02','Experiencias web','Interfaces rápidas, accesibles y con sistemas visuales que reflejan su negocio.'],['03','Plataformas a medida','Productos escalables que conectan operaciones, equipos y clientes.'],['04','Equipos extendidos','Ingeniería senior que se integra con claridad, autonomía y comunicación constante.']];
+  const work = [['VHealth','Telemedicina','Una plataforma de diagnóstico remoto pensada para dar continuidad a la atención.','https://vhealth-web.vercel.app/'],['Adán Farmacia','Comercio digital','Una experiencia de compra farmacéutica enfocada en velocidad y confianza.','https://adanfarmacia.com/'],['Billium','Fintech','Una presencia digital clara para una propuesta financiera contemporánea.','https://billium-landing.vercel.app/']];
 </script>
 
-<div id="app">
-  <Header />
-  <Hero />
-  <About />
-  <Services />
-  <Portfolio />
-  <Projects />
-  <Contact />
-  <Footer />
-</div>
+<svelte:head>
+  <title>{policy ? `${policy[0]} · Qub-its` : 'Qub-its — Software that moves business forward'}</title>
+  <meta name="description" content={policy ? policy[3] : 'Qub-its creates digital products, web experiences and custom software for ambitious teams.'} />
+</svelte:head>
 
-<style>
-  #app {
-    margin: 0;
-    padding: 0;
-  }
-</style>
+{#if policy}
+  <main class="legal-shell"><a class="brand" href="/"><img src={logo} alt="Qub-its" /></a><a class="back" href="/">← Volver a Qub-its</a><p class="eyebrow">{policy[1]}</p><h1>{policy[2]}</h1><p class="legal-intro">{policy[3]}</p><div class="legal-grid">{#each policy[4] as section}<article><span>/{section[0].toLowerCase().replaceAll(' ', '_')}</span><h2>{section[0]}</h2><p>{section[1]}</p></article>{/each}</div><p class="legal-contact">¿Preguntas? <a href="mailto:team@qub-its.com">team@qub-its.com</a></p></main>
+{:else}
+  <header class="site-header"><a class="brand" href="/"><img src={logo} alt="Qub-its" /></a><button class="menu-button" aria-label="Abrir navegación" aria-expanded={menuOpen} onclick={() => menuOpen = !menuOpen}>menu</button><nav class:open={menuOpen} aria-label="Navegación principal"><a href="#studio" onclick={() => menuOpen = false}>Estudio</a><a href="#services" onclick={() => menuOpen = false}>Servicios</a><a href="#work" onclick={() => menuOpen = false}>Trabajo</a><a class="nav-cta" href="#contact" onclick={() => menuOpen = false}>Iniciar proyecto ↗</a></nav></header>
+  <main><section class="hero"><div class="hero-glow"></div><p class="eyebrow">[ DIGITAL PRODUCT STUDIO / EST. 2010 ]</p><h1>Software que<br /><em>se siente</em> natural.</h1><div class="hero-bottom"><p>Diseñamos productos digitales precisos, útiles y listos para crecer con tu negocio.</p><a class="button" href="#contact">Cuéntanos tu reto <span>↘</span></a></div><div class="terminal" aria-hidden="true"><div class="terminal-top"><i></i><i></i><i></i><span>qubits.system</span></div><p><b>›</b> build <span>meaningful things</span></p><p><b>✓</b> strategy</p><p><b>✓</b> design</p><p><b>✓</b> engineering<span class="cursor">_</span></p></div></section>
+  <section class="intro section" id="studio"><p class="eyebrow">/ 01 — QUIÉNES SOMOS</p><div><h2>No entregamos software.<br />Construimos <em>claridad.</em></h2><p class="lead">Qub-its es un estudio de producto y desarrollo que convierte problemas complejos en herramientas que la gente quiere usar. Más de 15 años ayudando a equipos a avanzar con intención.</p></div></section>
+  <section class="services section" id="services"><div class="section-heading"><p class="eyebrow">/ 02 — LO QUE HACEMOS</p><h2>Del primer <em>“¿y si?”</em><br />al producto real.</h2></div><div class="service-grid">{#each services as service}<article><div class="service-number">{service[0]} <span>↗</span></div><h3>{service[1]}</h3><p>{service[2]}</p></article>{/each}</div></section>
+  <section class="work section" id="work"><div class="section-heading"><p class="eyebrow">/ 03 — SELECCIÓN</p><h2>Trabajo que deja<br /><em>huella.</em></h2></div><div class="work-list">{#each work as project, i}<a href={project[3]} target="_blank" rel="noreferrer"><span class="work-index">0{i + 1}</span><div><p>{project[1]}</p><h3>{project[0]}</h3></div><p class="work-description">{project[2]}</p><span class="arrow">↗</span></a>{/each}</div></section>
+  <section class="contact section" id="contact"><p class="eyebrow">/ 04 — HABLEMOS</p><h2>Tu próximo producto<br />empieza con un <em>hola.</em></h2><a class="contact-email" href="mailto:team@qub-its.com?subject=Nuevo%20proyecto%20con%20Qub-its">team@qub-its.com <span>↗</span></a><p class="contact-note">Cuéntanos qué quieres construir. Respondemos con preguntas inteligentes, no con promesas genéricas.</p></section></main>
+  <footer><a class="brand" href="/"><img src={logo} alt="Qub-its" /></a><p>© {new Date().getFullYear()} Qub-its Inc.</p><div><a href="/locAlert_policy.html">Privacidad</a><a href="mailto:team@qub-its.com">Contacto</a></div></footer>
+{/if}
