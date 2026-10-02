@@ -35,7 +35,9 @@
   let captchaToken = $state('');
   let captchaFailed = $state(false);
   let cooldownLeft = $state(0);
+  let isOpen = $state(false);
   let openedAt = 0;
+  let returnFocus = null;
   let widgetId = null;
   let closeTimer;
   let cooldownTimer;
@@ -47,10 +49,51 @@
   export function open() {
     clearTimeout(closeTimer);
     if (status === 'success') resetForm();
-    openedAt = Date.now();
-    dialog.showModal();
+    // Keep the bot timer from the first open while the user still has text typed, so reopening and sending
+    // right away is not mistaken for a bot.
+    if (!subject && !message && !email) openedAt = Date.now();
+    returnFocus = document.activeElement;
+    // Non-modal on purpose: showModal() makes everything outside the dialog inert, including the hCaptcha
+    // challenge popup that hCaptcha appends to <body>. The backdrop, Esc and the focus trap are handled here.
+    dialog.show();
+    isOpen = true;
+    dialog.querySelector('#fb-subject')?.focus();
     refreshCooldown();
     renderCaptcha();
+  }
+
+  function close() {
+    dialog.close();
+  }
+
+  function handleClose() {
+    isOpen = false;
+    clearTimeout(closeTimer);
+    if (returnFocus?.isConnected) returnFocus.focus();
+  }
+
+  // On window, not the dialog: focus can sit outside it (e.g. inside the hCaptcha challenge).
+  function handleWindowKeydown(event) {
+    if (isOpen && event.key === 'Escape') {
+      event.preventDefault();
+      close();
+    }
+  }
+
+  function trapFocus(event) {
+    if (event.key !== 'Tab') return;
+    const focusable = [...dialog.querySelectorAll('button, input, textarea, iframe')].filter(
+      (el) => !el.disabled && el.tabIndex >= 0 && el.offsetParent !== null
+    );
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 
   async function renderCaptcha() {
@@ -93,7 +136,8 @@
 
   function showSuccess() {
     status = 'success';
-    closeTimer = setTimeout(() => dialog.close(), 3000);
+    dialog.querySelector('.feedback-close')?.focus();
+    closeTimer = setTimeout(close, 3000);
   }
 
   async function handleSubmit(event) {
@@ -120,13 +164,15 @@
   }
 </script>
 
-<!-- Backdrop click closes; Esc is handled natively by <dialog>. -->
-<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-<dialog bind:this={dialog} class="feedback-dialog" aria-labelledby="feedback-title" onclick={(e) => { if (e.target === dialog) dialog.close(); }} onclose={() => clearTimeout(closeTimer)}>
+<svelte:window onkeydown={handleWindowKeydown} />
+<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+<div class="feedback-backdrop" hidden={!isOpen} onclick={close}></div>
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+<dialog bind:this={dialog} class="feedback-dialog" aria-modal="true" aria-labelledby="feedback-title" onkeydown={trapFocus} onclose={handleClose}>
   <form class="feedback-form" novalidate onsubmit={handleSubmit}>
     <div class="feedback-head">
       <h2 id="feedback-title">{t.title}</h2>
-      <button type="button" class="feedback-close" aria-label={t.close} onclick={() => dialog.close()}>×</button>
+      <button type="button" class="feedback-close" aria-label={t.close} onclick={close}>×</button>
     </div>
     {#if status === 'success'}<p class="feedback-success" role="status">{t.success}</p>{/if}
     <div class="feedback-fields" hidden={status === 'success'}>
