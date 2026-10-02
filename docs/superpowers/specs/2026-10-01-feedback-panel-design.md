@@ -90,7 +90,7 @@ From strongest to weakest:
 
 | File | Change |
 |---|---|
-| `landing-page-svelte/src/lib/feedback.js` | New. Pure logic with no DOM or Svelte imports: `validate(fields, locale)`, `isBot({ honeypot, openedAt, now })`, cooldown read/write with an injectable storage, `buildPayload(fields, ctx)`, `submit(payload, fetchImpl)`. Also `loadHcaptcha()`, which injects the Web3Forms client script once and returns a promise. |
+| `landing-page-svelte/src/lib/feedback.js` | New. Pure logic with no DOM or Svelte imports: `validate(fields, locale)`, `isBot({ honeypot, openedAt, now })`, cooldown read/write with an injectable storage, `buildPayload(fields, ctx)`, `submit(payload, fetchImpl)`. Also `loadHcaptcha(lang)`, which injects hCaptcha's explicit-render API (`https://js.hcaptcha.com/1/api.js?render=explicit`) once and returns a promise. The panel calls `hcaptcha.render()` with the Web3Forms free sitekey, so it controls the token, reset and error callbacks. |
 | `landing-page-svelte/src/lib/FeedbackPanel.svelte` | New. Dialog, form, states and ES/EN copy. Props: `locale`, `accessKey`. Exposes `open()`. |
 | `landing-page-svelte/src/App.svelte` | Feedback nav button (only when a key is present), mounts `FeedbackPanel`, closes the mobile menu on open. |
 | `landing-page-svelte/src/app.css` | Panel, nav-button and form styles, including the ≤760px bottom sheet. |
@@ -100,7 +100,7 @@ From strongest to weakest:
 
 Data flow:
 
-1. Nav click → `open()` → record `openedAt` → `showModal()` → `loadHcaptcha()`.
+1. Nav click → `open()` → record `openedAt` → `showModal()` → `loadHcaptcha(locale)` → `hcaptcha.render()` (first open only).
 2. Submit → `validate` → `isBot` → cooldown check → hCaptcha token check → `buildPayload` →
    `submit`.
 3. `submit` makes `fetch('https://api.web3forms.com/submit')` with a JSON body. On
