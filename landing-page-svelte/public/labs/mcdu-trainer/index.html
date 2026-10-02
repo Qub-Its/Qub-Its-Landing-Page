@@ -1,0 +1,1389 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Simulador interactivo de un MCDU estilo A320 con guía y ejercicios por niveles.">
+<title>Entrenador MCDU A320 | Qub-its Labs</title>
+<link rel="canonical" href="https://www.qub-its.com/labs/mcdu-trainer/">
+<link rel="alternate" hreflang="es" href="https://www.qub-its.com/labs/mcdu-trainer/">
+<link rel="alternate" hreflang="en" href="https://www.qub-its.com/en/labs/mcdu-trainer/">
+<link rel="alternate" hreflang="x-default" href="https://www.qub-its.com/labs/mcdu-trainer/">
+<link rel="icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=B612:wght@400;700&family=B612+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: cockpit pedestal on the left (the MCDU), a reference panel on the right (Guía / Ejercicios) that becomes a bottom sheet on phones. Single dark world, deliberately. */
+:root{
+  --bg:#141a1f; --panel:#1d252c; --panel-2:#252f37; --line:#34414c; --fg:#e4eaef; --muted:#97a5b1;
+  --cyan:#3ccbe8; --amber:#f3a533; --green:#45df80; --magenta:#e566e1; --yellow:#f3e24c; --danger:#ff6b5b;
+  --bezel-a:#3a3f45; --bezel-b:#25292d; --key-a:#4b5158; --key-b:#33383d; --key-fg:#f4f6f7;
+  --s-w:#ffffff; --s-c:#30d3f2; --s-g:#3ff27c; --s-a:#ffa31a; --s-m:#ff5cf6; --s-y:#fff23c;
+  --f-mono:'B612 Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  --f-ui:'B612', 'Segoe UI', system-ui, sans-serif;
+  --f-body:'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--f-body);font-size:15px;line-height:1.5;padding-inline:16px;padding-block:0 96px;
+  background:radial-gradient(1200px 600px at 20% -10%, #1f2a33 0%, transparent 60%), var(--bg)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+
+/* Header */
+.top{max-width:1240px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 20px;padding-block:18px 14px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:14px;min-width:0}
+.brand .plate{font-family:var(--f-ui);font-weight:700;font-size:11px;letter-spacing:.14em;color:var(--bg);background:var(--cyan);padding:6px 8px;border-radius:3px}
+.brand h1{font-family:var(--f-ui);font-weight:700;font-size:20px;margin:0;letter-spacing:.02em;text-wrap:balance}
+.brand p{margin:0;color:var(--muted);font-size:13px}
+.top-actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font-family:var(--f-ui);font-size:12px;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line);background:var(--panel);padding:8px 12px;border-radius:4px;cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+a.btn{color:var(--fg);text-decoration:none;display:inline-flex;align-items:center}
+.btn[aria-pressed="true"]{background:var(--cyan);color:#06222a;border-color:var(--cyan)}
+.btn.primary{background:var(--cyan);color:#06222a;border-color:var(--cyan)}
+.btn.ghost{background:transparent}
+
+/* Main layout */
+.layout{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:minmax(0,480px) minmax(0,1fr);gap:28px;padding-block:22px}
+.sim{min-width:0;display:flex;flex-direction:column;gap:12px}
+.kbd-note{color:var(--muted);font-size:12px;margin:0}
+.kbd-note kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border-radius:3px;padding:0 4px;background:var(--panel)}
+
+/* Task strip */
+.taskbar{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.taskbar .tb-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.taskbar .lvl{font-family:var(--f-ui);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--amber)}
+.taskbar .task{font-weight:500}
+.taskbar .hint{color:var(--muted);font-size:13px;border-left:2px solid var(--amber);padding-left:8px}
+.taskbar.free .lvl{color:var(--muted)}
+.linkbtn{background:none;border:0;color:var(--cyan);cursor:pointer;font-size:13px;padding:0;text-decoration:underline;text-underline-offset:3px}
+
+/* ---------- MCDU hardware ---------- */
+.mcdu{background:linear-gradient(180deg,var(--bezel-a),var(--bezel-b));border-radius:14px;padding:14px 12px 16px;box-shadow:0 1px 0 #555c63 inset,0 -2px 0 #15181b inset,0 18px 40px #0008;position:relative;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.mcdu::before,.mcdu::after{content:"";position:absolute;width:8px;height:8px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#8a9096,#3b4045);top:8px;left:8px;box-shadow:calc(100% * 0) 0 0 #000}
+.mcdu::after{left:auto;right:8px}
+.scr-wrap{display:grid;grid-template-columns:34px minmax(0,1fr) 34px;gap:6px}
+.lskcol{display:grid;grid-template-rows:repeat(14,1fr);padding-block:13px}
+.lsk{grid-column:1;height:22px;align-self:center;border:1px solid #16191c;border-radius:3px;background:linear-gradient(180deg,var(--key-a),var(--key-b));cursor:pointer;position:relative;padding:0}
+.lsk::after{content:"";position:absolute;left:50%;top:50%;width:14px;height:2px;background:#e9ecee;transform:translate(-50%,-50%);border-radius:1px}
+.lsk:active,.key:active,.lsk.pressed,.key.pressed{transform:translateY(1px);filter:brightness(1.25)}
+.lsk.hl,.key.hl{box-shadow:0 0 0 2px var(--cyan)}
+.screen{container-type:inline-size;background:#030605;border:3px solid #0f1214;border-radius:4px;padding:10px 6px;position:relative;box-shadow:inset 0 0 22px #000}
+.screen::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(160deg,#ffffff0d 0%,transparent 38%)}
+.row{display:grid;grid-template-columns:repeat(24,1fr);height:6.3cqi}
+.c{display:flex;align-items:center;justify-content:center;font-family:var(--f-mono);font-size:6.1cqi;line-height:1;white-space:pre}
+.c.s{font-size:4.6cqi}
+.k-w{color:var(--s-w)}.k-c{color:var(--s-c)}.k-g{color:var(--s-g)}.k-a{color:var(--s-a)}.k-m{color:var(--s-m)}.k-y{color:var(--s-y)}
+.c.bx::before{content:"";width:.5em;height:.7em;border:max(1px,.08em) solid currentColor}
+.rows{transition:filter .2s}
+
+.fkeys{display:grid;grid-template-columns:repeat(6,1fr) .8fr;gap:7px;margin-top:14px}
+.key{border:1px solid #15181b;border-radius:4px;background:linear-gradient(180deg,var(--key-a),var(--key-b));color:var(--key-fg);font-family:var(--f-ui);font-size:10px;line-height:1.15;letter-spacing:.03em;min-height:38px;cursor:pointer;padding:3px 2px;box-shadow:0 2px 0 #121417}
+.key.blank{visibility:hidden}
+.key.fn{font-weight:700}
+.lower{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,5fr);gap:14px;margin-top:12px}
+.pad3{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(7,1fr);gap:7px}
+.pad5{display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(7,1fr);gap:7px}
+.key.ch{font-size:15px;border-radius:7px;min-height:36px;font-weight:400}
+.key.ch.sm{font-size:10px}
+.key.arrow{font-size:16px}
+.annun{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:4px;padding:0 2px}
+.light{font-family:var(--f-ui);font-size:9px;letter-spacing:.08em;color:#5c646b;border:1px solid #1a1d20;background:#22262a;border-radius:2px;padding:3px 5px}
+.light.on-a{color:#1d1200;background:var(--amber);box-shadow:0 0 10px #f3a53399}
+.light.on-g{color:#03230f;background:var(--green);box-shadow:0 0 10px #45df8088}
+
+/* ---------- Panel ---------- */
+.panel{min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;max-height:calc(100vh - 120px);position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);overflow:hidden}
+.tabs{display:flex;align-items:stretch;border-bottom:1px solid var(--line);background:var(--panel-2)}
+.tab{flex:1;background:none;border:0;border-bottom:2px solid transparent;padding:12px 10px;font-family:var(--f-ui);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);cursor:pointer}
+.tab[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--cyan)}
+.close-sheet{display:none;background:none;border:0;color:var(--muted);font-size:22px;padding:0 14px;cursor:pointer}
+.tabbody{overflow:auto;padding:18px 20px 22px;display:flex;flex-direction:column;gap:20px}
+.tabbody h2{font-family:var(--f-ui);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:700}
+.tabbody p{margin:0}
+.inspector{border:1px solid var(--line);border-radius:8px;padding:14px 16px;background:var(--bg)}
+.inspector .tag{font-family:var(--f-mono);font-size:12px;color:var(--bg);background:var(--cyan);padding:1px 6px;border-radius:3px;margin-right:6px}
+.inspector h3{font-family:var(--f-ui);font-size:16px;margin:0 0 6px;display:flex;align-items:center;flex-wrap:wrap;gap:4px}
+.inspector p{color:var(--fg);max-width:62ch}
+.inspector .ex{margin-top:8px;font-size:13px;color:var(--muted)}
+.inspector .ex code{font-family:var(--f-mono);color:var(--cyan)}
+.pagehelp .desc{color:var(--fg);max-width:62ch;margin-bottom:10px}
+.fields{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.fields li{display:grid;grid-template-columns:40px minmax(0,1fr);gap:10px;padding:8px 4px;border-bottom:1px solid var(--line);cursor:default;font-size:14px}
+.fields li:hover{background:var(--panel-2)}
+.fields .lk{font-family:var(--f-mono);font-size:12px;color:var(--cyan);padding-top:2px}
+.legend{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.legend div{display:flex;gap:10px;align-items:baseline;font-size:13px;color:var(--muted)}
+.legend b{font-family:var(--f-mono);font-weight:400;font-size:13px;background:#030605;padding:2px 6px;border-radius:3px;white-space:nowrap}
+.concepts{display:flex;flex-direction:column;gap:6px}
+details{border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+summary{cursor:pointer;padding:10px 14px;font-weight:500}
+details > div{padding:0 14px 12px;color:var(--muted);font-size:14px;max-width:66ch}
+details code{font-family:var(--f-mono);color:var(--cyan);font-size:13px}
+.msgs{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}
+.msgs li{display:grid;grid-template-columns:minmax(0,170px) minmax(0,1fr);gap:10px}
+.msgs code{color:var(--s-w)}
+
+/* Exercises */
+.levels{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.lv{text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:10px 12px;cursor:pointer;display:flex;flex-direction:column;gap:2px}
+.lv:hover{border-color:var(--muted)}
+.lv .n{font-family:var(--f-ui);font-size:11px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;display:flex;justify-content:space-between}
+.lv .t{font-weight:500;font-size:14px}
+.lv .bar{height:3px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:6px}
+.lv .bar i{display:block;height:100%;background:var(--green)}
+.lv[aria-current="true"]{border-color:var(--cyan);box-shadow:0 0 0 1px var(--cyan) inset}
+.lv.active .n span:last-child{color:var(--amber)}
+.lvcard{border:1px solid var(--line);border-radius:8px;padding:16px;background:var(--bg);display:flex;flex-direction:column;gap:12px}
+.lvcard h3{margin:0;font-family:var(--f-ui);font-size:17px}
+.lvcard .intro{color:var(--muted);max-width:62ch}
+.lvcard .actions{display:flex;gap:8px;flex-wrap:wrap}
+.tasks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.tasks li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:8px;padding:8px 6px;border-radius:5px}
+.tasks .st{font-family:var(--f-mono);font-size:13px;color:var(--muted);text-align:center;padding-top:1px}
+.tasks li.done{color:var(--muted)}
+.tasks li.done .st{color:var(--green)}
+.tasks li.cur{background:var(--panel-2)}
+.tasks li.cur .st{color:var(--amber)}
+.tasks .h{margin-top:4px;font-size:13px;color:var(--muted);border-left:2px solid var(--amber);padding-left:8px}
+.tasks .row-actions{display:flex;gap:14px;margin-top:6px}
+.complete{border:1px solid var(--green);color:var(--green);border-radius:6px;padding:10px 12px;font-size:14px}
+.note{color:var(--muted);font-size:12px}
+
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 14px);transform:translate(-50%,-140%);background:var(--green);color:#04210f;font-weight:600;padding:9px 16px;border-radius:6px;box-shadow:0 8px 24px #0007;transition:transform .25s ease;z-index:50;max-width:calc(100vw - 32px)}
+.toast.show{transform:translate(-50%,0)}
+
+.mobile-only{display:none}
+
+/* Phone / tablet: panel becomes a bottom sheet */
+@media (max-width: 980px){
+  .layout{grid-template-columns:minmax(0,1fr);justify-items:center}
+  .sim{width:100%;max-width:480px}
+  .panel{position:fixed;left:0;right:0;bottom:0;top:auto;max-height:78vh;border-radius:14px 14px 0 0;transform:translateY(105%);transition:transform .28s ease;z-index:40;padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 -14px 40px #000a}
+  .panel.open{transform:translateY(0)}
+  .close-sheet{display:block}
+  .mobile-only{display:inline-block}
+  body{padding-block:0 32px}
+}
+@media (max-width: 420px){
+  .key{font-size:8.5px;min-height:34px}
+  .key.ch{font-size:13px;min-height:32px}
+  .scr-wrap{grid-template-columns:26px minmax(0,1fr) 26px;gap:4px}
+  .mcdu{padding:12px 8px 14px}
+  .fkeys,.pad3,.pad5{gap:5px}
+}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important} }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <span class="plate">FMGC</span>
+    <div>
+      <h1 data-i18n="title">Entrenador MCDU A320</h1>
+      <p data-i18n="subtitle">Simulador interactivo del Multipurpose Control &amp; Display Unit · datos de navegación ficticios</p>
+    </div>
+  </div>
+  <div class="top-actions">
+    <button class="btn" id="explainBtn" aria-pressed="false" title="Cuando está activo, pulsar una tecla la explica en vez de ejecutarla" data-i18n="explain" data-i18n-attr="title:explainTitle">? Modo explicar</button>
+    <button class="btn ghost" id="resetBtn" data-i18n="reset">Reiniciar MCDU</button>
+    <button class="btn mobile-only" data-open="guide" data-i18n="guide">Guía</button>
+    <button class="btn mobile-only" data-open="ex" data-i18n="exercises">Ejercicios</button>
+    <a class="btn" id="langLink" href="/en/labs/mcdu-trainer/" lang="en" aria-label="Switch to English">EN</a>
+    <a class="btn ghost" id="backLink" href="/#labs" data-i18n="back">← Qub-its</a>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="sim" aria-label="Simulador" data-i18n-attr="aria-label:simLabel">
+    <div class="taskbar" id="taskbar"></div>
+
+    <div class="mcdu" id="mcdu">
+      <div class="scr-wrap">
+        <div class="lskcol" id="lskL"></div>
+        <div class="screen" role="img" aria-label="Pantalla del MCDU" data-i18n-attr="aria-label:screenLabel"><div class="rows" id="rows"></div></div>
+        <div class="lskcol" id="lskR"></div>
+      </div>
+      <div class="fkeys" id="fkeys"></div>
+      <div class="lower">
+        <div class="pad3" id="pad3"></div>
+        <div class="pad5" id="pad5"></div>
+      </div>
+    </div>
+    <p class="kbd-note" data-i18n-html="kbdNote">Teclado físico: letras, números, <kbd>/</kbd> <kbd>.</kbd> <kbd>espacio</kbd> · <kbd>⌫</kbd> = CLR · <kbd>Supr</kbd> = borrar todo · flechas = ← → ↑ ↓</p>
+  </section>
+
+  <aside class="panel" id="panel" aria-label="Guía y ejercicios" data-i18n-attr="aria-label:panelLabel">
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" id="tabGuide" aria-selected="true" aria-controls="guideBody" data-i18n="guide">Guía</button>
+      <button class="tab" role="tab" id="tabEx" aria-selected="false" aria-controls="exBody" data-i18n="exercises">Ejercicios</button>
+      <button class="close-sheet" id="closeSheet" aria-label="Cerrar panel" data-i18n-attr="aria-label:closePanel">×</button>
+    </div>
+
+    <div class="tabbody" id="guideBody" role="tabpanel">
+      <section class="inspector" id="inspector" aria-live="polite"></section>
+
+      <section class="pagehelp">
+        <h2 id="pgTitle">Esta página</h2>
+        <p class="desc" id="pgDesc"></p>
+        <ul class="fields" id="pgFields"></ul>
+      </section>
+
+      <section>
+        <h2 data-i18n="colors">Colores de la pantalla</h2>
+        <div class="legend">
+          <div><b style="color:var(--s-a)">□□□</b><span data-i18n="legend1">Ámbar: dato obligatorio o acción pendiente</span></div>
+          <div><b style="color:var(--s-c)">[ ] 35</b><span data-i18n="legend2">Cian: campo que el piloto puede modificar</span></div>
+          <div><b style="color:var(--s-g)">FL350</b><span data-i18n="legend3">Verde: dato calculado o activo</span></div>
+          <div><b style="color:var(--s-w)">&lt;RETURN</b><span data-i18n="legend4">Blanco: títulos, etiquetas y opciones</span></div>
+          <div><b style="color:var(--s-y)">TMPY</b><span data-i18n="legend5">Amarillo: plan temporal sin confirmar</span></div>
+          <div><b style="color:var(--s-m)">250/FL240</b><span data-i18n="legend6">Magenta: restricciones de velocidad o altitud</span></div>
+        </div>
+      </section>
+
+      <section class="concepts">
+        <h2 data-i18n="howTo">Cómo se usa</h2>
+        <details open><summary data-i18n-html="c1S">Scratchpad y LSK: el ciclo básico</summary><div data-i18n-html="c1B">Todo lo que escribes aparece en la última línea (scratchpad). Para llevarlo a un campo, pulsa la tecla de selección de línea (LSK) junto a ese campo. Ejemplo: escribe <code>MROC/KMIA</code> y pulsa R1 en INIT A. Si el dato no es válido el scratchpad muestra un mensaje; bórralo con CLR.</div></details>
+        <details><summary data-i18n-html="c2S">Símbolos &lt; y &gt;</summary><div data-i18n-html="c2B">Una opción con <code>&lt;</code> o <code>&gt;</code> abre otra página. Con <code>*</code> ejecuta una acción (INSERT*). <code>←ERASE</code> descarta un cambio temporal.</div></details>
+        <details><summary data-i18n-html="c3S">Plan temporal (TMPY)</summary><div data-i18n-html="c3B">Las revisiones laterales (insertar un punto, SID, DIR TO, cambiar destino) se preparan en un plan temporal amarillo. No afectan al plan activo hasta pulsar <code>INSERT*</code>. <code>←ERASE</code> lo descarta.</div></details>
+        <details><summary data-i18n-html="c4S">Borrar un campo con CLR</summary><div data-i18n-html="c4B">Con el scratchpad vacío, CLR escribe <code>CLR</code>. Pulsa después el LSK del campo para borrarlo (por ejemplo, un waypoint o una discontinuidad del F-PLN). CLR con texto borra un carácter; mantenlo presionado para borrar todo.</div></details>
+        <details><summary data-i18n-html="c5S">Mensajes del scratchpad</summary><div data-i18n-html="c5B"><ul class="msgs">
+          <li><code>FORMAT ERROR</code><span>El formato no corresponde al campo.</span></li>
+          <li><code>NOT IN DATABASE</code><span>El identificador no existe en la base de datos.</span></li>
+          <li><code>ENTRY OUT OF RANGE</code><span>El valor está fuera de los límites permitidos.</span></li>
+          <li><code>NOT ALLOWED</code><span>Esa acción no se puede hacer en ese campo.</span></li>
+          <li><code>NOT AVAILABLE</code><span>Función no simulada en este entrenador.</span></li>
+          <li><code>V1/VR/V2 DISAGREE</code><span>Las velocidades no cumplen V1 ≤ VR ≤ V2.</span></li>
+        </ul></div></details>
+        <details><summary data-i18n-html="c6S">Base de datos de este entrenador</summary><div data-i18n-html="c6B">Aeropuertos: <code>MROC MRLB KMIA KFLL MPTO MMUN</code>. Waypoints: <code>ESPOX TALUK BOLOS GUSKE URSUS PIKIS SELVA NAVAS TORTU ROLEX</code>. VOR: <code>TIO 116.40 · LIB 114.10 · MIA 115.90 · DHP 113.30 · FLL 114.40</code>. Ruta de compañía: <code>MROCKMIA1</code>. Las coordenadas, frecuencias y procedimientos son ficticios: no los uses para navegación real.</div></details>
+      </section>
+    </div>
+
+    <div class="tabbody" id="exBody" role="tabpanel" hidden>
+      <section>
+        <h2 data-i18n="levels">Niveles</h2>
+        <p class="note" style="margin-bottom:10px" data-i18n="levelsNote">Todos los niveles están abiertos: puedes saltar al que quieras. Al iniciar un nivel, el MCDU se precarga con lo que ese nivel necesita.</p>
+        <div class="levels" id="levels"></div>
+      </section>
+      <section class="lvcard" id="lvcard"></section>
+      <p class="note" data-i18n="progressNote">No hay base de datos: el progreso vive solo en esta pestaña y se reinicia al recargar la página.</p>
+    </div>
+  </aside>
+</main>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+'use strict';
+/* =========================================================
+   LANGUAGE: /en/... (or ?lang=en in local dev) = English; anything else = Spanish.
+   Spanish copy lives inline below; English overrides live in the I18N section.
+   ========================================================= */
+const LANG=/^\/en(\/|$)/.test(location.pathname)||new URLSearchParams(location.search).get('lang')==='en'?'en':'es';
+const UI={
+ es:{lvl:n=>`Nivel ${n}`,lvlDone:n=>`Nivel ${n} completado`,taskDone:'✓ Tarea completada',mcduReset:'MCDU reiniciado',
+  free:'Modo libre',pickEx:'Elegir un ejercicio',freeTask:'Explora el MCDU a tu ritmo. Empieza con MCDU MENU → L1, o con INIT.',
+  completed:'completado',viewLevels:'Ver niveles',nextUp:(n,name)=>`Siguiente: Nivel ${n}, ${name}.`,lastDone:'Completaste el último nivel.',startNext:n=>`Empezar nivel ${n}`,
+  taskOf:(i,n)=>`Tarea ${i}/${n}`,hint:'Pista',hideHint:'Ocultar pista',showHint:'Ver pista',skip:'Saltar tarea',inProgress:'en curso',
+  restartLv:'Reiniciar nivel',exitFree:'Salir a modo libre',startLv:n=>`Iniciar nivel ${n}`,lvComplete:'Nivel completado.',lvMore:'Puedes seguir con el siguiente o repetir este.',allDone:'¡Terminaste todos los niveles!',
+  startNote:prev=>`Iniciar el nivel reinicia el MCDU y precarga lo necesario${prev?' (los datos de los niveles anteriores)':''}.`,
+  inspTitle:'Inspector de teclas',inspExplain:'<b>Modo explicar activo.</b> Pulsa cualquier tecla o LSK y aquí verás qué hace, sin ejecutarla. Desactívalo para volver a operar el MCDU.',
+  inspIdle:'Pasa el cursor por cualquier tecla para ver qué hace. En el teléfono, activa <b>Modo explicar</b> y toca la tecla.',
+  keyTag:'TECLA',keyboard:'Teclado',typeChar:k=>`Escribe «${k}» en el scratchpad (última línea). Luego pulsa un LSK para llevar el texto a un campo.`,
+  noFn:'Sin función en esta página.',lskName:(side,n)=>`LSK ${side==='L'?'izquierdo':'derecho'} ${n}`,thisPage:'Esta página',
+  toInitB:'Pasa a INIT B.',toInitA:'Vuelve a INIT A.',scrollList:'Desplazan la lista.',slash:'Barra'},
+ en:{lvl:n=>`Level ${n}`,lvlDone:n=>`Level ${n} complete`,taskDone:'✓ Task complete',mcduReset:'MCDU reset',
+  free:'Free mode',pickEx:'Pick an exercise',freeTask:'Explore the MCDU at your own pace. Start with MCDU MENU → L1, or with INIT.',
+  completed:'complete',viewLevels:'View levels',nextUp:(n,name)=>`Next: Level ${n}, ${name}.`,lastDone:'You finished the last level.',startNext:n=>`Start level ${n}`,
+  taskOf:(i,n)=>`Task ${i}/${n}`,hint:'Hint',hideHint:'Hide hint',showHint:'Show hint',skip:'Skip task',inProgress:'in progress',
+  restartLv:'Restart level',exitFree:'Exit to free mode',startLv:n=>`Start level ${n}`,lvComplete:'Level complete.',lvMore:'Move on to the next one or repeat this one.',allDone:'You finished every level!',
+  startNote:prev=>`Starting the level resets the MCDU and preloads what it needs${prev?' (the data from earlier levels)':''}.`,
+  inspTitle:'Key inspector',inspExplain:'<b>Explain mode on.</b> Press any key or LSK to see what it does here, without running it. Turn it off to operate the MCDU again.',
+  inspIdle:'Hover over any key to see what it does. On a phone, turn on <b>Explain mode</b> and tap the key.',
+  keyTag:'KEY',keyboard:'Keyboard',typeChar:k=>`Types “${k}” into the scratchpad (last line). Then press an LSK to send the text to a field.`,
+  noFn:'No function on this page.',lskName:(side,n)=>`${side==='L'?'Left':'Right'} LSK ${n}`,thisPage:'This page',
+  toInitB:'Goes to INIT B.',toInitA:'Back to INIT A.',scrollList:'Scroll the list.',slash:'Slash'}
+}[LANG];
+/* =========================================================
+   NAV DATABASE (fictional, training only)
+   ========================================================= */
+const AP={
+  MROC:{lat:9.9939,lon:-84.2088,el:3021,rwys:[['07',3012],['25',3012]]},
+  MRLB:{lat:10.5933,lon:-85.5444,el:270,rwys:[['07',2750],['25',2750]]},
+  KMIA:{lat:25.7932,lon:-80.2906,el:8,rwys:[['08R',3962],['09',2621],['12',2851],['27',2621]]},
+  KFLL:{lat:26.0726,lon:-80.1527,el:9,rwys:[['10L',2743],['28R',2743]]},
+  MPTO:{lat:9.0714,lon:-79.3835,el:135,rwys:[['03R',3050],['21L',3050]]},
+  MMUN:{lat:21.0365,lon:-86.8771,el:22,rwys:[['12L',3500],['30R',3500]]}
+};
+const WP={ESPOX:[11.20,-83.90],TALUK:[13.50,-83.20],BOLOS:[16.00,-82.50],GUSKE:[18.70,-81.90],URSUS:[21.30,-81.30],PIKIS:[23.60,-80.70],
+  SELVA:[10.40,-84.70],NAVAS:[15.00,-84.00],TORTU:[19.50,-82.80],ROLEX:[22.00,-79.90]};
+const NAV={TIO:{f:'116.40',lat:10.05,lon:-84.30},LIB:{f:'114.10',lat:10.60,lon:-85.55},MIA:{f:'115.90',lat:25.80,lon:-80.30},DHP:{f:'113.30',lat:25.80,lon:-80.35},FLL:{f:'114.40',lat:26.07,lon:-80.15}};
+const SIDS={MROC:[{n:'ESPO1A',rwy:'07',w:['ESPOX']},{n:'TALU1A',rwy:'07',w:['ESPOX','TALUK']},{n:'ESPO1B',rwy:'25',w:['SELVA','ESPOX']}]};
+const APPRS={KMIA:[{n:'ILS08R',rwy:'08R',ident:'IMIA',f:'110.30',crs:87},{n:'ILS09',rwy:'09',ident:'IVBU',f:'109.50',crs:93},{n:'ILS12',rwy:'12',ident:'ITXN',f:'108.30',crs:127},{n:'RNAV27',rwy:'27'}],
+  KFLL:[{n:'ILS10L',rwy:'10L',ident:'IFLL',f:'111.50',crs:97}],MROC:[{n:'ILS07',rwy:'07',ident:'ICRS',f:'109.70',crs:70}]};
+const ILS_LIST=Object.values(APPRS).flat().filter(a=>a.ident);
+const CO={MROCKMIA1:{from:'MROC',to:'KMIA',w:['ESPOX','TALUK','BOLOS','GUSKE','URSUS','PIKIS']}};
+
+function lookupFix(id){ if(WP[id]) return {lat:WP[id][0],lon:WP[id][1]}; if(NAV[id]) return {lat:NAV[id].lat,lon:NAV[id].lon}; return null; }
+function mkWpt(id){ const f=lookupFix(id); return {t:'wpt',id,lat:f.lat,lon:f.lon}; }
+function mkApt(id,kind){ const a=AP[id]; return {t:'wpt',id,kind,lat:a.lat,lon:a.lon}; }
+function buildPlan(from,to,w){ return [mkApt(from,'orig'), ...(w? w.map(mkWpt):[{t:'disco'}]), mkApt(to,'dest')]; }
+const clone=o=>JSON.parse(JSON.stringify(o));
+
+/* geo */
+const rad=Math.PI/180;
+function dist(a,b){ const dLat=(b.lat-a.lat)*rad,dLon=(b.lon-a.lon)*rad; const h=Math.sin(dLat/2)**2+Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(dLon/2)**2; return 2*3440.065*Math.asin(Math.sqrt(h)); }
+function brg(a,b){ const y=Math.sin((b.lon-a.lon)*rad)*Math.cos(b.lat*rad); const x=Math.cos(a.lat*rad)*Math.sin(b.lat*rad)-Math.sin(a.lat*rad)*Math.cos(b.lat*rad)*Math.cos((b.lon-a.lon)*rad); return (Math.atan2(y,x)/rad+360)%360; }
+function fmtLat(v){ const h=v>=0?'N':'S'; v=Math.abs(v); const d=Math.floor(v); return String(d).padStart(2,'0')+((v-d)*60).toFixed(1).padStart(4,'0')+h; }
+function fmtLon(v){ const h=v>=0?'E':'W'; v=Math.abs(v); const d=Math.floor(v); return String(d).padStart(3,'0')+((v-d)*60).toFixed(1).padStart(4,'0')+h; }
+const p3=n=>String(Math.round(n)%360||360).padStart(3,'0');
+function hhmm(min){ min=Math.round(min); min=((min%1440)+1440)%1440; return String(Math.floor(min/60)).padStart(2,'0')+String(min%60).padStart(2,'0'); }
+function isa(fl){ return Math.round(Math.max(-56.5,15-1.98*fl/10)); }
+
+/* =========================================================
+   STATE
+   ========================================================= */
+let S, E={};
+function fresh(){ return {
+  page:'MENU', scratch:'', msg:null, explain:false, brt:1,
+  init:{coRte:null,from:null,to:null,altn:null,flt:null,ci:null,crz:null,crzTemp:null,tropo:36090,irs:false},
+  fuel:{taxi:0.2,zfw:null,zfwcg:null,block:null,rsvPct:5.0},
+  fpln:[], tmpy:null, scroll:0, latRevIdx:0,
+  dep:{rwy:null,sid:null}, depSel:null, arr:{appr:null}, arrSel:null,
+  dirSel:null, dirScroll:0,
+  perf:{v1:null,vr:null,v2:null,flaps:null,ths:null,flex:null,transAlt:18000,thrRed:1500,acc:1500,engOut:1500,qnh:null,temp:null,wind:null,transFl:180,vapp:null,mda:null,dh:null,ldg:'FULL'},
+  rad:{vor1:null,vor2:null,crs1:null,crs2:null,ils:null,ilsCrs:null,ilsAuto:false,adf1:null,adf2:null},
+  sec:null, secScroll:0, progTo:null
+};}
+S=fresh();
+const plan=()=>S.tmpy||S.fpln;
+function use(){ S.scratch=''; }
+function go(p){ S.page=p; }
+
+function setFromTo(from,to,w){
+  const i=S.init; i.from=from; i.to=to; i.coRte=null;
+  S.fpln=buildPlan(from,to,w); S.tmpy=null; S.scroll=0;
+  S.dep={rwy:null,sid:null}; S.arr={appr:null};
+  if(S.rad.ilsAuto){ S.rad.ils=null; S.rad.ilsCrs=null; S.rad.ilsAuto=false; }
+}
+function stats(pl){ let cum=0,prev=null; const rows=pl.map(x=>{ if(x.t!=='wpt') return null; let leg=0,crs=null; if(prev){ leg=dist(prev,x); crs=brg(prev,x); cum+=leg; } const r={leg,crs,cum,utc:prev?14*60+15+cum/450*60:14*60}; prev=x; return r; }); return {rows,total:cum}; }
+function fuelCalc(){
+  const i=S.init,f=S.fuel; if(!i.from||!i.to||!S.fpln.length) return null;
+  const d=stats(S.fpln).total; const trip=0.4+d*0.0058, tripMin=d/450*60+25;
+  const rsv=trip*f.rsvPct/100;
+  let altn=0,altnMin=0; if(i.altn){ const ad=dist(AP[i.to],AP[i.altn]); altn=0.4+ad*0.006; altnMin=ad/300*60+12; }
+  const final=1.1; const r={d,trip,tripMin,rsv,altn,altnMin,final,minDest:altn+final};
+  if(f.block!=null){ r.extra=f.block-f.taxi-trip-rsv-altn-final; r.extraMin=r.extra/2.4*60; r.efobDest=f.block-f.taxi-trip; r.efobAltn=r.efobDest-altn; }
+  if(f.block!=null&&f.zfw!=null){ r.tow=f.zfw+f.block-f.taxi; r.lw=r.tow-trip; }
+  return r;
+}
+function fmtAlt(a){ return a>=S.perf.transAlt? 'FL'+String(Math.round(a/100)).padStart(3,'0') : String(a); }
+
+/* =========================================================
+   SCREEN BUILDER
+   ========================================================= */
+const BX='□';
+let SC;
+function blank(){ SC=Array.from({length:14},()=>Array.from({length:24},()=>({c:' ',k:'w',s:0}))); }
+function put(r,c,t,k='w',s=0){ t=String(t); for(let i=0;i<t.length;i++){ const x=c+i; if(x>=0&&x<24) SC[r][x]={c:t[i],k,s}; } }
+function putR(r,t,k='w',s=0){ put(r,24-String(t).length,t,k,s); }
+function putC(r,t,k='w',s=0){ put(r,Math.floor((24-String(t).length)/2),t,k,s); }
+const NA='NOT AVAILABLE';
+
+/* =========================================================
+   PAGES
+   ========================================================= */
+const P={};
+
+P.MENU={name:'MCDU MENU',
+ help:{d:'Menú principal del MCDU. Elige qué sistema de la aeronave usa esta pantalla. El FMGC (Flight Management & Guidance Computer) es el que se usa para planificar el vuelo.',
+   L1:'<FMGC: entra al computador de gestión de vuelo (abre A/C STATUS).',L2:'<ATSU: comunicaciones datalink (no simulado).',L3:'<AIDS: monitoreo de datos del avión (no simulado).',L4:'<CFDS: sistema de mantenimiento (no simulado).'},
+ render(){ putC(0,'MCDU MENU'); put(2,0,'<FMGC','g'); put(4,0,'<ATSU'); put(6,0,'<AIDS'); put(8,0,'<CFDS'); putC(11,'SELECT DESIRED SYSTEM','w',1); },
+ lsk:{L1:()=>go('ACSTATUS'),L2:()=>NA,L3:()=>NA,L4:()=>NA}};
+
+P.ACSTATUS={name:'A/C STATUS',
+ help:{d:'Estado de la aeronave: modelo, motores y base de datos de navegación. Antes de cada vuelo se comprueba que la base de datos activa esté vigente (ciclo AIRAC de 28 días).',
+   L1:'ENG: modelo de motor instalado.',L2:'ACTIVE DATA BASE: fechas de validez e identificador de la base de datos activa.',L3:'SECOND DATA BASE: base de datos de respaldo. En el avión real se intercambia en tierra.',L5:'CHG CODE: código de mantenimiento para cambiar parámetros (no simulado).',L6:'IDLE/PERF: factores de degradación del motor que usan las predicciones de combustible.'},
+ render(){ putC(0,'A320-214'); put(1,0,'ENG','w',1); put(2,0,'CFM56-5B4','g');
+   put(3,0,'ACTIVE DATA BASE','w',1); put(4,0,'25SEP-22OCT','c'); putR(4,'AB49170001','g');
+   put(5,0,'SECOND DATA BASE','w',1); put(6,0,'28AUG-24SEP','c',1);
+   put(9,0,'CHG CODE','w',1); put(10,0,'[  ]','c'); put(11,0,'IDLE/PERF','w',1); put(12,0,'+0.0/+0.0','g'); },
+ lsk:{L3:()=> 'NOT ALLOWED',L5:v=>v?'NOT ALLOWED':undefined}};
+
+P.DATA={name:'DATA INDEX',
+ help:{d:'Índice de datos: monitores de posición y sensores, estado del avión y aeropuertos cercanos.',
+   L1:'POSITION MONITOR: compara la posición de cada FMGC, GPS e IRS.',L2:'IRS MONITOR: estado de las tres unidades inerciales (ALIGN / NAV).',L3:'GPS MONITOR (no simulado).',L4:'A/C STATUS: modelo de avión y base de datos.',L5:'CLOSEST AIRPORTS: los 4 aeropuertos más cercanos con rumbo y distancia.',L6:'EQUITIME POINT (no simulado).',R1:'STORED WAYPOINTS (no simulado).'},
+ render(){ putC(0,'DATA INDEX'); put(1,1,'POSITION','w',1); put(2,0,'<MONITOR'); put(3,1,'IRS','w',1); put(4,0,'<MONITOR'); put(5,1,'GPS','w',1); put(6,0,'<MONITOR');
+   put(8,0,'<A/C STATUS'); put(9,1,'CLOSEST','w',1); put(10,0,'<AIRPORTS'); put(11,1,'EQUITIME','w',1); put(12,0,'<POINT'); putR(1,'STORED ','w',1); putR(2,'WAYPOINTS>'); },
+ lsk:{L1:()=>go('POSMON'),L2:()=>go('IRSMON'),L3:()=>NA,L4:()=>go('ACSTATUS'),L5:()=>go('CLOSEST'),L6:()=>NA,R1:()=>NA}};
+
+P.POSMON={name:'POSITION MONITOR',
+ help:{d:'Posición calculada por cada fuente. En tierra todas parten de la referencia del aeropuerto de origen.',L6:'←FREEZE: congela la lectura (no simulado).'},
+ render(){ putC(0,'POSITION MONITOR'); const a=S.init.from&&AP[S.init.from]; const pos=a? fmtLat(a.lat)+'/'+fmtLon(a.lon):'----.--/-----.--';
+   [['FMGC1',2],['FMGC2',4],['GPIRS',6],['MIX IRS',8]].forEach(([n,r])=>{ put(r,0,n); putR(r,pos,a?'g':'w',r===8?0:0); });
+   put(9,0,'IRS1   IRS2   IRS3','w',1); const st=S.init.irs?'NAV':'ALIGN'; put(10,0,(st.padEnd(7)+st.padEnd(7)+st),'g'); put(12,0,'←FREEZE'); },
+ lsk:{L6:()=>NA}};
+
+P.IRSMON={name:'IRS MONITOR',
+ help:{d:'Estado de las tres unidades de referencia inercial. ALIGN = alineando; NAV = listas para navegar.',L1:'IRS1: detalle de la unidad (no simulado).',L2:'IRS2',L3:'IRS3'},
+ render(){ putC(0,'IRS MONITOR'); ['IRS1','IRS2','IRS3'].forEach((n,i)=>{ put(1+2*i,1,S.init.irs?'NAV':(S.init.from?'ALIGN 6':'ALIGN'),'g',1); put(2+2*i,0,'<'+n); }); },
+ lsk:{L1:()=>NA,L2:()=>NA,L3:()=>NA}};
+
+P.CLOSEST={name:'CLOSEST AIRPORTS',
+ help:{d:'Los cuatro aeropuertos más cercanos a la posición actual, con rumbo verdadero y distancia. Útil para planificar un desvío.',L1:'Aeropuerto más cercano.',L2:'Segundo más cercano.',L3:'Tercero.',L4:'Cuarto.'},
+ render(){ putC(0,'CLOSEST AIRPORTS'); const ref=AP[S.init.from||'MROC'];
+   const list=Object.entries(AP).map(([id,a])=>({id,d:dist(ref,a),b:brg(ref,a)})).sort((x,y)=>x.d-y.d).slice(0,4);
+   put(1,7,'BRG','w',1); put(1,14,'DIST','w',1);
+   list.forEach((x,i)=>{ const r=2+2*i; put(r,0,x.id); put(r,6,(x.d<1?'---':p3(x.b))+'°','g'); put(r,13,String(Math.round(x.d)).padStart(4)+'NM','g'); }); }};
+
+P.INITA={name:'INIT A',
+ help:{d:'Primera página de la preparación del vuelo. Los recuadros ámbar son obligatorios. Con las flechas ← → pasas a INIT B.',
+   L1:'CO RTE: ruta de compañía. Ej.: MROCKMIA1 carga origen, destino y todos los waypoints.',R1:'FROM/TO: origen/destino en código OACI. Ej.: MROC/KMIA. Crea un plan con una discontinuidad entre ambos.',
+   L2:'ALTN: aeropuerto alterno. Ej.: KFLL.',R2:'INIT REQUEST: pide los datos de inicialización por datalink (no simulado).',
+   L3:'FLT NBR: número de vuelo, hasta 8 caracteres. Ej.: CRA450.',R3:'IRS INIT>: página para alinear las unidades inerciales.',
+   L4:'LAT: latitud del origen; es la referencia para alinear los IRS.',R4:'LONG: longitud del origen.',
+   L5:'COST INDEX: 0–999. Bajo = ahorra combustible; alto = vuela más rápido.',
+   L6:'CRZ FL/TEMP: nivel de crucero y temperatura. Ej.: 350 o FL350/-54. Sin temperatura se usa la ISA.',R6:'TROPO: altitud de la tropopausa en pies (36090 por defecto).'},
+ render(){ const i=S.init, has=!!i.from;
+   putC(0,'INIT'); put(0,20,'←→','w');
+   put(1,1,'CO RTE','w',1); putR(1,'FROM/TO  ','w',1);
+   put(2,0,i.coRte||BX.repeat(10),i.coRte?'c':'a'); putR(2,has?`${i.from}/${i.to}`:'□□□□/□□□□',has?'c':'a');
+   put(3,0,'ALTN/CO RTE','w',1); putR(3,'INIT ','a',1);
+   put(4,0,(i.altn||'----')+'/----------',i.altn?'c':(has?'c':'w')); putR(4,'REQUEST*','a');
+   put(5,0,'FLT NBR','w',1);
+   put(6,0,i.flt||BX.repeat(8),i.flt?'c':'a'); putR(6,'IRS INIT>');
+   put(7,1,'LAT','w',1); putR(7,'LONG  ','w',1);
+   if(has){ put(8,0,fmtLat(AP[i.from].lat),'c'); putR(8,fmtLon(AP[i.from].lon),'c'); } else { put(8,0,'----.-'); putR(8,'-----.-'); }
+   put(9,0,'COST INDEX','w',1); putR(9,'WIND/TEMP ','w',1);
+   put(10,0,i.ci!=null?String(i.ci):(has?BX.repeat(3):'---'),i.ci!=null?'c':(has?'a':'w')); putR(10,'WIND>');
+   put(11,0,'CRZ FL/TEMP','w',1); putR(11,'TROPO','w',1);
+   if(i.crz) put(12,0,`FL${String(i.crz).padStart(3,'0')}/${i.crzTemp}°`,'c'); else put(12,0,has?'□□□□□/□□□°':'-----/---°',has?'a':'w');
+   putR(12,String(i.tropo),'c'); },
+ slew(){ go('INITB'); },
+ lsk:{
+  L1(v){ if(!v) return; if(v==='CLR') return 'NOT ALLOWED'; const r=CO[v]; if(!r) return 'NOT IN DATABASE'; setFromTo(r.from,r.to,r.w); S.init.coRte=v; use(); },
+  R1(v){ if(!v) return; if(v==='CLR') return 'NOT ALLOWED'; const m=v.match(/^([A-Z]{4})\/([A-Z]{4})$/); if(!m) return 'FORMAT ERROR'; if(!AP[m[1]]||!AP[m[2]]) return 'NOT IN DATABASE'; if(m[1]===m[2]) return 'NOT ALLOWED'; setFromTo(m[1],m[2]); use(); },
+  L2(v){ if(!v) return; if(v==='CLR'){ S.init.altn=null; use(); return; } if(!S.init.to) return 'NOT ALLOWED'; const id=v.split('/')[0]; if(!/^[A-Z]{4}$/.test(id)) return 'FORMAT ERROR'; if(!AP[id]) return 'NOT IN DATABASE'; S.init.altn=id; use(); },
+  R2:()=>NA,
+  L3(v){ if(!v) return; if(v==='CLR'){ S.init.flt=null; use(); return; } if(!/^[A-Z0-9]{1,8}$/.test(v)) return 'FORMAT ERROR'; S.init.flt=v; use(); },
+  R3:()=>go('IRSINIT'),
+  L5(v){ if(!v) return; if(!/^\d{1,4}$/.test(v)) return 'FORMAT ERROR'; const n=+v; if(n>999) return 'ENTRY OUT OF RANGE'; S.init.ci=n; use(); },
+  R5:()=>NA,
+  L6(v){ if(!v) return; if(v==='CLR') return 'NOT ALLOWED'; const m=v.match(/^(?:FL)?(\d{2,3})?(?:\/([+-]?\d{1,2}))?$/); if(!m||(!m[1]&&m[2]==null)) return 'FORMAT ERROR';
+    if(m[1]){ const fl=+m[1]; if(fl<10||fl>398) return 'ENTRY OUT OF RANGE'; S.init.crz=fl; S.init.crzTemp=isa(fl); }
+    if(m[2]!=null){ if(!S.init.crz) return 'NOT ALLOWED'; S.init.crzTemp=+m[2]; } use(); },
+  R6(v){ if(!v) return; if(!/^\d{4,5}$/.test(v)) return 'FORMAT ERROR'; const n=+v; if(n<10000||n>60000) return 'ENTRY OUT OF RANGE'; S.init.tropo=n; use(); }
+ }};
+
+P.IRSINIT={name:'IRS INIT',
+ help:{d:'Alineación de las tres unidades inerciales (IRS) con la posición de referencia del aeropuerto de origen. Necesita FROM/TO en INIT A.',
+   L1:'LAT: latitud de referencia.',R1:'LONG: longitud de referencia.',L2:'REFERENCE: aeropuerto usado como referencia.',R2:'GPS POSITION: posición GPS para comparar.',L6:'<RETURN: vuelve a INIT A.',R6:'ALIGN IRS→: confirma la posición y alinea los IRS.'},
+ render(){ const i=S.init,a=i.from&&AP[i.from];
+   putC(0,'IRS INIT'); put(1,1,'LAT','w',1); putR(1,'LONG  ','w',1);
+   if(a){ put(2,0,fmtLat(a.lat),'c'); putR(2,fmtLon(a.lon),'c'); } else { put(2,0,'----.-'); putR(2,'-----.-'); }
+   put(3,0,'REFERENCE','w',1); putR(3,'GPS POSITION','w',1);
+   put(4,0,a?i.from+'/GATE':'----','g'); putR(4,a?fmtLat(a.lat+0.0006).slice(0,5)+'/'+fmtLon(a.lon).slice(0,6):'-----/------','g',1);
+   ['IRS1','IRS2','IRS3'].forEach((n,k)=>put(6+k,1,n+(i.irs?'  ALIGNED':(a?'  ALIGN ON REF':'  -----')),i.irs?'g':'w',1));
+   put(12,0,'<RETURN'); if(a&&!i.irs) putR(12,'ALIGN IRS→','a'); if(i.irs) putR(12,'IRS ALIGNED','g',1); },
+ lsk:{L6:()=>go('INITA'),R6(){ if(!S.init.from) return 'NOT ALLOWED'; S.init.irs=true; }}};
+
+P.INITB={name:'INIT B',
+ help:{d:'Pesos y combustible. Con ZFW y BLOCK el FMGC calcula viaje, reservas, pesos de despegue y aterrizaje y combustible extra. Con ← → vuelves a INIT A.',
+   L1:'TAXI: combustible de rodaje en toneladas (0.2 por defecto).',R1:'ZFW/ZFWCG: peso sin combustible (t) y su centro de gravedad (%MAC). Ej.: 61.2/27.5.',
+   L2:'TRIP/TIME: combustible y tiempo de viaje calculados.',R2:'BLOCK: combustible total a bordo antes del rodaje (t). Ej.: 9.5.',
+   L3:'RTE RSV/%: reserva de ruta. Cambia el porcentaje escribiendo /5.0.',L4:'ALTN/TIME: combustible y tiempo hasta el alterno.',R4:'TOW/LW: pesos estimados de despegue y aterrizaje.',
+   L5:'FINAL/TIME: reserva final (30 min).',R5:'TRIP WIND: componente media de viento (no editable aquí).',L6:'EXTRA/TIME: combustible sobrante tras todas las reservas.',R6:'MIN DEST FOB: combustible mínimo al llegar (alterno + final).'},
+ render(){ const f=S.fuel, fc=fuelCalc();
+   putC(0,'INIT'); put(0,20,'←→','w');
+   put(1,0,'TAXI','w',1); putR(1,'ZFW/ZFWCG','w',1);
+   put(2,0,f.taxi.toFixed(1),'c'); putR(2,f.zfw!=null?`${f.zfw.toFixed(1)}/${f.zfwcg!=null?f.zfwcg.toFixed(1):'--.-'}`:'□□.□/□□.□',f.zfw!=null?'c':'a');
+   put(3,0,'TRIP/TIME','w',1); putR(3,'BLOCK','w',1);
+   put(4,0,fc?`${fc.trip.toFixed(1)}/${hhmm(fc.tripMin)}`:'---.-/----',fc?'g':'w'); putR(4,f.block!=null?f.block.toFixed(1):'□□.□',f.block!=null?'c':'a');
+   put(5,0,'RTE RSV/%','w',1);
+   put(6,0,fc?fc.rsv.toFixed(1):'---.-',fc?'g':'w'); put(6,fc?String(fc.rsv.toFixed(1)).length:5,'/'+f.rsvPct.toFixed(1),'c');
+   put(7,0,'ALTN/TIME','w',1); putR(7,'TOW/LW','w',1);
+   put(8,0,fc&&S.init.altn?`${fc.altn.toFixed(1)}/${hhmm(fc.altnMin)}`:'---.-/----',fc&&S.init.altn?'g':'w'); putR(8,fc&&fc.tow!=null?`${fc.tow.toFixed(1)}/${fc.lw.toFixed(1)}`:'---.-/---.-',fc&&fc.tow!=null?'g':'w');
+   put(9,0,'FINAL/TIME','w',1); putR(9,'TRIP WIND','w',1);
+   put(10,0,'1.1/0030','c'); putR(10,'HD000','c');
+   put(11,0,'EXTRA/TIME','w',1); putR(11,'MIN DEST FOB','w',1);
+   if(fc&&fc.extra!=null) put(12,0,`${fc.extra.toFixed(1)}/${fc.extra>0?hhmm(fc.extraMin):'0000'}`,fc.extra<0?'a':'g'); else put(12,0,'---.-/----');
+   putR(12,fc?fc.minDest.toFixed(1):'---.-',fc?'c':'w'); },
+ slew(){ go('INITA'); },
+ lsk:{
+  L1(v){ if(!v) return; if(!/^\d(\.\d)?$/.test(v)) return 'FORMAT ERROR'; S.fuel.taxi=+v; use(); },
+  R1(v){ if(!v) return; if(v==='CLR') return 'NOT ALLOWED'; const m=v.match(/^(\d{1,2}(?:\.\d)?)?(?:\/(\d{1,2}(?:\.\d)?))?$/); if(!m||(!m[1]&&!m[2])) return 'FORMAT ERROR';
+    if(m[1]&&(+m[1]<35||+m[1]>62.5)) return 'ENTRY OUT OF RANGE'; if(m[2]&&(+m[2]<8||+m[2]>50)) return 'ENTRY OUT OF RANGE';
+    if(!m[1]&&S.fuel.zfw==null) return 'NOT ALLOWED';
+    if(m[1]) S.fuel.zfw=+m[1]; if(m[2]) S.fuel.zfwcg=+m[2]; use(); },
+  R2(v){ if(!v) return; if(v==='CLR') return 'NOT ALLOWED'; if(!/^\d{1,2}(\.\d)?$/.test(v)) return 'FORMAT ERROR'; const n=+v; if(n<1||n>19) return 'ENTRY OUT OF RANGE'; S.fuel.block=n; use(); },
+  L3(v){ if(!v) return; const m=v.match(/^\/(\d{1,2}(?:\.\d)?)$/); if(!m) return 'FORMAT ERROR'; if(+m[1]>15) return 'ENTRY OUT OF RANGE'; S.fuel.rsvPct=+m[1]; use(); }
+ }};
+
+/* ---------- F-PLN ---------- */
+function fplnItems(pl){ return [...pl,{t:'end'},{t:'noaltn'}]; }
+function renderPlan(pl,opts){
+  const tmp=opts.tmp, sec=opts.sec, scroll=opts.scroll;
+  const st=stats(pl), items=fplnItems(pl);
+  const active=pl.findIndex((x,i)=>i>0&&x.t==='wpt');
+  if(tmp) put(0,0,'TMPY','y'); else if(sec) put(0,0,'SEC','w');
+  put(0,tmp||sec?5:1,'FROM','w',1);
+  if(S.init.flt) putR(0,S.init.flt+' ');
+  for(let k=1;k<=5;k++){
+    const idx=scroll+k-1, it=items[idx], lr=2*k-1, dr=2*k; if(!it) continue;
+    if(k===1&&scroll===0){ put(lr,9,'TIME','w',1); put(lr,16,'SPD/ALT','w',1); }
+    if(it.t==='disco'){ put(dr,0,'---F-PLN DISCONTINUITY--'); continue; }
+    if(it.t==='end'){ put(dr,0,'------END OF F-PLN------'); continue; }
+    if(it.t==='noaltn'){ put(dr,0,'-----NO ALTN F-PLN------'); continue; }
+    const r=st.rows[idx];
+    if(!(k===1&&scroll===0)&&r&&r.crs!=null){ put(lr,1,'C'+p3(r.crs)+'°','g',1); putR(lr,Math.round(r.leg)+'NM  ','g',1); }
+    const col= tmp?'y':(sec?'w':(idx===active?'w':'g'));
+    let name=it.id; if(it.kind==='orig'&&S.dep.rwy&&!sec) name+=S.dep.rwy; if(it.kind==='dest'&&S.arr.appr&&!sec) name+=(APPRS[it.id]||[]).find(a=>a.n===S.arr.appr)?.rwy||'';
+    put(dr,0,name,col);
+    if(S.init.from) put(dr,8,hhmm(r.utc),tmp?'y':'g',1);
+    let spd='---', alt; const ck=it.spd||it.alt;
+    if(it.kind==='orig') alt=String(AP[it.id]?.el ?? '-----');
+    else if(it.kind==='dest') alt=String(AP[it.id]?.el ?? '-----');
+    else alt=it.alt?fmtAlt(it.alt):(S.init.crz?'FL'+String(S.init.crz).padStart(3,'0'):'-----');
+    if(it.spd) spd=String(it.spd);
+    put(dr,13,(it.spd?'*':'')+spd.padStart(it.spd?3:4),it.spd?'m':(tmp?'y':'g'),it.spd?0:1);
+    put(dr,17,'/',tmp?'y':'w');
+    put(dr,18,alt.padStart(6),it.alt?'m':(tmp?'y':'g'),it.alt?0:1);
+  }
+  if(tmp){ put(12,0,'←ERASE','a'); putR(12,'INSERT*','a'); return; }
+  const dest=pl.find(x=>x.kind==='dest');
+  put(11,0,'DEST','w',1); put(11,8,'TIME','w',1); put(11,14,'DIST','w',1); putR(11,'EFOB','w',1);
+  if(dest){ const fc=fuelCalc(); const dr=st.rows[pl.indexOf(dest)];
+    let dn=dest.id; if(S.arr.appr&&!sec) dn+=(APPRS[dest.id]||[]).find(a=>a.n===S.arr.appr)?.rwy||'';
+    put(12,0,dn); put(12,8,hhmm(dr.utc),'g'); put(12,14,String(Math.round(st.total)).padStart(4),'g'); putR(12,fc&&fc.efobDest!=null?fc.efobDest.toFixed(1):'--.-','g'); }
+  else { put(12,0,'----'); put(12,8,'----'); put(12,14,'----'); putR(12,'--.-'); }
+}
+function collapseDiscos(t){ for(let i=t.length-2;i>=0;i--){ if(t[i].t==='disco'&&t[i+1].t==='disco') t.splice(i,1); } }
+function insertTmpy(){ S.fpln=S.tmpy; S.tmpy=null; const d=S.fpln.find(x=>x.kind==='dest'); if(d) S.init.to=d.id; }
+
+function fplnLeft(k){ return v=>{
+  const pl=plan(), idx=S.scroll+k-1, it=fplnItems(pl)[idx]; if(!it) return;
+  if(!v){ if(it.t==='wpt'){ S.latRevIdx=idx; go('LATREV'); } return; }
+  if(it.t==='end'||it.t==='noaltn') return 'NOT ALLOWED';
+  if(v==='CLR'){
+    if(it.t==='wpt'&&(it.kind==='orig'||it.kind==='dest')) return 'NOT ALLOWED';
+    pl.splice(idx,1); collapseDiscos(pl); use(); return;
+  }
+  if(idx===0) return 'NOT ALLOWED';
+  if(!/^[A-Z]{2,5}$/.test(v)) return 'FORMAT ERROR';
+  if(!lookupFix(v)) return 'NOT IN DATABASE';
+  const t=S.tmpy||clone(S.fpln);
+  const j=t.findIndex((x,i)=>i>=idx&&x.t==='wpt'&&x.id===v);
+  if(j===idx) return 'NOT ALLOWED';
+  if(j>idx) t.splice(idx,j-idx);
+  else if(t[idx].t==='disco') t.splice(idx,0,mkWpt(v));
+  else t.splice(idx,0,mkWpt(v),{t:'disco'});
+  collapseDiscos(t); S.tmpy=t; use();
+};}
+function parseConstraint(v){
+  const m=v.match(/^(\d{3})?\/((?:FL)?\d{1,5})?$/)||v.match(/^(\d{3})\/?$/)&&[v,v.replace('/',''),undefined];
+  if(!m||(!m[1]&&!m[2])) return 'FORMAT ERROR';
+  const r={};
+  if(m[1]){ const s=+m[1]; if(s<100||s>350) return 'ENTRY OUT OF RANGE'; r.spd=s; }
+  if(m[2]){ let a; if(m[2].startsWith('FL')) a=+m[2].slice(2)*100; else { const n=+m[2]; a=n<=410?n*100:n; } if(a<1000||a>39800) return 'ENTRY OUT OF RANGE'; r.alt=Math.round(a/10)*10; }
+  return r;
+}
+function fplnRight(k){ return v=>{
+  const pl=plan(), idx=S.scroll+k-1, it=pl[idx]; if(!it||it.t!=='wpt'||!v) return;
+  if(it.kind==='orig'||it.kind==='dest'||it.kind==='tp') return 'NOT ALLOWED';
+  if(v==='CLR'){ delete it.spd; delete it.alt; use(); return; }
+  const r=parseConstraint(v); if(typeof r==='string') return r;
+  if(r.spd) it.spd=r.spd; if(r.alt) it.alt=r.alt; use();
+};}
+P.FPLN={name:'F-PLN',
+ help:{d:'Plan de vuelo activo: waypoint, hora UTC estimada y velocidad/altitud. ↑ muestra puntos más adelante y ↓ regresa. Las líneas amarillas son un plan temporal (TMPY) que se confirma con INSERT*.',
+   L1:'LSK izquierdo vacío: abre la revisión lateral (LAT REV) del punto. Con un identificador: lo inserta en esa posición. Con CLR: borra el punto o la discontinuidad.',
+   L2:'Igual que L1, para la segunda línea visible.',L3:'Igual que L1, para la tercera línea visible.',L4:'Igual que L1, para la cuarta línea visible.',L5:'Igual que L1, para la quinta línea visible.',
+   R1:'LSK derecho: restricciones. 250/ = velocidad, /FL240 o /5000 = altitud, 250/FL100 = ambas. CLR las borra.',R2:'Restricción de velocidad/altitud de la segunda línea.',R3:'Restricción de la tercera línea.',R4:'Restricción de la cuarta línea.',R5:'Restricción de la quinta línea.',
+   L6:'Línea de destino (hora, distancia total, combustible estimado). Abre la LAT REV del destino. Con TMPY: ←ERASE descarta los cambios.',R6:'Con TMPY: INSERT* activa el plan temporal.'},
+ render(){ renderPlan(plan(),{tmp:!!S.tmpy,scroll:S.scroll}); },
+ scroll(d){ const n=fplnItems(plan()).length; S.scroll=Math.max(0,Math.min(n-1,S.scroll+d)); },
+ lsk:{L1:fplnLeft(1),L2:fplnLeft(2),L3:fplnLeft(3),L4:fplnLeft(4),L5:fplnLeft(5),R1:fplnRight(1),R2:fplnRight(2),R3:fplnRight(3),R4:fplnRight(4),R5:fplnRight(5),
+  L6(){ if(S.tmpy){ S.tmpy=null; return; } const i=S.fpln.findIndex(x=>x.kind==='dest'); if(i>=0){ S.latRevIdx=i; go('LATREV'); } },
+  R6(){ if(S.tmpy) insertTmpy(); }}};
+
+P.LATREV={name:'LAT REV',
+ help:{d:'Revisión lateral de un waypoint: salidas, llegadas, insertar el siguiente punto o cambiar el destino. Se abre con el LSK izquierdo en el F-PLN.',
+   L1:'<DEPARTURE (en el origen) o <ARRIVAL (en el destino): pistas, SID y aproximaciones.',L3:'<HOLD: patrón de espera (no simulado).',
+   R2:'NEXT WPT: inserta un waypoint justo después de este. Crea un plan TMPY.',R3:'NEW DEST: cambia el destino a partir de este punto. Crea un plan TMPY.',L6:'<RETURN: vuelve al F-PLN.'},
+ render(){ const it=plan()[S.latRevIdx]; if(!it){ go('FPLN'); return P.FPLN.render(); }
+   put(0,0,'LAT REV','w'); put(0,8,'FROM','w',1); put(0,13,it.id,'g');
+   put(1,2,fmtLat(it.lat)+'/'+fmtLon(it.lon),'g',1);
+   if(it.kind==='orig') put(2,0,'<DEPARTURE'); else if(it.kind==='dest') put(2,0,'<ARRIVAL'); else put(6,0,'<HOLD');
+   if(it.kind!=='dest'){ putR(3,'NEXT WPT  ','w',1); putR(4,'[      ]','c'); putR(5,'NEW DEST','w',1); putR(6,'[   ]','c'); }
+   put(12,0,'<RETURN'); },
+ lsk:{
+  L1(){ const it=plan()[S.latRevIdx]; if(it.kind==='orig'){ S.depSel={rwy:S.dep.rwy,sid:S.dep.sid,mode:'rwy'}; go('DEP'); } else if(it.kind==='dest'){ S.arrSel={appr:S.arr.appr}; go('ARR'); } },
+  L3(){ const it=plan()[S.latRevIdx]; if(it.kind!=='orig'&&it.kind!=='dest') return NA; },
+  R2(v){ const idx=S.latRevIdx, it=plan()[idx]; if(!v||it.kind==='dest') return; if(!/^[A-Z]{2,5}$/.test(v)) return 'FORMAT ERROR'; if(!lookupFix(v)) return 'NOT IN DATABASE';
+    const t=S.tmpy||clone(S.fpln); const j=t.findIndex((x,i)=>i>idx&&x.t==='wpt'&&x.id===v);
+    if(j===idx+1) return 'NOT ALLOWED';
+    if(j>idx) t.splice(idx+1,j-idx-1); else { t.splice(idx+1,0,mkWpt(v)); const nx=t[idx+2]; if(nx&&nx.t!=='disco') t.splice(idx+2,0,{t:'disco'}); }
+    collapseDiscos(t); S.tmpy=t; use(); go('FPLN'); },
+  R3(v){ const idx=S.latRevIdx, it=plan()[idx]; if(!v||it.kind==='dest') return; if(!/^[A-Z]{4}$/.test(v)) return 'FORMAT ERROR'; if(!AP[v]) return 'NOT IN DATABASE';
+    const t=S.tmpy||clone(S.fpln); t.splice(idx+1); t.push({t:'disco'},mkApt(v,'dest')); S.tmpy=t; S.arr={appr:null}; use(); go('FPLN'); },
+  L6:()=>go('FPLN')
+ }};
+
+/* ---------- DEPARTURE / ARRIVAL ---------- */
+function applySid(rwy,sid){
+  const t=S.fpln; for(let i=t.length-1;i>=0;i--) if(t[i].sid) t.splice(i,1);
+  S.dep={rwy,sid};
+  const s=(SIDS[t[0].id]||[]).find(x=>x.n===sid);
+  if(s){ const ins=s.w.map(id=>Object.assign(mkWpt(id),{sid:true})); t.splice(1,0,...ins); const end=ins.length, last=s.w[s.w.length-1];
+    const j=t.findIndex((x,i)=>i>end&&x.t==='wpt'&&x.id===last);
+    if(j>end) t.splice(end+1,j-end); else if(t[end+1]&&t[end+1].t!=='disco') t.splice(end+1,0,{t:'disco'}); }
+  collapseDiscos(t);
+}
+P.DEP={name:'DEPARTURES',
+ help:{d:'Salidas desde el aeropuerto de origen. Primero eliges la pista y luego la SID (salida instrumental). La selección queda en amarillo hasta pulsar INSERT*.',
+   L1:'Muestra pista / SID seleccionadas. Púlsalo para volver a la lista de pistas.',L2:'Elige el elemento de esta línea (pista o SID).',L3:'Elige el elemento de esta línea.',L4:'Elige el elemento de esta línea.',L5:'Elige el elemento de esta línea.',
+   L6:'←ERASE descarta la selección; <RETURN vuelve al F-PLN.',R6:'INSERT*: inserta la pista y la SID en el plan activo.'},
+ list(){ const o=S.fpln[0]?.id; const d=S.depSel; if(d.mode==='rwy') return (AP[o]?.rwys||[]).map(([r,l])=>({k:'rwy',v:r,info:l+'M'})); return [...(SIDS[o]||[]).filter(s=>s.rwy===d.rwy).map(s=>({k:'sid',v:s.n,info:s.w.join(' ')})),{k:'sid',v:'NO SID',info:''}]; },
+ render(){ const o=S.fpln[0]; if(!o||o.kind!=='orig'){ go('FPLN'); return P.FPLN.render(); } const d=S.depSel, changed=d.rwy!==S.dep.rwy||d.sid!==S.dep.sid;
+   put(0,0,'DEPARTURES','w'); put(0,11,'FROM','w',1); put(0,16,o.id,'g');
+   put(1,1,'RWY','w',1); put(1,8,'SID','w',1); put(1,16,'TRANS','w',1);
+   put(2,0,d.rwy||'---',changed&&d.rwy?'y':(d.rwy?'g':'w')); put(2,7,d.sid||'------',changed&&d.sid?'y':(d.sid?'g':'w')); put(2,16,'------');
+   put(3,0,d.mode==='rwy'?'AVAILABLE RUNWAYS':'AVAILABLE SIDS','w',1);
+   this.list().slice(0,4).forEach((x,i)=>{ const r=4+2*i; put(r,0,'←'+x.v,'c'); if(x.info) put(r,9,x.info,'g',1); });
+   if(changed){ put(12,0,'←ERASE','a'); putR(12,'INSERT*','a'); } else put(12,0,'<RETURN'); },
+ lsk:{
+  L1(){ S.depSel.mode='rwy'; },
+  L2(){ return P.DEP.pick(0); },L3(){ return P.DEP.pick(1); },L4(){ return P.DEP.pick(2); },L5(){ return P.DEP.pick(3); },
+  L6(){ const d=S.depSel; if(d.rwy!==S.dep.rwy||d.sid!==S.dep.sid) S.depSel={rwy:S.dep.rwy,sid:S.dep.sid,mode:'rwy'}; else go('FPLN'); },
+  R6(){ const d=S.depSel; if(d.rwy===S.dep.rwy&&d.sid===S.dep.sid) return; if(!d.rwy) return 'NOT ALLOWED'; applySid(d.rwy,d.sid==='NO SID'?null:d.sid); S.dep.sid=d.sid; go('FPLN'); S.scroll=0; }
+ },
+ pick(i){ const x=this.list()[i]; if(!x) return; const d=S.depSel; if(x.k==='rwy'){ d.rwy=x.v; d.sid=null; d.mode='sid'; } else d.sid=x.v; }};
+
+function applyArr(appr){
+  S.arr={appr}; const dest=S.fpln.find(x=>x.kind==='dest'); const a=(APPRS[dest.id]||[]).find(x=>x.n===appr);
+  if(a&&a.ident&&(S.rad.ilsAuto||!S.rad.ils)){ S.rad.ils={id:a.ident,f:a.f}; S.rad.ilsCrs=a.crs; S.rad.ilsAuto=true; }
+}
+P.ARR={name:'ARRIVAL',
+ help:{d:'Llegadas al destino: elige la aproximación. Si es un ILS, su frecuencia y curso se sintonizan solos en RAD NAV (texto pequeño = automático).',
+   L1:'Aproximación seleccionada.',L2:'Elige la aproximación de esta línea.',L3:'Elige la aproximación de esta línea.',L4:'Elige la aproximación de esta línea.',L5:'Elige la aproximación de esta línea.',
+   L6:'←ERASE descarta la selección; <RETURN vuelve al F-PLN.',R6:'INSERT*: activa la aproximación en el plan.'},
+ list(){ const d=S.fpln.find(x=>x.kind==='dest'); return d? (APPRS[d.id]||[]):[]; },
+ render(){ const d=S.fpln.find(x=>x.kind==='dest'); if(!d){ go('FPLN'); return P.FPLN.render(); } const sel=S.arrSel.appr, changed=sel!==S.arr.appr;
+   put(0,0,'ARRIVAL','w'); put(0,8,'TO','w',1); put(0,11,d.id,'g');
+   put(1,1,'APPR','w',1); put(1,10,'VIA','w',1); put(1,18,'STAR','w',1);
+   put(2,0,sel||'------',changed&&sel?'y':(sel?'g':'w')); put(2,9,'------'); putR(2,'------');
+   put(3,0,'APPROACHES','w',1);
+   const L=this.list(); if(!L.length) put(4,0,'NONE','w');
+   L.slice(0,4).forEach((x,i)=>{ const r=4+2*i; put(r,0,'←'+x.n,'c'); if(x.f) put(r,10,x.f+' '+p3(x.crs)+'°','g',1); else put(r,10,'GNSS','g',1); });
+   if(changed){ put(12,0,'←ERASE','a'); putR(12,'INSERT*','a'); } else put(12,0,'<RETURN'); },
+ lsk:{L2(){ return P.ARR.pick(0); },L3(){ return P.ARR.pick(1); },L4(){ return P.ARR.pick(2); },L5(){ return P.ARR.pick(3); },
+  L6(){ if(S.arrSel.appr!==S.arr.appr) S.arrSel={appr:S.arr.appr}; else go('FPLN'); },
+  R6(){ const a=S.arrSel.appr; if(!a||a===S.arr.appr) return; applyArr(a); go('FPLN'); }},
+ pick(i){ const x=this.list()[i]; if(x) S.arrSel.appr=x.n; }};
+
+/* ---------- DIR TO ---------- */
+function dirCands(){ return S.fpln.filter((x,i)=>i>0&&x.t==='wpt'&&x.kind!=='tp').map(x=>x.id); }
+function directTo(id){
+  const pl=S.fpln; const tp={t:'wpt',id:'T-P',kind:'tp',lat:pl[0].lat,lon:pl[0].lon};
+  const j=pl.findIndex((x,i)=>i>0&&x.t==='wpt'&&x.id===id);
+  if(j>0) S.fpln=[tp,...pl.slice(j)];
+  else { const act=pl.findIndex((x,i)=>i>0&&x.t==='wpt'); S.fpln=[tp,mkWpt(id),{t:'disco'},...pl.slice(act)]; }
+  S.tmpy=null; S.dirSel=null; S.scroll=0; go('FPLN');
+}
+P.DIRTO={name:'DIR TO',
+ help:{d:'Directo a un punto: elimina los waypoints intermedios y crea un punto de viraje (T-P) en la posición actual. Útil cuando ATC autoriza un directo.',
+   L1:'WAYPOINT: escribe un identificador del plan o de la base de datos.',L2:'Elige este waypoint del plan. ↑ ↓ desplazan la lista.',L3:'Elige este waypoint.',L4:'Elige este waypoint.',L5:'Elige este waypoint.',
+   L6:'←ERASE: cancela la selección.',R6:'INSERT*: ejecuta el directo.'},
+ render(){ putC(0,'DIR TO'); put(1,0,'WAYPOINT','w',1);
+   put(2,0,S.dirSel?S.dirSel:'[     ]',S.dirSel?'y':'c');
+   if(!S.fpln.length){ put(4,0,'NO F-PLN','w'); return; }
+   put(3,0,'F-PLN WPTS','w',1);
+   dirCands().slice(S.dirScroll,S.dirScroll+4).forEach((id,i)=>{ put(4+2*i,0,'←','w'); put(4+2*i,1,id,'g'); });
+   if(S.dirSel){ put(12,0,'←ERASE','a'); putR(12,'INSERT*','a'); } },
+ scroll(d){ const n=dirCands().length; S.dirScroll=Math.max(0,Math.min(Math.max(0,n-4),S.dirScroll+d)); },
+ lsk:{
+  L1(v){ if(!v) return; if(!S.fpln.length) return 'NOT ALLOWED'; if(!/^[A-Z]{2,5}$/.test(v)) return 'FORMAT ERROR'; if(!dirCands().includes(v)&&!lookupFix(v)) return 'NOT IN DATABASE'; S.dirSel=v; use(); },
+  L2(){ return P.DIRTO.pick(0); },L3(){ return P.DIRTO.pick(1); },L4(){ return P.DIRTO.pick(2); },L5(){ return P.DIRTO.pick(3); },
+  L6(){ S.dirSel=null; },
+  R6(){ if(S.dirSel) directTo(S.dirSel); }},
+ pick(i){ const id=dirCands()[S.dirScroll+i]; if(id) S.dirSel=id; }};
+
+/* ---------- PERF ---------- */
+function speedsFSO(){ const fc=fuelCalc(); if(!fc||fc.tow==null) return null; const O=Math.round(140+fc.tow); return {F:O-65,S:O-25,O}; }
+function vEntry(field){ return v=>{ if(!v) return; if(v==='CLR'){ S.perf[field]=null; use(); return; } if(!/^\d{3}$/.test(v)) return 'FORMAT ERROR'; const n=+v; if(n<90||n>200) return 'ENTRY OUT OF RANGE'; S.perf[field]=n; use(); const p=S.perf; if(p.v1&&p.vr&&p.v2&&!(p.v1<=p.vr&&p.vr<=p.v2)) return {t:'V1/VR/V2 DISAGREE',c:'a'}; }; }
+function altEntry(field,lo,hi){ return v=>{ if(!v) return; if(!/^\d{3,5}$/.test(v)) return 'FORMAT ERROR'; const n=+v; if(n<lo||n>hi) return 'ENTRY OUT OF RANGE'; S.perf[field]=n; use(); }; }
+P.PERF_TO={name:'PERF TAKE OFF',
+ help:{d:'Datos de despegue. V1, VR y V2 son obligatorios (ámbar). F, S y O (verde, al centro) son las velocidades de retracción de flaps, de slats y la de mejor planeo; aparecen cuando INIT B está completo.',
+   L1:'V1: velocidad de decisión (kt). Ej.: 142.',L2:'VR: velocidad de rotación (kt).',L3:'V2: velocidad de seguridad al despegue. Debe cumplirse V1 ≤ VR ≤ V2.',
+   R1:'RWY: pista de despegue elegida en DEPARTURE.',R3:'FLAPS/THS: flaps (1–3) y ajuste del estabilizador. Ej.: 1/UP0.8 o 2/DN0.5.',
+   L4:'TRANS ALT: altitud de transición (al pasarla se ajusta 1013 hPa).',R4:'FLEX TO TEMP: temperatura asumida para despegue con empuje reducido. Ej.: 55.',
+   L5:'THR RED/ACC: altitudes de reducción de empuje y de aceleración. Ej.: 1500/1500.',R5:'ENG OUT ACC: altitud de aceleración con un motor fallado.',R6:'NEXT PHASE>: página de ascenso (CLB).'},
+ render(){ const p=S.perf, f=speedsFSO();
+   putC(0,'TAKE OFF','g');
+   put(1,0,'V1','w',1); put(1,8,'FLP RETR','w',1); putR(1,'RWY','w',1);
+   put(2,0,p.v1?String(p.v1):BX.repeat(3),p.v1?'c':'a'); put(2,9,f?'F='+f.F:'F=---','g'); putR(2,S.dep.rwy||'--','g');
+   put(3,0,'VR','w',1); put(3,8,'SLT RETR','w',1);
+   put(4,0,p.vr?String(p.vr):BX.repeat(3),p.vr?'c':'a'); put(4,9,f?'S='+f.S:'S=---','g');
+   put(5,0,'V2','w',1); put(5,9,'CLEAN','w',1); putR(5,'FLAPS/THS','w',1);
+   put(6,0,p.v2?String(p.v2):BX.repeat(3),p.v2?'c':'a'); put(6,9,f?'O='+f.O:'O=---','g'); putR(6,p.flaps?`${p.flaps}/${p.ths||'[   ]'}`:'[ ]/[   ]','c');
+   put(7,0,'TRANS ALT','w',1); putR(7,'FLEX TO TEMP','w',1);
+   put(8,0,String(p.transAlt),'c'); putR(8,p.flex!=null?p.flex+'°':'[ ]°','c');
+   put(9,0,'THR RED/ACC','w',1); putR(9,'ENG OUT ACC','w',1);
+   put(10,0,`${p.thrRed}/${p.acc}`,'c'); putR(10,String(p.engOut),'c');
+   putR(11,'NEXT ','w',1); putR(12,'PHASE>'); },
+ lsk:{L1:vEntry('v1'),L2:vEntry('vr'),L3:vEntry('v2'),
+  R3(v){ if(!v) return; if(v==='CLR'){ S.perf.flaps=null; S.perf.ths=null; use(); return; }
+    const m=v.match(/^([0-9])?(?:\/(?:(UP|DN)(\d\.\d)|(\d\.\d)(UP|DN)))?$/); if(!m||(!m[1]&&!m[2]&&!m[4])) return 'FORMAT ERROR';
+    if(m[1]&&(+m[1]<1||+m[1]>3)) return 'ENTRY OUT OF RANGE';
+    const dir=m[2]||m[5], val=m[3]||m[4]; if(val&&+val>2.5) return 'ENTRY OUT OF RANGE';
+    if(m[1]) S.perf.flaps=+m[1]; if(dir) S.perf.ths=dir+val; if(!S.perf.flaps) return 'NOT ALLOWED'; use(); },
+  L4:altEntry('transAlt',1000,39000),
+  R4(v){ if(!v) return; if(v==='CLR'){ S.perf.flex=null; use(); return; } if(!/^[+-]?\d{1,2}$/.test(v)) return 'FORMAT ERROR'; const n=+v; if(n<0||n>75) return 'ENTRY OUT OF RANGE'; S.perf.flex=n; use(); },
+  L5(v){ if(!v) return; const m=v.match(/^(\d{3,5})?(?:\/(\d{3,5}))?$/); if(!m||(!m[1]&&!m[2])) return 'FORMAT ERROR'; if(m[1]) S.perf.thrRed=+m[1]; if(m[2]) S.perf.acc=+m[2]; use(); },
+  R5:altEntry('engOut',400,9000),
+  R6:()=>go('PERF_CLB')}};
+
+function phasePage(id,title,managed,prev,next,extra){
+  return {name:'PERF '+title,
+   help:Object.assign({d:`Fase de ${({CLB:'ascenso',CRZ:'crucero',DES:'descenso'})[title]}: modo de velocidad ECON (según el cost index) y velocidad administrada por el FMGC.`,
+     L1:'ACT MODE: modo de velocidad activo (ECON).',L2:'CI: cost index ingresado en INIT A.',L3:'MANAGED: velocidad/Mach administrada.',L4:'SELECTED: velocidad preseleccionada (no simulado).',L6:'<PREV PHASE: fase anterior.',R6:'NEXT PHASE>: fase siguiente.'},extra&&extra.help),
+   render(){ putC(0,title); put(1,0,'ACT MODE','w',1); put(2,0,'ECON','g'); put(3,0,'CI','w',1); put(4,0,S.init.ci!=null?String(S.init.ci):'---',S.init.ci!=null?'c':'w');
+     put(5,0,'MANAGED','w',1); put(6,0,managed,'m'); put(7,0,'SELECTED','w',1); put(8,0,'[ ]','c');
+     if(extra) extra.render(); put(11,0,'PREV','w',1); put(12,0,'<PHASE'); putR(11,'NEXT ','w',1); putR(12,'PHASE>'); },
+   lsk:{L6:()=>go(prev),R6:()=>go(next),L4:v=>v?NA:undefined}};
+}
+P.PERF_CLB=phasePage('PERF_CLB','CLB','*250/0.78','PERF_TO','PERF_CRZ');
+P.PERF_CRZ=phasePage('PERF_CRZ','CRZ','*.78','PERF_CLB','PERF_DES',{help:{R3:'DES CABIN RATE: tasa de descenso de la cabina presurizada.'},render(){ putR(5,'DES CABIN RATE','w',1); putR(6,'-350FT/MN','c'); }});
+P.PERF_DES=phasePage('PERF_DES','DES','*.78/300','PERF_CRZ','PERF_APPR');
+P.PERF_APPR={name:'PERF APPR',
+ help:{d:'Datos de aproximación al destino. QNH es obligatorio. BARO (MDA) y RADIO (DH) son excluyentes: ingresar uno borra el otro.',
+   L1:'QNH: presión en hPa (1015) o inHg (29.97).',L2:'TEMP: temperatura en destino (°C).',L3:'MAG WIND: viento magnético. Ej.: 090/10.',L4:'TRANS FL: nivel de transición.',L5:'VAPP: velocidad de aproximación calculada con el peso de aterrizaje; puedes sobrescribirla.',
+   R1:'FINAL: aproximación seleccionada en ARRIVAL.',R2:'BARO: altitud mínima de descenso (MDA) en pies.',R3:'RADIO: altura de decisión (DH) en pies. Ej.: 200.',R4:'CONF3*: aterrizaje en configuración 3.',R5:'FULL*: aterrizaje con flaps FULL.',
+   L6:'<PREV PHASE: descenso.',R6:'NEXT PHASE>: motor y al aire (GO AROUND).'},
+ render(){ const p=S.perf, fc=fuelCalc();
+   putC(0,'APPR'); put(1,0,'QNH','w',1); putR(1,'FINAL','w',1);
+   put(2,0,p.qnh!=null?String(p.qnh):BX.repeat(4),p.qnh!=null?'c':'a'); putR(2,S.arr.appr||'------','g');
+   put(3,0,'TEMP','w',1); putR(3,'BARO','w',1);
+   put(4,0,p.temp!=null?p.temp+'°':'[ ]°','c'); putR(4,p.mda!=null?String(p.mda):'[    ]','c');
+   put(5,0,'MAG WIND','w',1); putR(5,'RADIO','w',1);
+   put(6,0,p.wind||'[ ]°/[ ]','c'); putR(6,p.dh!=null?String(p.dh):'[   ]','c');
+   put(7,0,'TRANS FL','w',1); putR(7,'LDG CONF','w',1);
+   put(8,0,'FL'+String(p.transFl).padStart(3,'0'),'c'); putR(8,p.ldg==='CONF3'?'CONF3':'CONF3*',p.ldg==='CONF3'?'g':'c');
+   put(9,0,'VAPP','w',1);
+   const vapp=p.vapp||(fc&&fc.lw?Math.round(105+fc.lw*0.5):null);
+   put(10,0,vapp?String(vapp):'---',p.vapp?'c':'g',p.vapp?0:1); putR(10,p.ldg==='FULL'?'FULL':'FULL*',p.ldg==='FULL'?'g':'c');
+   put(11,0,'PREV','w',1); put(12,0,'<PHASE'); putR(11,'NEXT ','w',1); putR(12,'PHASE>'); },
+ lsk:{
+  L1(v){ if(!v) return; if(/^\d{3,4}$/.test(v)){ const n=+v; if(n<745||n>1100) return 'ENTRY OUT OF RANGE'; S.perf.qnh=n; use(); return; } if(/^\d{2}\.\d{2}$/.test(v)){ const n=+v; if(n<22||n>32.48) return 'ENTRY OUT OF RANGE'; S.perf.qnh=v; use(); return; } return 'FORMAT ERROR'; },
+  L2(v){ if(!v) return; if(!/^[+-]?\d{1,2}$/.test(v)) return 'FORMAT ERROR'; S.perf.temp=+v; use(); },
+  L3(v){ if(!v) return; const m=v.match(/^(\d{1,3})\/(\d{1,3})$/); if(!m) return 'FORMAT ERROR'; if(+m[1]>360||+m[2]>200) return 'ENTRY OUT OF RANGE'; S.perf.wind=p3(+m[1]||360)+'°/'+String(+m[2]).padStart(3,'0'); use(); },
+  L4(v){ if(!v) return; const m=v.match(/^(?:FL)?(\d{2,3})$/); if(!m) return 'FORMAT ERROR'; S.perf.transFl=+m[1]; use(); },
+  L5(v){ if(!v) return; if(v==='CLR'){ S.perf.vapp=null; use(); return; } if(!/^\d{3}$/.test(v)) return 'FORMAT ERROR'; const n=+v; if(n<90||n>350) return 'ENTRY OUT OF RANGE'; S.perf.vapp=n; use(); },
+  R2(v){ if(!v) return; if(v==='CLR'){ S.perf.mda=null; use(); return; } if(!/^\d{1,4}$/.test(v)) return 'FORMAT ERROR'; const n=+v; if(n>5000) return 'ENTRY OUT OF RANGE'; S.perf.mda=n; S.perf.dh=null; use(); },
+  R3(v){ if(!v) return; if(v==='CLR'){ S.perf.dh=null; use(); return; } if(v==='NO'){ S.perf.dh='NO'; S.perf.mda=null; use(); return; } if(!/^\d{1,3}$/.test(v)) return 'FORMAT ERROR'; const n=+v; if(n>700) return 'ENTRY OUT OF RANGE'; S.perf.dh=n; S.perf.mda=null; use(); },
+  R4(){ S.perf.ldg='CONF3'; }, R5(){ S.perf.ldg='FULL'; },
+  L6:()=>go('PERF_DES'), R6:()=>go('PERF_GA')}};
+P.PERF_GA={name:'PERF GO AROUND',
+ help:{d:'Motor y al aire: altitudes de reducción de empuje y aceleración para la frustrada.',L1:'THR RED/ACC: altitudes de reducción de empuje y aceleración.',L2:'ENG OUT ACC: aceleración con un motor fallado.',L6:'<PREV PHASE: aproximación.'},
+ render(){ putC(0,'GO AROUND'); put(1,0,'THR RED/ACC','w',1); put(2,0,`${S.perf.thrRed}/${S.perf.acc}`,'c'); put(3,0,'ENG OUT ACC','w',1); put(4,0,String(S.perf.engOut),'c'); put(11,0,'PREV','w',1); put(12,0,'<PHASE'); },
+ lsk:{L6:()=>go('PERF_APPR')}};
+
+/* ---------- PROG / FUEL PRED ---------- */
+P.PROG={name:'PROG',
+ help:{d:'Progreso del vuelo: niveles de crucero, rumbo y distancia a cualquier punto y precisión de la navegación.',
+   L1:'CRZ / OPT / REC MAX: nivel de crucero, óptimo y máximo recomendado para el peso actual.',L2:'<REPORT: reporte de posición (no simulado).',L3:'POSITION UPDATE AT: actualización manual de posición (no simulado).',
+   R4:'TO: escribe un waypoint o aeropuerto y verás rumbo/distancia desde la posición actual.',L5:'<GPS: predicción de disponibilidad GPS (no simulado).',L6:'REQUIRED / ESTIMATED: precisión requerida vs. estimada. HIGH = navegación precisa.'},
+ render(){ const i=S.init, fc=fuelCalc();
+   putC(0,'TAKE OFF','g'); if(i.flt) putR(0,i.flt);
+   put(1,1,'CRZ','w',1); put(1,9,'OPT','w',1); putR(1,'REC MAX','w',1);
+   put(2,0,i.crz?'FL'+String(i.crz).padStart(3,'0'):'-----',i.crz?'c':'w');
+   const rm=fc&&fc.tow!=null?Math.min(398,Math.round((430-fc.tow*1.1)/10)*10):398; const opt=fc&&fc.tow!=null?Math.min(rm,Math.round((420-fc.tow*1.2)/10)*10):null;
+   put(2,8,opt?'FL'+opt:'FL---','g'); putR(2,'FL'+rm,'m');
+   put(4,0,'<REPORT'); put(5,0,'POSITION UPDATE AT','w',1); put(6,0,'*[      ]','c');
+   put(7,1,'BRG /DIST','w',1);
+   const ref=i.from&&AP[i.from]; let tgt=null; if(S.progTo) tgt=lookupFix(S.progTo)||AP[S.progTo];
+   if(ref&&tgt){ put(8,0,p3(brg(ref,tgt))+'°/'+dist(ref,tgt).toFixed(1),'g'); } else put(8,0,' ---°/----.-');
+   put(8,15,'TO','w',1); putR(8,S.progTo||'[    ]','c');
+   put(9,0,'PREDICTIVE','w',1); put(10,0,'<GPS');
+   put(11,0,'REQUIRED','w',1); put(11,9,'ACCUR','w',1); putR(11,'ESTIMATED','w',1);
+   put(12,0,'3.0NM','c'); put(12,10,i.irs?'HIGH':'LOW',i.irs?'g':'a'); putR(12,i.irs?'0.08NM':'---','g'); },
+ lsk:{L2:()=>NA,L3:v=>v?NA:undefined,L5:()=>NA,
+  R4(v){ if(!v) return; if(v==='CLR'){ S.progTo=null; use(); return; } if(!/^[A-Z]{2,5}$/.test(v)) return 'FORMAT ERROR'; if(!lookupFix(v)&&!AP[v]) return 'NOT IN DATABASE'; if(!S.init.from) return 'NOT ALLOWED'; S.progTo=v; use(); }}};
+
+P.FUELPRED={name:'FUEL PRED',
+ help:{d:'Predicciones de combustible: hora estimada y combustible a bordo (EFOB) al llegar al destino y al alterno. Necesita INIT A e INIT B completos.',
+   L1:'Destino: hora UTC estimada y EFOB.',L2:'Alterno: hora y EFOB al alterno.',L3:'RTE RSV/%: reserva de ruta.',R3:'GW/CG: peso bruto y centro de gravedad.',
+   L4:'ALTN/TIME: combustible y tiempo al alterno.',R4:'FOB: combustible a bordo. FF+FQ indica que se calcula con flujo y cantidad medidos.',L5:'FINAL/TIME: reserva final.',R5:'MIN DEST FOB: mínimo al llegar.',L6:'EXTRA/TIME: combustible extra disponible.'},
+ render(){ const i=S.init,f=S.fuel,fc=fuelCalc(); const st=S.fpln.length?stats(S.fpln):null; const ok=fc&&fc.efobDest!=null;
+   putC(0,'FUEL PRED');
+   put(1,0,'AT','w',1); put(1,8,'UTC','w',1); put(1,15,'EFOB','w',1);
+   put(2,0,i.to||'----'); put(2,8,st?hhmm(st.rows[st.rows.length-1].utc):'----',st?'g':'w'); put(2,15,ok?fc.efobDest.toFixed(1):'--.-',ok?'g':'w');
+   put(4,0,i.altn||'----'); put(4,8,st&&i.altn?hhmm(st.rows[st.rows.length-1].utc+fc.altnMin):'----',st&&i.altn?'g':'w'); put(4,15,ok&&i.altn?fc.efobAltn.toFixed(1):'--.-',ok&&i.altn?'g':'w');
+   put(5,0,'RTE RSV/%','w',1); putR(5,'GW/CG','w',1);
+   put(6,0,fc?`${fc.rsv.toFixed(1)}/${f.rsvPct.toFixed(1)}`:'---.-/-.-',fc?'g':'w'); putR(6,fc&&fc.tow!=null?`${fc.tow.toFixed(1)}/${(f.zfwcg??27).toFixed(1)}`:'---.-/--.-',fc&&fc.tow!=null?'g':'w');
+   put(7,0,'ALTN/TIME','w',1); putR(7,'FOB','w',1);
+   put(8,0,fc&&i.altn?`${fc.altn.toFixed(1)}/${hhmm(fc.altnMin)}`:'---.-/----',fc&&i.altn?'g':'w'); putR(8,f.block!=null?(f.block.toFixed(1)+' FF+FQ'):'---.-','g');
+   put(9,0,'FINAL/TIME','w',1); putR(9,'MIN DEST FOB','w',1);
+   put(10,0,'1.1/0030','c'); putR(10,fc?fc.minDest.toFixed(1):'---.-',fc?'c':'w');
+   put(11,0,'EXTRA/TIME','w',1);
+   put(12,0,ok?`${fc.extra.toFixed(1)}/${fc.extra>0?hhmm(fc.extraMin):'0000'}`:'---.-/----',ok?(fc.extra<0?'a':'g'):'w'); }};
+
+/* ---------- RAD NAV ---------- */
+function navEntry(v,type){
+  if(/^\d{3}(\.\d{1,2})?$/.test(v)){ const f=+v; const [lo,hi]=type==='VOR'?[108,117.95]:[108.1,111.95]; if(f<lo||f>hi) return 'ENTRY OUT OF RANGE'; const fs=f.toFixed(2);
+    if(type==='VOR'){ const e=Object.entries(NAV).find(([,n])=>n.f===fs); return {id:e?e[0]:'',f:fs}; } const a=ILS_LIST.find(x=>x.f===fs); return {id:a?a.ident:'',f:fs,crs:a?a.crs:null}; }
+  if(/^[A-Z]{2,4}$/.test(v)){ if(type==='VOR'){ const n=NAV[v]; if(!n) return 'NOT IN DATABASE'; return {id:v,f:n.f}; } const a=ILS_LIST.find(x=>x.ident===v); if(!a) return 'NOT IN DATABASE'; return {id:v,f:a.f,crs:a.crs}; }
+  return 'FORMAT ERROR';
+}
+function crsEntry(field){ return v=>{ if(!v) return; if(v==='CLR'){ S.rad[field]=null; use(); return; } if(!/^\d{1,3}$/.test(v)) return 'FORMAT ERROR'; const n=+v; if(n>360) return 'ENTRY OUT OF RANGE'; S.rad[field]=n; if(field==='ilsCrs') S.rad.ilsAuto=false; use(); }; }
+function vorEntry(field){ return v=>{ if(!v) return; if(v==='CLR'){ S.rad[field]=null; use(); return; } const r=navEntry(v,'VOR'); if(typeof r==='string') return r; S.rad[field]=r; use(); }; }
+function adfEntry(field){ return v=>{ if(!v) return; if(v==='CLR'){ S.rad[field]=null; use(); return; } if(!/^\d{3,4}(\.\d)?$/.test(v)) return 'FORMAT ERROR'; const n=+v; if(n<190||n>1750) return 'ENTRY OUT OF RANGE'; S.rad[field]=n.toFixed(1); use(); }; }
+P.RADNAV={name:'RAD NAV',
+ help:{d:'Sintonía de radioayudas. Escribe el identificador o la frecuencia. Texto grande = sintonía manual del piloto; texto pequeño = sintonía automática del FMGC.',
+   L1:'VOR1/FREQ: identificador (MIA) o frecuencia (115.90). Rango 108.00–117.95.',R1:'FREQ/VOR2: igual que VOR1. Ej.: 113.30.',
+   L2:'CRS VOR1: curso seleccionado, 0–360.',R2:'CRS VOR2.',
+   L3:'ILS/FREQ: identificador (IMIA) o frecuencia (108.10–111.95). Se sintoniza solo al elegir una aproximación ILS.',L4:'CRS ILS: curso del localizador.',
+   L5:'ADF1/FREQ: frecuencia NDB en kHz (190–1750).',R5:'FREQ/ADF2.'},
+ render(){ const r=S.rad;
+   putC(0,'RADIO NAV');
+   put(1,0,'VOR1/FREQ','w',1); putR(1,'FREQ/VOR2','w',1);
+   put(2,0,r.vor1?`${r.vor1.id||'---'}/${r.vor1.f}`:'[ ]/[  . ]','c'); putR(2,r.vor2?`${r.vor2.f}/${r.vor2.id||'---'}`:'[  . ]/[ ]','c');
+   put(3,0,'CRS','w',1); putR(3,'CRS','w',1);
+   put(4,0,r.crs1!=null?p3(r.crs1):'[ ]','c'); putR(4,r.crs2!=null?p3(r.crs2):'[ ]','c');
+   put(5,0,'ILS /FREQ','w',1);
+   put(6,0,r.ils?`${r.ils.id||'----'}/${r.ils.f}`:'[  ]/[   . ]','c',r.ils&&r.ilsAuto?1:0);
+   put(7,0,'CRS','w',1); put(8,0,r.ilsCrs!=null?p3(r.ilsCrs):'[ ]','c',r.ilsAuto?1:0);
+   put(9,0,'ADF1/FREQ','w',1); putR(9,'FREQ/ADF2','w',1);
+   put(10,0,r.adf1?`---/${r.adf1}`:'[ ]/[   . ]','c'); putR(10,r.adf2?`${r.adf2}/---`:'[   . ]/[ ]','c'); },
+ lsk:{L1:vorEntry('vor1'),R1:vorEntry('vor2'),L2:crsEntry('crs1'),R2:crsEntry('crs2'),
+  L3(v){ if(!v) return; if(v==='CLR'){ S.rad.ils=null; S.rad.ilsCrs=null; S.rad.ilsAuto=false; use(); return; } const r=navEntry(v,'ILS'); if(typeof r==='string') return r; S.rad.ils={id:r.id,f:r.f}; if(r.crs!=null) S.rad.ilsCrs=r.crs; S.rad.ilsAuto=false; use(); },
+  L4:crsEntry('ilsCrs'),L5:adfEntry('adf1'),R5:adfEntry('adf2')}};
+
+/* ---------- SEC / ATC ---------- */
+P.SEC={name:'SEC INDEX',
+ help:{d:'Índice del plan secundario: una copia del plan activo para preparar alternativas sin tocarlo.',L1:'<COPY ACTIVE: copia el plan activo al secundario.',R1:'SEC F-PLN>: muestra el plan secundario.',L2:'<SWAP ACTIVE: intercambia activo y secundario (no simulado).',L3:'<DELETE SEC: borra el plan secundario.'},
+ render(){ putC(0,'SEC INDEX'); put(2,0,'<COPY ACTIVE'); put(4,0,'<SWAP ACTIVE'); if(S.sec){ put(6,0,'<DELETE SEC'); putR(2,'SEC F-PLN>'); putR(1,'SEC COPIED ','g',1); } },
+ lsk:{L1(){ if(!S.fpln.length) return 'NOT ALLOWED'; S.sec=clone(S.fpln); S.secScroll=0; }, R1(){ if(S.sec) go('SECFPLN'); }, L2:()=>NA, L3(){ if(S.sec) S.sec=null; }}};
+P.SECFPLN={name:'SEC F-PLN',
+ help:{d:'Plan secundario. En este entrenador es de solo lectura; ↑ ↓ para desplazarte. Pulsa SEC F-PLN para volver al índice.'},
+ render(){ renderPlan(S.sec||[],{sec:true,scroll:S.secScroll}); },
+ scroll(d){ const n=fplnItems(S.sec||[]).length; S.secScroll=Math.max(0,Math.min(n-1,S.secScroll+d)); },
+ lsk:Object.fromEntries(['L1','L2','L3','L4','L5','R1','R2','R3','R4','R5'].map(k=>[k,()=> 'NOT ALLOWED']))};
+P.ATC={name:'ATC MENU',
+ help:{d:'Comunicaciones por datalink con el control de tránsito aéreo (CPDLC). Este entrenador muestra el menú, pero no simula el enlace.',L1:'<LAT REQ: solicitud lateral (directo, desvío).',R1:'VERT REQ>: solicitud vertical (nivel, ascenso).',L2:'<WHEN CAN WE: pregunta a ATC cuándo se puede.',R2:'OTHER REQ>',L3:'<MSG RECORD: historial de mensajes.',R3:'TEXT>: mensaje libre.',L6:'<CONNECTION: estado de conexión con el centro ATC.'},
+ render(){ putC(0,'ATC MENU'); put(2,0,'<LAT REQ'); putR(2,'VERT REQ>'); put(4,0,'<WHEN CAN WE'); putR(4,'OTHER REQ>'); put(6,0,'<MSG RECORD'); putR(6,'TEXT>'); put(11,0,'NOTIFY','w',1); put(12,0,'<CONNECTION'); },
+ lsk:Object.fromEntries(['L1','L2','L3','L6','R1','R2','R3'].map(k=>[k,()=>NA]))};
+
+/* =========================================================
+   KEYS + HELP
+   ========================================================= */
+const KEY_HELP={
+ DIR:['DIR','Direct To','Abre DIR TO para volar directo a un waypoint del plan o de la base de datos.'],
+ PROG:['PROG','Progress','Progreso del vuelo: niveles CRZ/OPT/REC MAX, rumbo y distancia a un punto y precisión de navegación.'],
+ PERF:['PERF','Performance','Páginas de performance por fase: TAKE OFF, CLB, CRZ, DES, APPR y GO AROUND. En tierra abre TAKE OFF.'],
+ INIT:['INIT','Initialization','INIT A: ruta, aeropuertos, número de vuelo, cost index y nivel de crucero. Con → pasas a INIT B (pesos y combustible).'],
+ DATA:['DATA','Data index','Monitores de posición e IRS, estado de la aeronave (A/C STATUS) y aeropuertos más cercanos.'],
+ FPLN:['F-PLN','Flight plan','El plan de vuelo activo. LSK izquierdo = revisión lateral; LSK derecho = restricciones de velocidad/altitud.'],
+ RADNAV:['RAD NAV','Radio navigation','Sintoniza VOR, ILS y ADF por identificador o frecuencia.'],
+ FUELPRED:['FUEL PRED','Fuel prediction','Combustible estimado a bordo (EFOB) al llegar al destino y al alterno, reservas y extra.'],
+ SECFPLN:['SEC F-PLN','Secondary flight plan','Plan secundario: copia del activo para preparar alternativas sin tocarlo.'],
+ ATC:['ATC COMM','ATC communications','Menú de comunicaciones datalink con ATC (CPDLC). Solo el menú en este entrenador.'],
+ MENU:['MCDU MENU','MCDU menu','Elige qué sistema controla el MCDU (FMGC, ATSU, AIDS, CFDS).'],
+ AIRPORT:['AIRPORT','Airport','Salta en el F-PLN directamente al aeropuerto de destino, sin desplazarte línea por línea.'],
+ BRT:['BRT','Bright','Aumenta el brillo de la pantalla.'],DIM:['DIM','Dim','Reduce el brillo de la pantalla.'],
+ LEFT:['←','Slew left','Cambia entre páginas hermanas, como INIT A ↔ INIT B.'],RIGHT:['→','Slew right','Cambia entre páginas hermanas, como INIT A ↔ INIT B.'],
+ UP:['↑','Scroll up','Desplaza listas largas (F-PLN, DIR TO, SEC): muestra los puntos siguientes.'],DOWN:['↓','Scroll down','Desplaza listas hacia atrás, de vuelta al inicio.'],
+ CLR:['CLR','Clear','Borra el último carácter o un mensaje. Mantener presionado borra todo. Con el scratchpad vacío escribe CLR para borrar un campo con su LSK.'],
+ OVFY:['OVFY','Overfly','Escribe Δ. En el avión real marca un waypoint para sobrevolarlo en vez de anticipar el viraje.'],
+ SP:['SP','Space','Inserta un espacio en el scratchpad.'],
+ '/':['/','Slash','Separa dos datos en un mismo campo: FROM/TO, ZFW/ZFWCG, velocidad/altitud.'],
+ '+/-':['+/-','Sign','Escribe un signo menos (pulsa otra vez para cambiar a +). Útil para temperaturas: -54.'],
+ '.':['.','Decimal','Punto decimal: 61.2, 115.90.']
+};
+const KEY_EX={INIT:'Ej.: pulsa INIT y luego escribe MROC/KMIA → R1.',FPLN:'Ej.: escribe /FL240 y pulsa el LSK derecho de un waypoint.',RADNAV:'Ej.: escribe MIA → L1.',CLR:'Ej.: con el scratchpad vacío: CLR → LSK de la discontinuidad.',DIR:'Ej.: DIR → elige GUSKE → INSERT*.'};
+
+const FKEYS=[['DIR','DIR'],['PROG','PROG'],['PERF','PERF'],['INIT','INIT'],['DATA','DATA'],[null,''],['BRT','BRT'],
+ ['FPLN','F-PLN'],['RADNAV','RAD<br>NAV'],['FUELPRED','FUEL<br>PRED'],['SECFPLN','SEC<br>F-PLN'],['ATC','ATC<br>COMM'],['MENU','MCDU<br>MENU'],['DIM','DIM']];
+
+function buildHardware(){
+  const lL=document.getElementById('lskL'), lR=document.getElementById('lskR');
+  for(let n=1;n<=6;n++){ for(const [side,col] of [['L',lL],['R',lR]]){ const b=document.createElement('button'); b.className='lsk'; b.dataset.lsk=side+n; b.style.gridRow=String(2*n+1); b.setAttribute('aria-label','LSK '+side+n); col.appendChild(b); } }
+  const fk=document.getElementById('fkeys');
+  FKEYS.forEach(([k,l])=>{ const b=document.createElement('button'); b.className='key fn'+(k?'':' blank'); if(k){ b.dataset.k=k; b.innerHTML=l; b.setAttribute('aria-label',KEY_HELP[k][0]); } else b.tabIndex=-1; fk.appendChild(b); });
+  const p3=document.getElementById('pad3');
+  const L3=[['AIRPORT','AIR<br>PORT','fn'],[null],[null],['LEFT','←','arrow'],['UP','↑','arrow'],[null],['RIGHT','→','arrow'],['DOWN','↓','arrow'],[null],
+    ['1','1','ch'],['2','2','ch'],['3','3','ch'],['4','4','ch'],['5','5','ch'],['6','6','ch'],['7','7','ch'],['8','8','ch'],['9','9','ch'],['.','.','ch'],['0','0','ch'],['+/-','+/-','ch sm']];
+  L3.forEach(([k,l,c])=>{ const b=document.createElement('button'); b.className='key '+(k?c:'blank'); if(k){ b.dataset.k=k; b.innerHTML=l; b.setAttribute('aria-label',KEY_HELP[k]?KEY_HELP[k][0]:k); } else b.tabIndex=-1; p3.appendChild(b); });
+  const p5=document.getElementById('pad5');
+  const an=document.createElement('div'); an.className='annun'; an.innerHTML='<span class="light" id="lFail">FAIL</span><span class="light" id="lFm">FM</span><span class="light" id="lInd">IND</span><span class="light on-g" id="lRdy">RDY</span><span class="light">FM1</span><span class="light">FM2</span>'; p5.appendChild(an);
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').concat(['/','SP','OVFY','CLR']).forEach(k=>{ const b=document.createElement('button'); b.className='key ch'+(k.length>1?' sm':''); b.dataset.k=k; b.textContent=k; b.setAttribute('aria-label',k==='/'?UI.slash:k); p5.appendChild(b); });
+}
+
+/* =========================================================
+   INPUT DISPATCH
+   ========================================================= */
+function pressLSK(key){
+  if(S.explain){ explainLSK(key,true); return; }
+  E={type:'lsk',key,page:S.page};
+  const pg=P[S.page], fn=pg.lsk&&pg.lsk[key];
+  S.msg=null;
+  if(fn){ const r=fn(S.scratch); if(typeof r==='string') S.msg={t:r,c:'w'}; else if(r&&r.t) S.msg=r; }
+  if(fn) explainLSK(key,false);
+  after();
+}
+function typeChar(ch){ if(S.msg){ S.msg=null; } if(S.scratch==='CLR') S.scratch=''; if(S.scratch.length<22) S.scratch+=ch; }
+function pressKey(k){
+  if(S.explain){ explainKey(k,true); return; }
+  E={type:'key',key:k};
+  const goPage={DIR:()=>{ S.dirSel=null; S.dirScroll=0; go('DIRTO'); },PROG:()=>go('PROG'),PERF:()=>go('PERF_TO'),INIT:()=>go('INITA'),DATA:()=>go('DATA'),
+    FPLN:()=>{ go('FPLN'); },RADNAV:()=>go('RADNAV'),FUELPRED:()=>go('FUELPRED'),SECFPLN:()=>go('SEC'),ATC:()=>go('ATC'),MENU:()=>go('MENU'),
+    AIRPORT:()=>{ go('FPLN'); const i=plan().findIndex(x=>x.kind==='dest'); S.scroll=i>=0?i:0; }};
+  if(goPage[k]) goPage[k]();
+  else if(k==='BRT') S.brt=Math.min(1.15,S.brt+0.15);
+  else if(k==='DIM') S.brt=Math.max(0.3,S.brt-0.15);
+  else if(k==='LEFT'||k==='RIGHT'){ const pg=P[S.page]; pg.slew&&pg.slew(k==='LEFT'?-1:1); }
+  else if(k==='UP'||k==='DOWN'){ const pg=P[S.page]; pg.scroll&&pg.scroll(k==='UP'?1:-1); }
+  else if(k==='CLR'){
+    if(S.msg){ S.msg=null; E={type:'clrMsg'}; }
+    else if(S.scratch==='CLR'){ S.scratch=''; }
+    else if(S.scratch){ S.scratch=S.scratch.slice(0,-1); if(!S.scratch) E={type:'clrEmpty'}; }
+    else S.scratch='CLR';
+  }
+  else if(k==='SP') typeChar(' ');
+  else if(k==='OVFY') typeChar('Δ');
+  else if(k==='+/-'){ if(S.msg) S.msg=null; const s=S.scratch; if(s.endsWith('-')) S.scratch=s.slice(0,-1)+'+'; else if(s.endsWith('+')) S.scratch=s.slice(0,-1)+'-'; else if(s.length<22) S.scratch=(s==='CLR'?'':s)+'-'; }
+  else if(k.length===1) typeChar(k);
+  after();
+}
+function clrAll(){ if(S.explain) return; S.msg=null; const had=!!S.scratch; S.scratch=''; E={type:had?'clrEmpty':'clrMsg'}; after(); }
+
+/* =========================================================
+   RENDER
+   ========================================================= */
+const rowsEl=document.getElementById('rows');
+function esc(c){ return c==='<'?'&lt;':c==='>'?'&gt;':c==='&'?'&amp;':c; }
+const escText=t=>String(t).replace(/[<>&]/g,esc);
+function render(){
+  blank(); const pg=P[S.page]; pg.render();
+  // scratchpad
+  if(S.msg) put(13,0,S.msg.t.slice(0,24),S.msg.c||'w'); else if(S.scratch) put(13,0,S.scratch,S.scratch==='CLR'?'w':'w');
+  let h='';
+  for(const row of SC){ h+='<div class="row">'; for(const c of row){ if(c.c===BX) h+=`<span class="c bx k-${c.k}"></span>`; else h+=`<span class="c k-${c.k}${c.s?' s':''}">${esc(c.c)}</span>`; } h+='</div>'; }
+  rowsEl.innerHTML=h; rowsEl.style.filter=`brightness(${S.brt})`;
+  document.getElementById('lFm').className='light'+(S.msg?' on-a':'');
+  renderPageHelp(); renderTaskbar();
+}
+
+/* =========================================================
+   GUIDE PANEL
+   ========================================================= */
+const insp=document.getElementById('inspector');
+function setInspector(tag,title,sub,body,ex){
+  insp.innerHTML=`<h3>${tag?`<span class="tag">${tag}</span>`:''}${title}${sub?` <span style="color:var(--muted);font-weight:400;font-size:13px">· ${sub}</span>`:''}</h3><p>${body}</p>${ex?`<p class="ex">${ex}</p>`:''}`;
+}
+function idleInspector(){ setInspector('',UI.inspTitle,'', S.explain?UI.inspExplain:UI.inspIdle, ''); }
+function explainKey(k,open){ const h=KEY_HELP[k]; if(h) setInspector(UI.keyTag,h[0],h[1],h[2],KEY_EX[k]||''); else if(/^[A-Z0-9]$/.test(k)) setInspector(UI.keyTag,k,UI.keyboard,UI.typeChar(k),''); if(open) openPanel('guide'); }
+function explainLSK(key,open){ const pg=P[S.page]; const t=escText((pg.help&&pg.help[key])||UI.noFn); setInspector(key,UI.lskName(key[0],key[1]),pg.name,t,''); if(open) openPanel('guide'); }
+let lastHelpPage=null;
+function renderPageHelp(){
+  if(lastHelpPage===S.page) return; lastHelpPage=S.page;
+  const pg=P[S.page];
+  document.getElementById('pgTitle').textContent=UI.thisPage+' · '+pg.name;
+  document.getElementById('pgDesc').textContent=pg.help.d;
+  const ul=document.getElementById('pgFields'); ul.innerHTML='';
+  const keys=['L1','R1','L2','R2','L3','R3','L4','R4','L5','R5','L6','R6'].filter(k=>pg.help[k]);
+  if(pg.slew) keys.push('←→'); if(pg.scroll) keys.push('↑↓');
+  keys.forEach(k=>{ const li=document.createElement('li'); const txt=k==='←→'?(P[S.page]===P.INITA?UI.toInitB:UI.toInitA):k==='↑↓'?UI.scrollList:pg.help[k];
+    li.innerHTML=`<span class="lk">${k}</span><span>${escText(txt)}</span>`; li.dataset.lk=k;
+    li.addEventListener('mouseenter',()=>hl(k,true)); li.addEventListener('mouseleave',()=>hl(k,false)); ul.appendChild(li); });
+}
+function hl(k,on){ let sel=null; if(/^[LR]\d$/.test(k)) sel=`[data-lsk="${k}"]`; else if(k==='←→') sel='[data-k="LEFT"],[data-k="RIGHT"]'; else if(k==='↑↓') sel='[data-k="UP"],[data-k="DOWN"]'; if(sel) document.querySelectorAll(sel).forEach(b=>b.classList.toggle('hl',on)); }
+
+/* =========================================================
+   EXERCISES
+   ========================================================= */
+const has=id=>S.fpln.some(x=>x.t==='wpt'&&x.id===id);
+const idx=id=>S.fpln.findIndex(x=>x.t==='wpt'&&x.id===id);
+const wp=id=>S.fpln.find(x=>x.t==='wpt'&&x.id===id);
+function applyInitA(route){ const i=S.init; if(route){ setFromTo('MROC','KMIA',CO.MROCKMIA1.w); i.coRte='MROCKMIA1'; } else setFromTo('MROC','KMIA'); i.altn='KFLL'; i.flt='CRA450'; i.ci=35; i.crz=350; i.crzTemp=isa(350); i.irs=true; }
+function applyDep(){ applySid('07','ESPO1A'); }
+function applyFuel(){ S.fuel.zfw=61.2; S.fuel.zfwcg=27.5; S.fuel.block=9.5; }
+
+const LEVELS=[
+ {name:'Familiarización',intro:'Reconoce las partes del MCDU: las teclas de página, los LSK a los lados de la pantalla y el scratchpad (la última línea).',
+  setup(){},
+  tasks:[
+   {t:'Entra al FMGC pulsando el LSK L1 junto a <FMGC.',h:'Los LSK son las teclas rectangulares a los lados de la pantalla. L1 es la primera de la izquierda.',ok:()=>S.page==='ACSTATUS'},
+   {t:'Abre el índice de datos con la tecla DATA.',h:'DATA está en la primera fila de teclas de función, debajo de la pantalla.',ok:()=>S.page==='DATA'},
+   {t:'Desde DATA INDEX, abre CLOSEST AIRPORTS.',h:'Es la opción <AIRPORTS, en L5.',ok:()=>S.page==='CLOSEST'},
+   {t:'Escribe ABC en el scratchpad.',h:'Usa las teclas de letras; el texto aparece en la última línea de la pantalla.',ok:()=>S.scratch==='ABC'},
+   {t:'Borra el scratchpad con CLR.',h:'Pulsa CLR una vez por carácter, o mantenlo presionado para borrar todo.',ok:()=>E.type==='clrEmpty'},
+   {t:'Vuelve al menú principal con la tecla MCDU MENU.',h:'MCDU MENU está en la segunda fila de teclas de función.',ok:()=>S.page==='MENU'}]},
+ {name:'INIT A',intro:'La primera página que se completa en la preparación de cabina. Vuelo de práctica: San José (MROC) a Miami (KMIA), alterno Fort Lauderdale (KFLL).',
+  setup(){},
+  tasks:[
+   {t:'Pulsa INIT para abrir INIT A.',h:'Fíjate en los recuadros ámbar: son los datos obligatorios.',ok:()=>S.page==='INITA'},
+   {t:'Ingresa FROM/TO: MROC/KMIA.',h:'Escribe MROC/KMIA (la barra está junto a la Z) y pulsa R1.',ok:()=>S.init.from==='MROC'&&S.init.to==='KMIA'},
+   {t:'Ingresa el alterno KFLL.',h:'Escribe KFLL y pulsa L2 (ALTN/CO RTE).',ok:()=>S.init.altn==='KFLL'},
+   {t:'Ingresa el número de vuelo CRA450.',h:'Escribe CRA450 y pulsa L3 (FLT NBR).',ok:()=>S.init.flt==='CRA450'},
+   {t:'Ingresa COST INDEX 35.',h:'Escribe 35 y pulsa L5.',ok:()=>S.init.ci===35},
+   {t:'Ingresa el nivel de crucero FL350.',h:'Escribe 350 y pulsa L6. La temperatura ISA se calcula sola.',ok:()=>S.init.crz===350},
+   {t:'Alinea los IRS desde IRS INIT>.',h:'Pulsa R3 (IRS INIT>) y luego R6 (ALIGN IRS→).',ok:()=>S.init.irs}]},
+ {name:'Combustible',intro:'INIT B: pesos y combustible. INIT A ya está cargado con la ruta de compañía MROCKMIA1.',
+  setup(){ applyInitA(true); go('INITA'); },
+  tasks:[
+   {t:'Desde INIT A, pasa a INIT B con la flecha →.',h:'Las flechas están a la izquierda, sobre el teclado numérico.',ok:()=>S.page==='INITB'},
+   {t:'Ingresa ZFW/ZFWCG 61.2/27.5.',h:'Escribe 61.2/27.5 y pulsa R1.',ok:()=>S.fuel.zfw===61.2&&S.fuel.zfwcg===27.5},
+   {t:'Ingresa BLOCK 9.5 y revisa TOW/LW y EXTRA.',h:'Escribe 9.5 y pulsa R2. Las cifras en verde se calculan solas.',ok:()=>S.fuel.block===9.5},
+   {t:'Cambia el combustible de rodaje (TAXI) a 0.3.',h:'Escribe 0.3 y pulsa L1. Observa cómo cambia EXTRA.',ok:()=>S.fuel.taxi===0.3},
+   {t:'Abre FUEL PRED y lee el EFOB en destino.',h:'Tecla FUEL PRED, segunda fila de teclas de función.',ok:()=>S.page==='FUELPRED'}]},
+ {name:'Construir el F-PLN',intro:'Con solo FROM/TO el plan es MROC — discontinuidad — KMIA. Aquí lo construyes punto por punto y aprendes el plan temporal (TMPY).',
+  setup(){ applyInitA(false); go('INITA'); },
+  tasks:[
+   {t:'Abre la página F-PLN.',h:'Tecla F-PLN, segunda fila de teclas de función.',ok:()=>S.page==='FPLN'},
+   {t:'Pulsa L1 sobre MROC para abrir su revisión lateral (LAT REV).',h:'Con el scratchpad vacío, el LSK izquierdo de un waypoint abre LAT REV.',ok:()=>S.page==='LATREV'&&plan()[S.latRevIdx]?.id==='MROC'},
+   {t:'En <DEPARTURE elige pista 07 y SID ESPO1A; confirma con INSERT*.',h:'L1 abre DEPARTURE. Toca ←07, luego ←ESPO1A, y R6 (INSERT*).',ok:()=>S.dep.rwy==='07'&&S.dep.sid==='ESPO1A'},
+   {t:'Inserta TALUK después de ESPOX con NEXT WPT y confírmalo.',h:'L-LSK sobre ESPOX → escribe TALUK → R2 (NEXT WPT). En el F-PLN amarillo pulsa R6 (INSERT*).',ok:()=>!S.tmpy&&has('TALUK')&&idx('TALUK')===idx('ESPOX')+1},
+   {t:'Escribe BOLOS y pulsa el LSK izquierdo de la F-PLN DISCONTINUITY. Confirma con INSERT*.',h:'Así se inserta un punto sin pasar por LAT REV. Queda antes de la discontinuidad.',ok:()=>!S.tmpy&&has('BOLOS')&&idx('BOLOS')>idx('TALUK')},
+   {t:'Borra la F-PLN DISCONTINUITY.',h:'Con el scratchpad vacío pulsa CLR (aparece «CLR») y luego el LSK izquierdo de la discontinuidad.',ok:()=>S.fpln.length>0&&!S.fpln.some(x=>x.t==='disco')}]},
+ {name:'Revisiones en ruta',intro:'El plan completo ya está cargado (MROC07 · ESPO1A). Practica restricciones, borrar puntos, DIR TO y el plan secundario.',
+  setup(){ applyInitA(true); applyDep(); go('FPLN'); },
+  tasks:[
+   {t:'Pon una restricción de altitud FL240 en BOLOS.',h:'Escribe /FL240 y pulsa el LSK derecho de la línea BOLOS. Usa ↑ si no la ves.',ok:()=>wp('BOLOS')?.alt===24000},
+   {t:'Pon una restricción de velocidad de 250 kt en PIKIS.',h:'Escribe 250/ y pulsa el LSK derecho de PIKIS.',ok:()=>wp('PIKIS')?.spd===250},
+   {t:'Elimina URSUS del plan.',h:'Con el scratchpad vacío: CLR, y luego el LSK izquierdo de URSUS.',ok:()=>S.fpln.length>0&&!has('URSUS')},
+   {t:'Haz un DIR TO a GUSKE y confírmalo.',h:'Tecla DIR → elige GUSKE en la lista (o escríbelo en L1) → R6 INSERT*.',ok:()=>S.fpln[0]?.id==='T-P'&&S.fpln[1]?.id==='GUSKE'},
+   {t:'Pulsa AIRPORT para ver el destino.',h:'AIRPORT está sobre las flechas.',ok:()=>E.type==='key'&&E.key==='AIRPORT'},
+   {t:'Copia el plan activo al secundario.',h:'Tecla SEC F-PLN → L1 <COPY ACTIVE.',ok:()=>!!S.sec}]},
+ {name:'Performance',intro:'Datos de despegue y de aproximación. Ruta, salida y combustible ya están cargados.',
+  setup(){ applyInitA(true); applyDep(); applyFuel(); go('FPLN'); },
+  tasks:[
+   {t:'Abre PERF (página TAKE OFF).',h:'Tecla PERF, primera fila.',ok:()=>S.page==='PERF_TO'},
+   {t:'Ingresa V1 142, VR 145 y V2 149.',h:'142 → L1, 145 → L2, 149 → L3.',ok:()=>S.perf.v1===142&&S.perf.vr===145&&S.perf.v2===149},
+   {t:'Ingresa FLAPS/THS 1/UP0.8.',h:'Escribe 1/UP0.8 y pulsa R3.',ok:()=>S.perf.flaps===1&&S.perf.ths==='UP0.8'},
+   {t:'Ingresa FLEX TO TEMP 55.',h:'Escribe 55 y pulsa R4.',ok:()=>S.perf.flex===55},
+   {t:'Avanza con NEXT PHASE> hasta la página APPR.',h:'R6 cuatro veces: CLB, CRZ, DES y APPR.',ok:()=>S.page==='PERF_APPR'},
+   {t:'En APPR ingresa QNH 1015 y DH 200.',h:'1015 → L1. 200 → R3 (RADIO).',ok:()=>S.perf.qnh===1015&&S.perf.dh===200}]},
+ {name:'Aproximación y radios',intro:'Elige la aproximación en destino y sintoniza las radioayudas. Ruta y combustible ya están cargados.',
+  setup(){ applyInitA(true); applyDep(); applyFuel(); go('FPLN'); },
+  tasks:[
+   {t:'Abre la LAT REV de KMIA y entra a <ARRIVAL.',h:'En F-PLN, L6 abre la LAT REV del destino. Luego L1 <ARRIVAL.',ok:()=>S.page==='ARR'},
+   {t:'Selecciona ILS08R y confírmalo con INSERT*.',h:'Toca ←ILS08R y luego R6.',ok:()=>S.arr.appr==='ILS08R'},
+   {t:'Abre RAD NAV y comprueba que el ILS se sintonizó solo.',h:'Tecla RAD NAV. El texto pequeño indica sintonía automática.',ok:()=>S.page==='RADNAV'&&!!S.rad.ils},
+   {t:'Sintoniza VOR1 por identificador: MIA.',h:'Escribe MIA y pulsa L1. La frecuencia se completa sola.',ok:()=>S.rad.vor1?.id==='MIA'},
+   {t:'Ingresa el curso 090 para VOR1.',h:'Escribe 090 y pulsa L2.',ok:()=>S.rad.crs1===90},
+   {t:'Sintoniza VOR2 por frecuencia: 113.30.',h:'Escribe 113.30 y pulsa R1.',ok:()=>S.rad.vor2?.f==='113.30'}]}
+];
+const prog=LEVELS.map(()=>0);
+let active=null, viewing=0, hintOpen=false;
+
+function startLevel(i){
+  S=Object.assign(fresh(),{explain:S.explain,brt:S.brt}); E={};
+  LEVELS[i].setup(); active=i; viewing=i; prog[i]=0; hintOpen=false; lastHelpPage=null;
+  after(); renderLevels(); toast(`${UI.lvl(i+1)}: ${LEVELS[i].name}`, true);
+  if(window.matchMedia('(max-width: 980px)').matches) closePanel();
+}
+function checkTasks(){
+  if(active==null) return; const L=LEVELS[active]; let i=prog[active], adv=false;
+  while(i<L.tasks.length&&L.tasks[i].ok()){ i++; adv=true; }
+  if(adv){ prog[active]=i; hintOpen=false; toast(i===L.tasks.length?UI.lvlDone(active+1):UI.taskDone); renderLevels(); }
+}
+function after(){ checkTasks(); render(); }
+
+const tb=document.getElementById('taskbar');
+function renderTaskbar(){
+  if(active==null){ tb.className='taskbar free'; tb.innerHTML=`<div class="tb-head"><span class="lvl">${UI.free}</span><button class="linkbtn" data-open="ex">${UI.pickEx}</button></div><div class="task">${UI.freeTask}</div>`; return; }
+  const L=LEVELS[active], i=prog[active], n=L.tasks.length;
+  tb.className='taskbar';
+  if(i>=n){ tb.innerHTML=`<div class="tb-head"><span class="lvl">${UI.lvl(active+1)} · ${L.name} · ${UI.completed}</span><button class="linkbtn" data-open="ex">${UI.viewLevels}</button></div><div class="task">${active<LEVELS.length-1?UI.nextUp(active+2,LEVELS[active+1].name):UI.lastDone}</div>${active<LEVELS.length-1?`<div><button class="btn primary" id="nextLv">${UI.startNext(active+2)}</button></div>`:''}`; const nb=document.getElementById('nextLv'); if(nb) nb.onclick=()=>startLevel(active+1); return; }
+  const T=L.tasks[i];
+  tb.innerHTML=`<div class="tb-head"><span class="lvl">${UI.lvl(active+1)} · ${UI.taskOf(i+1,n)}</span><button class="linkbtn" id="tbHint">${hintOpen?UI.hideHint:UI.hint}</button></div><div class="task">${T.t}</div>${hintOpen?`<div class="hint">${T.h}</div>`:''}`;
+  document.getElementById('tbHint').onclick=()=>{ hintOpen=!hintOpen; renderTaskbar(); renderLevels(); };
+}
+function renderLevels(){
+  const box=document.getElementById('levels'); box.innerHTML='';
+  LEVELS.forEach((L,i)=>{ const b=document.createElement('button'); b.className='lv'+(active===i?' active':''); b.setAttribute('aria-current',viewing===i?'true':'false');
+    const n=L.tasks.length, d=prog[i];
+    b.innerHTML=`<span class="n"><span>${UI.lvl(i+1)}</span><span>${active===i?UI.inProgress:(d>=n?'✓':d+'/'+n)}</span></span><span class="t">${L.name}</span><span class="bar"><i style="width:${d/n*100}%"></i></span>`;
+    b.onclick=()=>{ viewing=i; renderLevels(); }; box.appendChild(b); });
+  const L=LEVELS[viewing], c=document.getElementById('lvcard'), isAct=active===viewing, done=prog[viewing];
+  let h=`<h3>${UI.lvl(viewing+1)} · ${L.name}</h3><p class="intro">${L.intro}</p><div class="actions">`;
+  h+= isAct? `<button class="btn" id="lvRestart">${UI.restartLv}</button><button class="btn ghost" id="lvFree">${UI.exitFree}</button>` : `<button class="btn primary" id="lvStart">${UI.startLv(viewing+1)}</button>`;
+  h+='</div>';
+  if(isAct&&done>=L.tasks.length) h+=`<div class="complete">${UI.lvComplete} ${viewing<LEVELS.length-1?UI.lvMore:UI.allDone}</div>`;
+  h+='<ol class="tasks">';
+  L.tasks.forEach((T,j)=>{ const st=j<done?'done':(isAct&&j===done?'cur':''); h+=`<li class="${st}"><span class="st">${j<done?'✓':(st==='cur'?'▸':j+1)}</span><div><div>${T.t}</div>`;
+    if(st==='cur'){ h+= hintOpen?`<div class="h">${T.h}</div>`:''; h+=`<div class="row-actions"><button class="linkbtn" data-act="hint">${hintOpen?UI.hideHint:UI.showHint}</button><button class="linkbtn" data-act="skip">${UI.skip}</button></div>`; }
+    h+='</div></li>'; });
+  h+='</ol>';
+  if(!isAct) h+=`<p class="note">${UI.startNote(viewing>1)}</p>`;
+  c.innerHTML=h;
+  const s=document.getElementById('lvStart'); if(s) s.onclick=()=>startLevel(viewing);
+  const r=document.getElementById('lvRestart'); if(r) r.onclick=()=>startLevel(viewing);
+  const f=document.getElementById('lvFree'); if(f) f.onclick=()=>{ active=null; renderLevels(); render(); };
+  c.querySelectorAll('[data-act="hint"]').forEach(b=>b.onclick=()=>{ hintOpen=!hintOpen; renderLevels(); renderTaskbar(); });
+  c.querySelectorAll('[data-act="skip"]').forEach(b=>b.onclick=()=>{ prog[active]++; hintOpen=false; renderLevels(); after(); });
+}
+
+/* =========================================================
+   PANEL, TOAST, EVENTS
+   ========================================================= */
+const panel=document.getElementById('panel');
+function setTab(t){ const g=t==='guide'; document.getElementById('tabGuide').setAttribute('aria-selected',g); document.getElementById('tabEx').setAttribute('aria-selected',!g); document.getElementById('guideBody').hidden=!g; document.getElementById('exBody').hidden=g; }
+function openPanel(t){ setTab(t); panel.classList.add('open'); }
+function closePanel(){ panel.classList.remove('open'); }
+document.getElementById('tabGuide').onclick=()=>setTab('guide');
+document.getElementById('tabEx').onclick=()=>setTab('ex');
+document.getElementById('closeSheet').onclick=closePanel;
+document.addEventListener('click',e=>{ const o=e.target.closest('[data-open]'); if(o) openPanel(o.dataset.open); });
+
+let toastT;
+function toast(msg,neutral){ const t=document.getElementById('toast'); t.textContent=msg; t.style.background=neutral?'var(--cyan)':'var(--green)'; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),1800); }
+
+const mcdu=document.getElementById('mcdu');
+let holdT=null, held=false;
+mcdu.addEventListener('pointerdown',e=>{ const b=e.target.closest('[data-k="CLR"]'); if(!b) return; held=false; holdT=setTimeout(()=>{ held=true; clrAll(); },550); });
+['pointerup','pointerleave','pointercancel'].forEach(ev=>mcdu.addEventListener(ev,()=>{ clearTimeout(holdT); }));
+mcdu.addEventListener('click',e=>{
+  const l=e.target.closest('[data-lsk]'); if(l){ pressLSK(l.dataset.lsk); return; }
+  const k=e.target.closest('[data-k]'); if(k){ if(k.dataset.k==='CLR'&&held){ held=false; return; } pressKey(k.dataset.k); }
+});
+const fine=window.matchMedia('(hover: hover) and (pointer: fine)');
+mcdu.addEventListener('mouseover',e=>{ if(!fine.matches) return; const l=e.target.closest('[data-lsk]'); if(l){ explainLSK(l.dataset.lsk,false); return; } const k=e.target.closest('[data-k]'); if(k) explainKey(k.dataset.k,false); });
+mcdu.addEventListener('focusin',e=>{ const l=e.target.closest('[data-lsk]'); if(l){ explainLSK(l.dataset.lsk,false); return; } const k=e.target.closest('[data-k]'); if(k) explainKey(k.dataset.k,false); });
+
+function flash(sel){ const b=document.querySelector(sel); if(!b) return; b.classList.add('pressed'); setTimeout(()=>b.classList.remove('pressed'),110); }
+document.addEventListener('keydown',e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey) return;
+  const tag=(e.target.tagName||'').toLowerCase(); if(tag==='input'||tag==='textarea') return;
+  if((e.key===' '||e.key==='Enter')&&tag==='button') return;
+  const map={ArrowLeft:'LEFT',ArrowRight:'RIGHT',ArrowUp:'UP',ArrowDown:'DOWN',Backspace:'CLR',' ':'SP','-':'+/-'};
+  let k=map[e.key];
+  if(e.key==='Delete'){ e.preventDefault(); clrAll(); return; }
+  if(!k&&e.key.length===1&&/[a-zA-Z0-9./]/.test(e.key)) k=e.key.toUpperCase();
+  if(!k) return; e.preventDefault(); flash(`[data-k="${CSS.escape(k)}"]`); pressKey(k);
+});
+
+const exBtn=document.getElementById('explainBtn');
+exBtn.onclick=()=>{ S.explain=!S.explain; exBtn.setAttribute('aria-pressed',S.explain); idleInspector(); if(S.explain) openPanel('guide'); };
+document.getElementById('resetBtn').onclick=()=>{ const ex=S.explain; S=fresh(); S.explain=ex; E={}; lastHelpPage=null; if(active!=null){ LEVELS[active].setup(); prog[active]=0; renderLevels(); } after(); toast(UI.mcduReset,true); };
+
+/* =========================================================
+   I18N — English overrides (Spanish is the inline default)
+   ========================================================= */
+const STATIC_EN={
+ docTitle:'A320 MCDU Trainer | Qub-its Labs',
+ description:'Interactive A320-style MCDU simulator with a guide and level-based exercises.',
+ title:'A320 MCDU Trainer',
+ subtitle:'Interactive Multipurpose Control & Display Unit simulator · fictional navigation data',
+ explain:'? Explain mode',explainTitle:'When on, pressing a key explains it instead of running it',
+ reset:'Reset MCDU',guide:'Guide',exercises:'Exercises',back:'← Qub-its',
+ simLabel:'Simulator',screenLabel:'MCDU screen',panelLabel:'Guide and exercises',closePanel:'Close panel',
+ kbdNote:'Physical keyboard: letters, numbers, <kbd>/</kbd> <kbd>.</kbd> <kbd>space</kbd> · <kbd>⌫</kbd> = CLR · <kbd>Delete</kbd> = clear all · arrows = ← → ↑ ↓',
+ colors:'Screen colors',
+ legend1:'Amber: required data or pending action',legend2:'Cyan: field the pilot can modify',legend3:'Green: computed or active data',
+ legend4:'White: titles, labels and options',legend5:'Yellow: unconfirmed temporary plan',legend6:'Magenta: speed or altitude constraints',
+ howTo:'How to use it',
+ c1S:'Scratchpad and LSK: the basic loop',
+ c1B:'Everything you type appears on the last line (the scratchpad). To send it to a field, press the line select key (LSK) next to that field. Example: type <code>MROC/KMIA</code> and press R1 on INIT A. If the entry is invalid the scratchpad shows a message; clear it with CLR.',
+ c2S:'&lt; and &gt; symbols',
+ c2B:'An option with <code>&lt;</code> or <code>&gt;</code> opens another page. One with <code>*</code> runs an action (INSERT*). <code>←ERASE</code> discards a temporary change.',
+ c3S:'Temporary plan (TMPY)',
+ c3B:'Lateral revisions (inserting a waypoint, SID, DIR TO, changing the destination) are prepared in a yellow temporary plan. They do not affect the active plan until you press <code>INSERT*</code>. <code>←ERASE</code> discards it.',
+ c4S:'Clearing a field with CLR',
+ c4B:'With an empty scratchpad, CLR types <code>CLR</code>. Then press the field\'s LSK to clear it (for example, a waypoint or an F-PLN discontinuity). CLR with text deletes one character; hold it to delete everything.',
+ c5S:'Scratchpad messages',
+ c5B:`<ul class="msgs">
+          <li><code>FORMAT ERROR</code><span>The format does not match the field.</span></li>
+          <li><code>NOT IN DATABASE</code><span>The identifier does not exist in the database.</span></li>
+          <li><code>ENTRY OUT OF RANGE</code><span>The value is outside the allowed limits.</span></li>
+          <li><code>NOT ALLOWED</code><span>That action is not possible in that field.</span></li>
+          <li><code>NOT AVAILABLE</code><span>Function not simulated in this trainer.</span></li>
+          <li><code>V1/VR/V2 DISAGREE</code><span>The speeds do not satisfy V1 ≤ VR ≤ V2.</span></li>
+        </ul>`,
+ c6S:'This trainer\'s database',
+ c6B:'Airports: <code>MROC MRLB KMIA KFLL MPTO MMUN</code>. Waypoints: <code>ESPOX TALUK BOLOS GUSKE URSUS PIKIS SELVA NAVAS TORTU ROLEX</code>. VOR: <code>TIO 116.40 · LIB 114.10 · MIA 115.90 · DHP 113.30 · FLL 114.40</code>. Company route: <code>MROCKMIA1</code>. Coordinates, frequencies and procedures are fictional: do not use them for real navigation.',
+ levels:'Levels',
+ levelsNote:'All levels are unlocked: jump to any one you like. Starting a level preloads the MCDU with what that level needs.',
+ progressNote:'There is no database: progress lives only in this tab and resets when you reload the page.'
+};
+
+const PHASE_EN=ph=>({d:`${ph} phase: ECON speed mode (based on the cost index) and speed managed by the FMGC.`,
+ L1:'ACT MODE: active speed mode (ECON).',L2:'CI: cost index entered on INIT A.',L3:'MANAGED: managed speed/Mach.',L4:'SELECTED: preselected speed (not simulated).',L6:'<PREV PHASE: previous phase.',R6:'NEXT PHASE>: next phase.'});
+const HELP_EN={
+ MENU:{d:'MCDU main menu. Choose which aircraft system this display controls. The FMGC (Flight Management & Guidance Computer) is the one used to plan the flight.',
+  L1:'<FMGC: enters the flight management computer (opens A/C STATUS).',L2:'<ATSU: datalink communications (not simulated).',L3:'<AIDS: aircraft data monitoring (not simulated).',L4:'<CFDS: maintenance system (not simulated).'},
+ ACSTATUS:{d:'Aircraft status: model, engines and navigation database. Before every flight, check that the active database is current (28-day AIRAC cycle).',
+  L1:'ENG: installed engine model.',L2:'ACTIVE DATA BASE: validity dates and identifier of the active database.',L3:'SECOND DATA BASE: backup database. On the real aircraft it is swapped on the ground.',L5:'CHG CODE: maintenance code to change parameters (not simulated).',L6:'IDLE/PERF: engine degradation factors used by the fuel predictions.'},
+ DATA:{d:'Data index: position and sensor monitors, aircraft status and nearby airports.',
+  L1:'POSITION MONITOR: compares the position from each FMGC, GPS and IRS.',L2:'IRS MONITOR: status of the three inertial units (ALIGN / NAV).',L3:'GPS MONITOR (not simulated).',L4:'A/C STATUS: aircraft model and database.',L5:'CLOSEST AIRPORTS: the 4 closest airports with bearing and distance.',L6:'EQUITIME POINT (not simulated).',R1:'STORED WAYPOINTS (not simulated).'},
+ POSMON:{d:'Position computed by each source. On the ground they all start from the origin airport reference.',L6:'←FREEZE: freezes the reading (not simulated).'},
+ IRSMON:{d:'Status of the three inertial reference units. ALIGN = aligning; NAV = ready to navigate.',L1:'IRS1: unit detail (not simulated).',L2:'IRS2',L3:'IRS3'},
+ CLOSEST:{d:'The four airports closest to the current position, with true bearing and distance. Useful for planning a diversion.',L1:'Closest airport.',L2:'Second closest.',L3:'Third.',L4:'Fourth.'},
+ INITA:{d:'First page of flight preparation. Amber boxes are mandatory. Use the ← → arrows to go to INIT B.',
+  L1:'CO RTE: company route. E.g. MROCKMIA1 loads origin, destination and every waypoint.',R1:'FROM/TO: origin/destination as ICAO codes. E.g. MROC/KMIA. Creates a plan with a discontinuity between them.',
+  L2:'ALTN: alternate airport. E.g. KFLL.',R2:'INIT REQUEST: requests initialization data over datalink (not simulated).',
+  L3:'FLT NBR: flight number, up to 8 characters. E.g. CRA450.',R3:'IRS INIT>: page to align the inertial units.',
+  L4:'LAT: origin latitude; the reference used to align the IRS.',R4:'LONG: origin longitude.',
+  L5:'COST INDEX: 0–999. Low = saves fuel; high = flies faster.',
+  L6:'CRZ FL/TEMP: cruise level and temperature. E.g. 350 or FL350/-54. Without a temperature, ISA is used.',R6:'TROPO: tropopause altitude in feet (36090 by default).'},
+ IRSINIT:{d:'Alignment of the three inertial units (IRS) with the origin airport reference position. Requires FROM/TO on INIT A.',
+  L1:'LAT: reference latitude.',R1:'LONG: reference longitude.',L2:'REFERENCE: airport used as the reference.',R2:'GPS POSITION: GPS position for comparison.',L6:'<RETURN: back to INIT A.',R6:'ALIGN IRS→: confirms the position and aligns the IRS.'},
+ INITB:{d:'Weights and fuel. With ZFW and BLOCK the FMGC computes trip, reserves, takeoff and landing weights and extra fuel. Use ← → to return to INIT A.',
+  L1:'TAXI: taxi fuel in tonnes (0.2 by default).',R1:'ZFW/ZFWCG: zero fuel weight (t) and its center of gravity (%MAC). E.g. 61.2/27.5.',
+  L2:'TRIP/TIME: computed trip fuel and time.',R2:'BLOCK: total fuel on board before taxi (t). E.g. 9.5.',
+  L3:'RTE RSV/%: route reserve. Change the percentage by typing /5.0.',L4:'ALTN/TIME: fuel and time to the alternate.',R4:'TOW/LW: estimated takeoff and landing weights.',
+  L5:'FINAL/TIME: final reserve (30 min).',R5:'TRIP WIND: average wind component (not editable here).',L6:'EXTRA/TIME: fuel left over after all reserves.',R6:'MIN DEST FOB: minimum fuel on arrival (alternate + final).'},
+ FPLN:{d:'Active flight plan: waypoint, estimated UTC time and speed/altitude. ↑ shows waypoints further ahead and ↓ goes back. Yellow lines are a temporary plan (TMPY), confirmed with INSERT*.',
+  L1:'Empty left LSK: opens the lateral revision (LAT REV) for the waypoint. With an identifier: inserts it at that position. With CLR: deletes the waypoint or discontinuity.',
+  L2:'Same as L1, for the second visible line.',L3:'Same as L1, for the third visible line.',L4:'Same as L1, for the fourth visible line.',L5:'Same as L1, for the fifth visible line.',
+  R1:'Right LSK: constraints. 250/ = speed, /FL240 or /5000 = altitude, 250/FL100 = both. CLR removes them.',R2:'Speed/altitude constraint for the second line.',R3:'Constraint for the third line.',R4:'Constraint for the fourth line.',R5:'Constraint for the fifth line.',
+  L6:'Destination line (time, total distance, estimated fuel). Opens the destination LAT REV. With TMPY: ←ERASE discards the changes.',R6:'With TMPY: INSERT* activates the temporary plan.'},
+ LATREV:{d:'Lateral revision of a waypoint: departures, arrivals, inserting the next waypoint or changing the destination. Opened with the left LSK on the F-PLN.',
+  L1:'<DEPARTURE (at the origin) or <ARRIVAL (at the destination): runways, SIDs and approaches.',L3:'<HOLD: holding pattern (not simulated).',
+  R2:'NEXT WPT: inserts a waypoint right after this one. Creates a TMPY plan.',R3:'NEW DEST: changes the destination from this waypoint on. Creates a TMPY plan.',L6:'<RETURN: back to the F-PLN.'},
+ DEP:{d:'Departures from the origin airport. Pick the runway first, then the SID (standard instrument departure). The selection stays yellow until you press INSERT*.',
+  L1:'Shows the selected runway / SID. Press it to go back to the runway list.',L2:'Selects the item on this line (runway or SID).',L3:'Selects the item on this line.',L4:'Selects the item on this line.',L5:'Selects the item on this line.',
+  L6:'←ERASE discards the selection; <RETURN goes back to the F-PLN.',R6:'INSERT*: inserts the runway and SID into the active plan.'},
+ ARR:{d:'Arrivals at the destination: pick the approach. If it is an ILS, its frequency and course are tuned automatically on RAD NAV (small text = automatic).',
+  L1:'Selected approach.',L2:'Selects the approach on this line.',L3:'Selects the approach on this line.',L4:'Selects the approach on this line.',L5:'Selects the approach on this line.',
+  L6:'←ERASE discards the selection; <RETURN goes back to the F-PLN.',R6:'INSERT*: activates the approach in the plan.'},
+ DIRTO:{d:'Direct to a waypoint: removes the intermediate waypoints and creates a turn point (T-P) at the current position. Useful when ATC clears you direct.',
+  L1:'WAYPOINT: type an identifier from the plan or the database.',L2:'Selects this waypoint from the plan. ↑ ↓ scroll the list.',L3:'Selects this waypoint.',L4:'Selects this waypoint.',L5:'Selects this waypoint.',
+  L6:'←ERASE: cancels the selection.',R6:'INSERT*: executes the direct.'},
+ PERF_TO:{d:'Takeoff data. V1, VR and V2 are mandatory (amber). F, S and O (green, center) are the flap retraction, slat retraction and best glide speeds; they appear once INIT B is complete.',
+  L1:'V1: decision speed (kt). E.g. 142.',L2:'VR: rotation speed (kt).',L3:'V2: takeoff safety speed. V1 ≤ VR ≤ V2 must hold.',
+  R1:'RWY: takeoff runway chosen in DEPARTURE.',R3:'FLAPS/THS: flaps (1–3) and stabilizer trim. E.g. 1/UP0.8 or 2/DN0.5.',
+  L4:'TRANS ALT: transition altitude (above it, set 1013 hPa).',R4:'FLEX TO TEMP: assumed temperature for a reduced-thrust takeoff. E.g. 55.',
+  L5:'THR RED/ACC: thrust reduction and acceleration altitudes. E.g. 1500/1500.',R5:'ENG OUT ACC: acceleration altitude with one engine failed.',R6:'NEXT PHASE>: climb page (CLB).'},
+ PERF_CLB:PHASE_EN('Climb'),
+ PERF_CRZ:Object.assign(PHASE_EN('Cruise'),{R3:'DES CABIN RATE: descent rate of the pressurized cabin.'}),
+ PERF_DES:PHASE_EN('Descent'),
+ PERF_APPR:{d:'Approach data for the destination. QNH is mandatory. BARO (MDA) and RADIO (DH) are mutually exclusive: entering one clears the other.',
+  L1:'QNH: pressure in hPa (1015) or inHg (29.97).',L2:'TEMP: temperature at destination (°C).',L3:'MAG WIND: magnetic wind. E.g. 090/10.',L4:'TRANS FL: transition level.',L5:'VAPP: approach speed computed from the landing weight; you can override it.',
+  R1:'FINAL: approach selected in ARRIVAL.',R2:'BARO: minimum descent altitude (MDA) in feet.',R3:'RADIO: decision height (DH) in feet. E.g. 200.',R4:'CONF3*: landing in configuration 3.',R5:'FULL*: landing with FULL flaps.',
+  L6:'<PREV PHASE: descent.',R6:'NEXT PHASE>: go-around.'},
+ PERF_GA:{d:'Go-around: thrust reduction and acceleration altitudes for the missed approach.',L1:'THR RED/ACC: thrust reduction and acceleration altitudes.',L2:'ENG OUT ACC: acceleration with one engine failed.',L6:'<PREV PHASE: approach.'},
+ PROG:{d:'Flight progress: cruise levels, bearing and distance to any point, and navigation accuracy.',
+  L1:'CRZ / OPT / REC MAX: cruise, optimum and recommended maximum level for the current weight.',L2:'<REPORT: position report (not simulated).',L3:'POSITION UPDATE AT: manual position update (not simulated).',
+  R4:'TO: type a waypoint or airport to see bearing/distance from the current position.',L5:'<GPS: GPS availability prediction (not simulated).',L6:'REQUIRED / ESTIMATED: required vs. estimated accuracy. HIGH = accurate navigation.'},
+ FUELPRED:{d:'Fuel predictions: estimated time and fuel on board (EFOB) on arrival at the destination and the alternate. Requires INIT A and INIT B to be complete.',
+  L1:'Destination: estimated UTC time and EFOB.',L2:'Alternate: time and EFOB at the alternate.',L3:'RTE RSV/%: route reserve.',R3:'GW/CG: gross weight and center of gravity.',
+  L4:'ALTN/TIME: fuel and time to the alternate.',R4:'FOB: fuel on board. FF+FQ means it is computed from measured flow and quantity.',L5:'FINAL/TIME: final reserve.',R5:'MIN DEST FOB: minimum on arrival.',L6:'EXTRA/TIME: extra fuel available.'},
+ RADNAV:{d:'Radio navaid tuning. Type the identifier or the frequency. Large text = manual pilot tuning; small text = automatic FMGC tuning.',
+  L1:'VOR1/FREQ: identifier (MIA) or frequency (115.90). Range 108.00–117.95.',R1:'FREQ/VOR2: same as VOR1. E.g. 113.30.',
+  L2:'CRS VOR1: selected course, 0–360.',R2:'CRS VOR2.',
+  L3:'ILS/FREQ: identifier (IMIA) or frequency (108.10–111.95). Tuned automatically when you pick an ILS approach.',L4:'CRS ILS: localizer course.',
+  L5:'ADF1/FREQ: NDB frequency in kHz (190–1750).',R5:'FREQ/ADF2.'},
+ SEC:{d:'Secondary plan index: a copy of the active plan to prepare alternatives without touching it.',L1:'<COPY ACTIVE: copies the active plan to the secondary.',R1:'SEC F-PLN>: shows the secondary plan.',L2:'<SWAP ACTIVE: swaps active and secondary (not simulated).',L3:'<DELETE SEC: deletes the secondary plan.'},
+ SECFPLN:{d:'Secondary plan. Read-only in this trainer; ↑ ↓ to scroll. Press SEC F-PLN to return to the index.'},
+ ATC:{d:'Datalink communications with air traffic control (CPDLC). This trainer shows the menu but does not simulate the link.',L1:'<LAT REQ: lateral request (direct, deviation).',R1:'VERT REQ>: vertical request (level, climb).',L2:'<WHEN CAN WE: asks ATC when something will be possible.',R2:'OTHER REQ>',L3:'<MSG RECORD: message history.',R3:'TEXT>: free text message.',L6:'<CONNECTION: connection status with the ATC center.'}
+};
+
+const KEY_HELP_EN={
+ DIR:'Opens DIR TO to fly direct to a waypoint from the plan or the database.',
+ PROG:'Flight progress: CRZ/OPT/REC MAX levels, bearing and distance to a point, and navigation accuracy.',
+ PERF:'Performance pages by phase: TAKE OFF, CLB, CRZ, DES, APPR and GO AROUND. On the ground it opens TAKE OFF.',
+ INIT:'INIT A: route, airports, flight number, cost index and cruise level. Use → to go to INIT B (weights and fuel).',
+ DATA:'Position and IRS monitors, aircraft status (A/C STATUS) and closest airports.',
+ FPLN:'The active flight plan. Left LSK = lateral revision; right LSK = speed/altitude constraints.',
+ RADNAV:'Tunes VOR, ILS and ADF by identifier or frequency.',
+ FUELPRED:'Estimated fuel on board (EFOB) on arrival at the destination and the alternate, reserves and extra.',
+ SECFPLN:'Secondary plan: a copy of the active one to prepare alternatives without touching it.',
+ ATC:'Datalink communications menu with ATC (CPDLC). Menu only in this trainer.',
+ MENU:'Chooses which system the MCDU controls (FMGC, ATSU, AIDS, CFDS).',
+ AIRPORT:'Jumps the F-PLN straight to the destination airport, without scrolling line by line.',
+ BRT:'Increases screen brightness.',DIM:'Decreases screen brightness.',
+ LEFT:'Switches between sibling pages, such as INIT A ↔ INIT B.',RIGHT:'Switches between sibling pages, such as INIT A ↔ INIT B.',
+ UP:'Scrolls long lists (F-PLN, DIR TO, SEC): shows the next waypoints.',DOWN:'Scrolls lists back toward the start.',
+ CLR:'Deletes the last character or a message. Hold it to delete everything. With an empty scratchpad it types CLR to clear a field with its LSK.',
+ OVFY:'Types Δ. On the real aircraft it marks a waypoint to be overflown instead of anticipating the turn.',
+ SP:'Inserts a space in the scratchpad.',
+ '/':'Separates two entries in the same field: FROM/TO, ZFW/ZFWCG, speed/altitude.',
+ '+/-':'Types a minus sign (press again to switch to +). Useful for temperatures: -54.',
+ '.':'Decimal point: 61.2, 115.90.'
+};
+const KEY_EX_EN={INIT:'E.g. press INIT, then type MROC/KMIA → R1.',FPLN:'E.g. type /FL240 and press the right LSK of a waypoint.',RADNAV:'E.g. type MIA → L1.',CLR:'E.g. with an empty scratchpad: CLR → LSK of the discontinuity.',DIR:'E.g. DIR → pick GUSKE → INSERT*.'};
+
+const LEVELS_EN=[
+ {name:'Familiarization',intro:'Learn the parts of the MCDU: the page keys, the LSKs on either side of the screen and the scratchpad (the last line).',
+  tasks:[['Enter the FMGC by pressing LSK L1 next to <FMGC.','LSKs are the rectangular keys on either side of the screen. L1 is the top one on the left.'],
+   ['Open the data index with the DATA key.','DATA is in the first row of function keys, below the screen.'],
+   ['From DATA INDEX, open CLOSEST AIRPORTS.','It is the <AIRPORTS option, on L5.'],
+   ['Type ABC into the scratchpad.','Use the letter keys; the text appears on the last line of the screen.'],
+   ['Clear the scratchpad with CLR.','Press CLR once per character, or hold it to delete everything.'],
+   ['Return to the main menu with the MCDU MENU key.','MCDU MENU is in the second row of function keys.']]},
+ {name:'INIT A',intro:'The first page completed during cockpit preparation. Practice flight: San José (MROC) to Miami (KMIA), alternate Fort Lauderdale (KFLL).',
+  tasks:[['Press INIT to open INIT A.','Notice the amber boxes: they are the mandatory entries.'],
+   ['Enter FROM/TO: MROC/KMIA.','Type MROC/KMIA (the slash is next to Z) and press R1.'],
+   ['Enter the alternate KFLL.','Type KFLL and press L2 (ALTN/CO RTE).'],
+   ['Enter flight number CRA450.','Type CRA450 and press L3 (FLT NBR).'],
+   ['Enter COST INDEX 35.','Type 35 and press L5.'],
+   ['Enter cruise level FL350.','Type 350 and press L6. The ISA temperature is computed automatically.'],
+   ['Align the IRS from IRS INIT>.','Press R3 (IRS INIT>) and then R6 (ALIGN IRS→).']]},
+ {name:'Fuel',intro:'INIT B: weights and fuel. INIT A is already loaded with company route MROCKMIA1.',
+  tasks:[['From INIT A, go to INIT B with the → arrow.','The arrows are on the left, above the numeric keypad.'],
+   ['Enter ZFW/ZFWCG 61.2/27.5.','Type 61.2/27.5 and press R1.'],
+   ['Enter BLOCK 9.5 and check TOW/LW and EXTRA.','Type 9.5 and press R2. The green figures are computed automatically.'],
+   ['Change the taxi fuel (TAXI) to 0.3.','Type 0.3 and press L1. Watch how EXTRA changes.'],
+   ['Open FUEL PRED and read the EFOB at the destination.','FUEL PRED key, second row of function keys.']]},
+ {name:'Building the F-PLN',intro:'With only FROM/TO the plan is MROC — discontinuity — KMIA. Here you build it waypoint by waypoint and learn the temporary plan (TMPY).',
+  tasks:[['Open the F-PLN page.','F-PLN key, second row of function keys.'],
+   ['Press L1 on MROC to open its lateral revision (LAT REV).','With an empty scratchpad, a waypoint\'s left LSK opens LAT REV.'],
+   ['In <DEPARTURE pick runway 07 and SID ESPO1A; confirm with INSERT*.','L1 opens DEPARTURE. Tap ←07, then ←ESPO1A, and R6 (INSERT*).'],
+   ['Insert TALUK after ESPOX with NEXT WPT and confirm it.','Left LSK on ESPOX → type TALUK → R2 (NEXT WPT). On the yellow F-PLN press R6 (INSERT*).'],
+   ['Type BOLOS and press the left LSK of the F-PLN DISCONTINUITY. Confirm with INSERT*.','This inserts a waypoint without going through LAT REV. It lands before the discontinuity.'],
+   ['Delete the F-PLN DISCONTINUITY.','With an empty scratchpad press CLR (“CLR” appears), then the left LSK of the discontinuity.']]},
+ {name:'En-route revisions',intro:'The full plan is already loaded (MROC07 · ESPO1A). Practice constraints, deleting waypoints, DIR TO and the secondary plan.',
+  tasks:[['Set an altitude constraint of FL240 at BOLOS.','Type /FL240 and press the right LSK of the BOLOS line. Use ↑ if you cannot see it.'],
+   ['Set a 250 kt speed constraint at PIKIS.','Type 250/ and press the right LSK of PIKIS.'],
+   ['Remove URSUS from the plan.','With an empty scratchpad: CLR, then the left LSK of URSUS.'],
+   ['Do a DIR TO GUSKE and confirm it.','DIR key → pick GUSKE from the list (or type it into L1) → R6 INSERT*.'],
+   ['Press AIRPORT to see the destination.','AIRPORT is above the arrows.'],
+   ['Copy the active plan to the secondary.','SEC F-PLN key → L1 <COPY ACTIVE.']]},
+ {name:'Performance',intro:'Takeoff and approach data. Route, departure and fuel are already loaded.',
+  tasks:[['Open PERF (TAKE OFF page).','PERF key, first row.'],
+   ['Enter V1 142, VR 145 and V2 149.','142 → L1, 145 → L2, 149 → L3.'],
+   ['Enter FLAPS/THS 1/UP0.8.','Type 1/UP0.8 and press R3.'],
+   ['Enter FLEX TO TEMP 55.','Type 55 and press R4.'],
+   ['Advance with NEXT PHASE> to the APPR page.','R6 four times: CLB, CRZ, DES and APPR.'],
+   ['On APPR enter QNH 1015 and DH 200.','1015 → L1. 200 → R3 (RADIO).']]},
+ {name:'Approach and radios',intro:'Pick the approach at the destination and tune the navaids. Route and fuel are already loaded.',
+  tasks:[['Open the KMIA LAT REV and enter <ARRIVAL.','On the F-PLN, L6 opens the destination LAT REV. Then L1 <ARRIVAL.'],
+   ['Select ILS08R and confirm it with INSERT*.','Tap ←ILS08R and then R6.'],
+   ['Open RAD NAV and check that the ILS tuned itself.','RAD NAV key. Small text means automatic tuning.'],
+   ['Tune VOR1 by identifier: MIA.','Type MIA and press L1. The frequency fills in automatically.'],
+   ['Enter course 090 for VOR1.','Type 090 and press L2.'],
+   ['Tune VOR2 by frequency: 113.30.','Type 113.30 and press R1.']]}
+];
+
+function applyLanguage(){
+  if(LANG!=='en') return;
+  const lang=document.getElementById('langLink'), back=document.getElementById('backLink');
+  for(const k in HELP_EN) P[k].help=HELP_EN[k];
+  for(const k in KEY_HELP_EN) KEY_HELP[k][2]=KEY_HELP_EN[k];
+  Object.assign(KEY_EX,KEY_EX_EN);
+  LEVELS_EN.forEach((l,i)=>{ const L=LEVELS[i]; L.name=l.name; L.intro=l.intro; l.tasks.forEach(([t,h],j)=>{ L.tasks[j].t=t; L.tasks[j].h=h; }); });
+  document.documentElement.lang='en';
+  document.title=STATIC_EN.docTitle;
+  document.querySelector('meta[name="description"]').setAttribute('content',STATIC_EN.description);
+  document.querySelector('link[rel="canonical"]').setAttribute('href','https://www.qub-its.com/en/labs/mcdu-trainer/');
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent=STATIC_EN[el.dataset.i18n]; });
+  document.querySelectorAll('[data-i18n-html]').forEach(el=>{ el.innerHTML=STATIC_EN[el.dataset.i18nHtml]; });
+  document.querySelectorAll('[data-i18n-attr]').forEach(el=>{ const [attr,key]=el.dataset.i18nAttr.split(':'); el.setAttribute(attr,STATIC_EN[key]); });
+  lang.href='/labs/mcdu-trainer/'; lang.lang='es'; lang.textContent='ES'; lang.setAttribute('aria-label','Cambiar a español');
+  back.href='/en/#labs';
+}
+
+applyLanguage(); buildHardware(); idleInspector(); renderLevels(); after();
+})();
+</script>
+
+</body>
+</html>

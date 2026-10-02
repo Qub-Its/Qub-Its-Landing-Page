@@ -3,6 +3,21 @@
   "buildCommand": "npm --prefix landing-page-svelte run build",
   "outputDirectory": "landing-page-svelte/dist",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/labs/mcdu-trainer",
+      "destination": "/labs/mcdu-trainer/index.html"
+    },
+    {
+      "source": "/en/labs/mcdu-trainer",
+      "destination": "/labs/mcdu-trainer/index.html"
+    },
+    {
+      "source": "/en/labs/mcdu-trainer/",
+      "destination": "/labs/mcdu-trainer/index.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }

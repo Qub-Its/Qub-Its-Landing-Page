@@ -21,7 +21,7 @@
     es: {
       title: 'Desarrollo de software a medida | Qub-its',
       description: 'Qub-its crea software a medida, productos digitales y plataformas web para empresas que quieren crecer con tecnología.',
-      nav: ['Estudio', 'Servicios', 'Trabajo', 'Iniciar proyecto ↗'],
+      nav: ['Estudio', 'Servicios', 'Trabajo', 'Iniciar proyecto ↗', 'Labs'],
       menu: 'Abrir navegación',
       heroKicker: '[ ESTUDIO DE PRODUCTO DIGITAL / DESDE 2010 ]',
       hero: ['Software que', 'se siente', 'natural.'],
@@ -37,7 +37,10 @@
       workKicker: '/ 03 — SELECCIÓN',
       workTitle: ['Trabajo que deja', 'huella.'],
       work: [['BabyGunGuin', 'Salud digital', 'Seguimiento del embarazo, ecografías y herramientas de IA informativa para Android.', '/baby_gun_guin_privacy_policy.html'], ['LocAlert', 'Movilidad', 'Alarmas de proximidad para llegar a cada destino sin perder de vista la privacidad.', '/locAlert_policy.html'], ['Telemedicina HCG', 'Healthtech', 'Consultas remotas, gestión de pacientes y servicios digitales para HCG Consulting Group.', 'https://hcgconsulting.net'], ['Chrome Site Stats', 'Extensión Chrome', 'Métricas y hábitos de navegación almacenados localmente en el navegador.', '/chrome_site_stats_policy.html'], ['Qubits Cargo', 'SaaS logística', 'Gestión de envíos, seguimiento y operaciones para empresas de courier y cargo.', '#contact'], ['Qub-its Biometric', 'Verificación + OCR', 'OCR de documentos, validación de autenticidad y lectura MRZ en tiempo real.', '/biometric-landing.html'], ['Billium', 'Fintech', 'Una aplicación móvil para mantener las suscripciones organizadas en un solo lugar.', 'https://billium-landing.vercel.app']],
-      contactKicker: '/ 04 — HABLEMOS',
+      labsKicker: '/ 04 — LABS',
+      labsTitle: ['Experimentos que', 'puedes usar.'],
+      labs: [['MCDU Trainer', 'Simulador aeronáutico', 'Entrenador interactivo del MCDU del A320 con guía y ejercicios por niveles.', '/labs/mcdu-trainer/']],
+      contactKicker: '/ 05 — HABLEMOS',
       contact: ['Tu próximo producto', 'empieza con un', 'hola.'],
       contactNote: 'Cuéntanos qué quieres construir. Respondemos con preguntas inteligentes, no con promesas genéricas.',
       privacy: 'Privacidad',
@@ -47,7 +50,7 @@
     en: {
       title: 'Custom Software Development | Qub-its',
       description: 'Qub-its builds custom software, digital products, and web platforms for businesses ready to grow with technology.',
-      nav: ['Studio', 'Services', 'Work', 'Start a project ↗'],
+      nav: ['Studio', 'Services', 'Work', 'Start a project ↗', 'Labs'],
       menu: 'Open navigation',
       heroKicker: '[ DIGITAL PRODUCT STUDIO / EST. 2010 ]',
       hero: ['Software that', 'feels', 'natural.'],
@@ -63,7 +66,10 @@
       workKicker: '/ 03 — SELECTED WORK',
       workTitle: ['Work that makes', 'an impact.'],
       work: [['BabyGunGuin', 'Digital health', 'Pregnancy tracking, ultrasounds, and informational AI tools for Android.', '/baby_gun_guin_privacy_policy.html'], ['LocAlert', 'Mobility', 'Proximity alarms that help people reach each destination while protecting privacy.', '/locAlert_policy.html'], ['HCG Telemedicine', 'Healthtech', 'Remote consultations, patient management, and digital services for HCG Consulting Group.', 'https://hcgconsulting.net'], ['Chrome Site Stats', 'Chrome extension', 'Browser activity insights and habits stored locally on the device.', '/chrome_site_stats_policy.html'], ['Qubits Cargo', 'Logistics SaaS', 'Shipment management, tracking, and operations for courier and cargo businesses.', '#contact'], ['Qub-its Biometric', 'Verification + OCR', 'Document OCR, authenticity validation, and real-time MRZ reading.', '/biometric-landing.html'], ['Billium', 'Fintech', 'A mobile app that keeps subscriptions organized in one place.', 'https://billium-landing.vercel.app']],
-      contactKicker: '/ 04 — LET’S TALK',
+      labsKicker: '/ 04 — LABS',
+      labsTitle: ['Experiments you', 'can use.'],
+      labs: [['MCDU Trainer', 'Aviation simulator', 'Interactive A320 MCDU trainer with a guide and level-based exercises.', '/labs/mcdu-trainer/']],
+      contactKicker: '/ 05 — LET’S TALK',
       contact: ['Your next product', 'starts with a', 'hello.'],
       contactNote: 'Tell us what you want to build. We answer with thoughtful questions, not generic promises.',
       privacy: 'Privacy',
@@ -118,11 +124,12 @@
 {#if policy}
   <main class="legal-shell"><a class="brand" href={isEnglish ? '/en/' : '/'}><img src={logo} alt="Qub-its" /></a><a class="back" href={isEnglish ? '/en/' : '/'}>{copy.back}</a><a class="language-switch legal-language" href={languageTarget} lang={isEnglish ? 'es' : 'en'} aria-label={isEnglish ? 'Cambiar a español' : 'Switch to English'}>{isEnglish ? 'ES' : 'EN'}</a><p class="eyebrow">{policy[1]}</p><h1>{policy[2]}</h1><p class="legal-intro">{policy[3]}</p><div class="legal-grid">{#each policy[4] as section}<article><span>/{section[0].toLowerCase().replaceAll(' ', '_')}</span><h2>{section[0]}</h2><p>{section[1]}</p></article>{/each}</div><p class="legal-contact">{isEnglish ? 'Questions?' : '¿Preguntas?'} <a href="mailto:team@qub-its.com">team@qub-its.com</a></p></main>
 {:else}
-  <header class="site-header"><a class="brand" href={isEnglish ? '/en/' : '/'} aria-label="Qub-its home"><img src={logo} alt="Qub-its" /></a><button class="menu-button" aria-label={copy.menu} aria-expanded={menuOpen} onclick={() => menuOpen = !menuOpen}>menu</button><nav class:open={menuOpen} aria-label="Primary navigation"><a href="#studio" onclick={() => menuOpen = false}>{copy.nav[0]}</a><a href="#services" onclick={() => menuOpen = false}>{copy.nav[1]}</a><a href="#work" onclick={() => menuOpen = false}>{copy.nav[2]}</a><a class="language-switch" href={languageTarget} lang={isEnglish ? 'es' : 'en'} aria-label={isEnglish ? 'Cambiar a español' : 'Switch to English'}>{isEnglish ? 'ES' : 'EN'}</a><a class="nav-cta" href="#contact" onclick={() => menuOpen = false}>{copy.nav[3]}</a></nav></header>
+  <header class="site-header"><a class="brand" href={isEnglish ? '/en/' : '/'} aria-label="Qub-its home"><img src={logo} alt="Qub-its" /></a><button class="menu-button" aria-label={copy.menu} aria-expanded={menuOpen} onclick={() => menuOpen = !menuOpen}>menu</button><nav class:open={menuOpen} aria-label="Primary navigation"><a href="#studio" onclick={() => menuOpen = false}>{copy.nav[0]}</a><a href="#services" onclick={() => menuOpen = false}>{copy.nav[1]}</a><a href="#work" onclick={() => menuOpen = false}>{copy.nav[2]}</a><a href="#labs" onclick={() => menuOpen = false}>{copy.nav[4]}</a><a class="language-switch" href={languageTarget} lang={isEnglish ? 'es' : 'en'} aria-label={isEnglish ? 'Cambiar a español' : 'Switch to English'}>{isEnglish ? 'ES' : 'EN'}</a><a class="nav-cta" href="#contact" onclick={() => menuOpen = false}>{copy.nav[3]}</a></nav></header>
   <main><section class="hero"><div class="hero-glow"></div><p class="eyebrow">{copy.heroKicker}</p><h1>{copy.hero[0]}<br /><em>{copy.hero[1]}</em> {copy.hero[2]}</h1><div class="hero-bottom"><p>{copy.heroDescription}</p><a class="button" href="#contact">{copy.heroCta} <span>↘</span></a></div><div class="terminal" aria-hidden="true"><div class="terminal-top"><i></i><i></i><i></i><span>qubits.system</span></div><p><b>›</b> {copy.terminal[0]}</p><p><b>✓</b> {copy.terminal[1]}</p><p><b>✓</b> {copy.terminal[2]}</p><p><b>✓</b> {copy.terminal[3]}<span class="cursor">_</span></p></div></section>
   <section class="intro section" id="studio"><p class="eyebrow">{copy.aboutKicker}</p><div><h2>{copy.about[0]}<br />{copy.about[1]} <em>{copy.about[2]}</em></h2><p class="lead">{copy.aboutDescription}</p></div></section>
   <section class="services section" id="services"><div class="section-heading"><p class="eyebrow">{copy.servicesKicker}</p><h2>{copy.servicesTitle[0]} <em>{copy.servicesTitle[1]}</em><br />{copy.servicesTitle[2]}</h2></div><div class="service-grid">{#each copy.services as service}<article><div class="service-number">{service[0]} <span>↗</span></div><h3>{service[1]}</h3><p>{service[2]}</p></article>{/each}</div></section>
   <section class="work section" id="work"><div class="section-heading"><p class="eyebrow">{copy.workKicker}</p><h2>{copy.workTitle[0]}<br /><em>{copy.workTitle[1]}</em></h2></div><div class="work-list">{#each copy.work as project, i}<a href={localize(project[3])} target={project[3].startsWith('http') ? '_blank' : undefined} rel={project[3].startsWith('http') ? 'noreferrer' : undefined}><span class="work-index">0{i + 1}</span><div><p>{project[1]}</p><h3>{project[0]}</h3></div><p class="work-description">{project[2]}</p><span class="arrow">↗</span></a>{/each}</div></section>
+  <section class="labs section" id="labs"><div class="section-heading"><p class="eyebrow">{copy.labsKicker}</p><h2>{copy.labsTitle[0]}<br /><em>{copy.labsTitle[1]}</em></h2></div><div class="work-list">{#each copy.labs as lab, i}<a href={localize(lab[3])}><span class="work-index">0{i + 1}</span><div><p>{lab[1]}</p><h3>{lab[0]}</h3></div><p class="work-description">{lab[2]}</p><span class="arrow">↗</span></a>{/each}</div></section>
   <section class="contact section" id="contact"><p class="eyebrow">{copy.contactKicker}</p><h2>{copy.contact[0]}<br />{copy.contact[1]} <em>{copy.contact[2]}</em></h2><a class="contact-email" href="mailto:team@qub-its.com?subject=New%20project%20with%20Qub-its">team@qub-its.com <span>↗</span></a><p class="contact-note">{copy.contactNote}</p></section></main>
   <footer><a class="brand" href={isEnglish ? '/en/' : '/'}><img src={logo} alt="Qub-its" /></a><p>© {new Date().getFullYear()} Qub-its Inc.</p><div><a href={localize('/locAlert_policy.html')}>{copy.privacy}</a><a href="mailto:team@qub-its.com">{copy.contactLabel}</a></div></footer>
 {/if}
