@@ -36,3 +36,11 @@ npx postcss HTML/css/*.css -o HTML/css/output.css  # or similar
 ## Contact Form
 
 The `HTML/` version submits to Web3Forms. Do not commit access keys — the one present (`53269194-6475-4891-a617-a0363b8ddb30`) is already public but should still be treated as a secret.
+
+## Feedback Panel
+
+The Svelte landing has a "Feedback" button in the header (`src/lib/FeedbackPanel.svelte`, logic in `src/lib/feedback.js`) that submits to Web3Forms.
+
+- Key: `VITE_WEB3FORMS_FEEDBACK_KEY` (Vercel env vars, or `landing-page-svelte/.env.local`). Without it, the button is not rendered. Never commit the key.
+- Use a dedicated feedback key with **hCaptcha enabled** in the Web3Forms dashboard — it is the only anti-spam layer a direct API caller cannot skip. Rotate the key if it gets abused.
+- Logic checks: `node scripts/check-feedback.mjs` (from `landing-page-svelte/`).
