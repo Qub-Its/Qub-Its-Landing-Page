@@ -9,11 +9,19 @@
     },
     {
       "source": "/en/labs/mcdu-trainer",
-      "destination": "/labs/mcdu-trainer/index.html"
+      "destination": "/en/labs/mcdu-trainer/index.html"
     },
     {
       "source": "/en/labs/mcdu-trainer/",
-      "destination": "/labs/mcdu-trainer/index.html"
+      "destination": "/en/labs/mcdu-trainer/index.html"
+    },
+    {
+      "source": "/en",
+      "destination": "/en/index.html"
+    },
+    {
+      "source": "/en/(.*)",
+      "destination": "/en/index.html"
     },
     {
       "source": "/(.*)",

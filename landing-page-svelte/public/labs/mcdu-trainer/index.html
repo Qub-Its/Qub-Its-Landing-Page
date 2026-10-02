@@ -3,13 +3,33 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Simulador interactivo de un MCDU estilo A320 con guía y ejercicios por niveles.">
+<meta name="description" content="Simulador interactivo y gratuito del MCDU del Airbus A320: aprende INIT, F-PLN, PERF y RAD NAV con una guía de teclas y ejercicios por niveles.">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+<meta name="theme-color" content="#141a1f">
 <title>Entrenador MCDU A320 | Qub-its Labs</title>
 <link rel="canonical" href="https://www.qub-its.com/labs/mcdu-trainer/">
 <link rel="alternate" hreflang="es" href="https://www.qub-its.com/labs/mcdu-trainer/">
 <link rel="alternate" hreflang="en" href="https://www.qub-its.com/en/labs/mcdu-trainer/">
 <link rel="alternate" hreflang="x-default" href="https://www.qub-its.com/labs/mcdu-trainer/">
-<link rel="icon" href="/favicon.ico">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<meta property="og:locale" content="es_ES">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Qub-its">
+<meta property="og:title" content="Entrenador MCDU A320 | Qub-its Labs">
+<meta property="og:description" content="Aprende a usar el MCDU del A320 con un simulador interactivo y ejercicios por niveles.">
+<meta property="og:url" content="https://www.qub-its.com/labs/mcdu-trainer/">
+<meta property="og:image" content="https://www.qub-its.com/images/logo.png">
+<meta property="og:image:width" content="2401">
+<meta property="og:image:height" content="988">
+<meta property="og:image:alt" content="Logo de Qub-its">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Entrenador MCDU A320 | Qub-its Labs">
+<meta name="twitter:description" content="Aprende a usar el MCDU del A320 con un simulador interactivo y ejercicios por niveles.">
+<meta name="twitter:image" content="https://www.qub-its.com/images/logo.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","@id":"https://www.qub-its.com/labs/mcdu-trainer/#app","name":"Entrenador MCDU A320","url":"https://www.qub-its.com/labs/mcdu-trainer/","description":"Simulador interactivo y gratuito del MCDU del Airbus A320 con guía de teclas y ejercicios por niveles.","applicationCategory":"EducationalApplication","operatingSystem":"Web","browserRequirements":"Requires JavaScript","inLanguage":"es","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"publisher":{"@id":"https://www.qub-its.com/#organization"},"isPartOf":{"@id":"https://www.qub-its.com/#website"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Qub-its","item":"https://www.qub-its.com/"},{"@type":"ListItem","position":2,"name":"Labs","item":"https://www.qub-its.com/#labs"},{"@type":"ListItem","position":3,"name":"Entrenador MCDU A320","item":"https://www.qub-its.com/labs/mcdu-trainer/"}]}]}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=B612:wght@400;700&family=B612+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
@@ -1178,8 +1198,6 @@ document.getElementById('resetBtn').onclick=()=>{ const ex=S.explain; S=fresh();
    I18N — English overrides (Spanish is the inline default)
    ========================================================= */
 const STATIC_EN={
- docTitle:'A320 MCDU Trainer | Qub-its Labs',
- description:'Interactive A320-style MCDU simulator with a guide and level-based exercises.',
  title:'A320 MCDU Trainer',
  subtitle:'Interactive Multipurpose Control & Display Unit simulator · fictional navigation data',
  explain:'? Explain mode',explainTitle:'When on, pressing a key explains it instead of running it',
@@ -1370,10 +1388,8 @@ function applyLanguage(){
   for(const k in KEY_HELP_EN) KEY_HELP[k][2]=KEY_HELP_EN[k];
   Object.assign(KEY_EX,KEY_EX_EN);
   LEVELS_EN.forEach((l,i)=>{ const L=LEVELS[i]; L.name=l.name; L.intro=l.intro; l.tasks.forEach(([t,h],j)=>{ L.tasks[j].t=t; L.tasks[j].h=h; }); });
+  // <head> metadata for /en/ is written statically at build time (scripts/localize-heads.mjs).
   document.documentElement.lang='en';
-  document.title=STATIC_EN.docTitle;
-  document.querySelector('meta[name="description"]').setAttribute('content',STATIC_EN.description);
-  document.querySelector('link[rel="canonical"]').setAttribute('href','https://www.qub-its.com/en/labs/mcdu-trainer/');
   document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent=STATIC_EN[el.dataset.i18n]; });
   document.querySelectorAll('[data-i18n-html]').forEach(el=>{ el.innerHTML=STATIC_EN[el.dataset.i18nHtml]; });
   document.querySelectorAll('[data-i18n-attr]').forEach(el=>{ const [attr,key]=el.dataset.i18nAttr.split(':'); el.setAttribute(attr,STATIC_EN[key]); });
