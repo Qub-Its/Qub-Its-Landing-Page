@@ -39,8 +39,8 @@ The `HTML/` version submits to Web3Forms. Do not commit access keys — the one 
 
 ## Feedback Panel
 
-The Svelte landing has a "Feedback" button in the header (`src/lib/FeedbackPanel.svelte`, logic in `src/lib/feedback.js`) that submits to Web3Forms.
+The MCDU trainer (`public/labs/mcdu-trainer/`) has a "Feedback" button in its header that submits to Web3Forms. Panel UI: `feedback-panel.js`; logic: `feedback.js` (both plain ES modules, no bundler).
 
-- Key: `VITE_WEB3FORMS_FEEDBACK_KEY` (Vercel env vars, or `landing-page-svelte/.env.local`). Without it, the button is not rendered. Never commit the key.
+- Key: `VITE_WEB3FORMS_FEEDBACK_KEY` (Vercel env vars, or `landing-page-svelte/.env.local`). The trainer is static, so `scripts/inject-feedback-key.mjs` writes the key into its `<meta name="feedback-key">` during `npm run build`. Without a key the button stays hidden; a new key needs a new build/deploy. Never commit the key.
 - Use a dedicated feedback key with **hCaptcha enabled** in the Web3Forms dashboard — it is the only anti-spam layer a direct API caller cannot skip. Rotate the key if it gets abused.
 - Logic checks: `node scripts/check-feedback.mjs` (from `landing-page-svelte/`).

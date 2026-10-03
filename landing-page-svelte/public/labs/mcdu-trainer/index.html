@@ -6,6 +6,7 @@
 <meta name="description" content="Simulador interactivo y gratuito del MCDU del Airbus A320: aprende INIT, F-PLN, PERF y RAD NAV con una guía de teclas y ejercicios por niveles.">
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
 <meta name="theme-color" content="#141a1f">
+<meta name="feedback-key" content="">
 <title>Entrenador MCDU A320 | Qub-its Labs</title>
 <link rel="canonical" href="https://www.qub-its.com/labs/mcdu-trainer/">
 <link rel="alternate" hreflang="es" href="https://www.qub-its.com/labs/mcdu-trainer/">
@@ -196,6 +197,29 @@ details code{font-family:var(--f-mono);color:var(--cyan);font-size:13px}
   .mcdu{padding:12px 8px 14px}
   .fkeys,.pad3,.pad5{gap:5px}
 }
+/* Feedback panel (feedback-panel.js). Non-modal dialog + own backdrop so the hCaptcha challenge stays clickable. */
+.fb-backdrop{position:fixed;inset:0;z-index:60;background:#0b0f12b3}
+.fb-dialog{position:fixed;inset:0 0 0 auto;z-index:61;margin:0;height:100%;max-height:none;width:min(440px,100%);max-width:none;border:0;border-left:1px solid var(--line);background:var(--panel);color:var(--fg);padding:24px;overflow-y:auto}
+.fb-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.fb-head h2{margin:0;font-family:var(--f-ui);font-size:18px;letter-spacing:.02em}
+.fb-close{background:none;border:1px solid var(--line);border-radius:4px;width:34px;height:34px;font-size:20px;line-height:1;cursor:pointer}
+.fb-close:hover{border-color:var(--muted)}
+.fb-intro,.fb-hint,.fb-count{color:var(--muted);font-size:13px;margin:6px 0 0}
+.fb-intro{margin:10px 0 4px}
+.fb-count{text-align:right}
+.fb-form label{display:block;margin-top:16px;font-family:var(--f-ui);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.fb-form input:not([type=checkbox]),.fb-form textarea{display:block;width:100%;margin-top:6px;background:var(--bg);border:1px solid var(--line);border-radius:4px;color:var(--fg);padding:10px;font:inherit;resize:vertical}
+.fb-form [aria-invalid="true"]{border-color:var(--danger)}
+.fb-error{color:var(--danger);font-size:13px;margin:6px 0 0}
+.fb-hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.fb-captcha{margin-top:18px;min-height:78px}
+.fb-status{min-height:20px;color:var(--muted);font-size:13px;margin:10px 0}
+.fb-submit:disabled{opacity:.45;cursor:not-allowed}
+.fb-success{color:var(--green);font-size:16px;margin:24px 0}
+.fb-link{background:none;border:0;padding:0;color:var(--cyan);text-decoration:underline;cursor:pointer;font:inherit}
+@media (max-width: 980px){
+  .fb-dialog{inset:auto 0 0 0;width:100%;height:auto;max-height:90vh;border-left:0;border-top:1px solid var(--line);border-radius:14px 14px 0 0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
+}
 @media (prefers-reduced-motion: reduce){ *{transition:none!important} }
 </style>
 </head>
@@ -214,6 +238,7 @@ details code{font-family:var(--f-mono);color:var(--cyan);font-size:13px}
     <button class="btn ghost" id="resetBtn" data-i18n="reset">Reiniciar MCDU</button>
     <button class="btn mobile-only" data-open="guide" data-i18n="guide">Guía</button>
     <button class="btn mobile-only" data-open="ex" data-i18n="exercises">Ejercicios</button>
+    <button class="btn" id="feedbackBtn" type="button" hidden>Feedback</button>
     <a class="btn" id="langLink" href="/en/labs/mcdu-trainer/" lang="en" aria-label="Switch to English">EN</a>
     <a class="btn ghost" id="backLink" href="/#labs" data-i18n="back">← Qub-its</a>
   </div>
@@ -1181,6 +1206,7 @@ mcdu.addEventListener('focusin',e=>{ const l=e.target.closest('[data-lsk]'); if(
 function flash(sel){ const b=document.querySelector(sel); if(!b) return; b.classList.add('pressed'); setTimeout(()=>b.classList.remove('pressed'),110); }
 document.addEventListener('keydown',e=>{
   if(e.ctrlKey||e.metaKey||e.altKey) return;
+  if(document.getElementById('fbDialog')?.open) return; // typing in the feedback panel must not drive the MCDU
   const tag=(e.target.tagName||'').toLowerCase(); if(tag==='input'||tag==='textarea') return;
   if((e.key===' '||e.key==='Enter')&&tag==='button') return;
   const map={ArrowLeft:'LEFT',ArrowRight:'RIGHT',ArrowUp:'UP',ArrowDown:'DOWN',Backspace:'CLR',' ':'SP','-':'+/-'};
@@ -1400,6 +1426,7 @@ function applyLanguage(){
 applyLanguage(); buildHardware(); idleInspector(); renderLevels(); after();
 })();
 </script>
+<script type="module" src="/labs/mcdu-trainer/feedback-panel.js"></script>
 
 </body>
 </html>

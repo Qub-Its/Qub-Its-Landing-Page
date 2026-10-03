@@ -1,8 +1,8 @@
-// Assertions for src/lib/feedback.js. Run: node scripts/check-feedback.mjs
+// Assertions for public/labs/mcdu-trainer/feedback.js. Run: node scripts/check-feedback.mjs
 import assert from 'node:assert/strict';
 import {
   LIMITS, MIN_FILL_MS, COOLDOWN_MS, countLinks, validate, isBot, createCooldown, buildPayload, submit
-} from '../src/lib/feedback.js';
+} from '../public/labs/mcdu-trainer/feedback.js';
 
 const ok = { subject: 'Hola', message: 'Un comentario útil.', email: '' };
 
