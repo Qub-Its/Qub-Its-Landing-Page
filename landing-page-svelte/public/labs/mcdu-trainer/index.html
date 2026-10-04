@@ -171,7 +171,16 @@ details code{font-family:var(--f-mono);color:var(--cyan);font-size:13px}
 .tasks li.cur{background:var(--panel-2)}
 .tasks li.cur .st{color:var(--amber)}
 .tasks .h{margin-top:4px;font-size:13px;color:var(--muted);border-left:2px solid var(--amber);padding-left:8px}
-.tasks .row-actions{display:flex;gap:14px;margin-top:6px}
+.tasks .row-actions{display:flex;gap:14px;margin-top:6px;flex-wrap:wrap}
+.tasks .w,.taskbar .why{margin-top:4px;font-size:13px;border-left:2px solid var(--cyan);padding-left:8px}
+.tb-links{display:flex;gap:14px}
+
+/* Glossary terms + tooltip */
+.term{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:help;text-decoration:underline dotted var(--amber);text-decoration-thickness:1px;text-underline-offset:3px}
+.term:hover,.term[aria-describedby]{color:var(--amber)}
+.gloss-tip{position:fixed;z-index:45;max-width:min(320px,calc(100vw - 32px));background:var(--panel-2);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:13px;line-height:1.45;box-shadow:0 8px 24px #0008;display:flex;flex-direction:column;gap:2px;pointer-events:none}
+.gloss-tip[hidden]{display:none}
+.gloss-tip b{font-family:var(--f-ui);font-size:12px;letter-spacing:.03em;color:var(--amber)}
 .complete{border:1px solid var(--green);color:var(--green);border-radius:6px;padding:10px 12px;font-size:14px}
 .note{color:var(--muted);font-size:12px}
 
@@ -342,7 +351,7 @@ const UI={
   inspIdle:'Pasa el cursor por cualquier tecla para ver qué hace. En el teléfono, activa <b>Modo explicar</b> y toca la tecla.',
   keyTag:'TECLA',keyboard:'Teclado',typeChar:k=>`Escribe «${k}» en el scratchpad (última línea). Luego pulsa un LSK para llevar el texto a un campo.`,
   noFn:'Sin función en esta página.',lskName:(side,n)=>`LSK ${side==='L'?'izquierdo':'derecho'} ${n}`,thisPage:'Esta página',
-  toInitB:'Pasa a INIT B.',toInitA:'Vuelve a INIT A.',scrollList:'Desplazan la lista.',slash:'Barra'},
+  toInitB:'Pasa a INIT B.',toInitA:'Vuelve a INIT A.',scrollList:'Desplazan la lista.',slash:'Barra',why:'¿Por qué?',hideWhy:'Ocultar por qué'},
  en:{lvl:n=>`Level ${n}`,lvlDone:n=>`Level ${n} complete`,taskDone:'✓ Task complete',mcduReset:'MCDU reset',
   free:'Free mode',pickEx:'Pick an exercise',freeTask:'Explore the MCDU at your own pace. Start with MCDU MENU → L1, or with INIT.',
   completed:'complete',viewLevels:'View levels',nextUp:(n,name)=>`Next: Level ${n}, ${name}.`,lastDone:'You finished the last level.',startNext:n=>`Start level ${n}`,
@@ -353,7 +362,7 @@ const UI={
   inspIdle:'Hover over any key to see what it does. On a phone, turn on <b>Explain mode</b> and tap the key.',
   keyTag:'KEY',keyboard:'Keyboard',typeChar:k=>`Types “${k}” into the scratchpad (last line). Then press an LSK to send the text to a field.`,
   noFn:'No function on this page.',lskName:(side,n)=>`${side==='L'?'Left':'Right'} LSK ${n}`,thisPage:'This page',
-  toInitB:'Goes to INIT B.',toInitA:'Back to INIT A.',scrollList:'Scroll the list.',slash:'Slash'}
+  toInitB:'Goes to INIT B.',toInitA:'Back to INIT A.',scrollList:'Scroll the list.',slash:'Slash',why:'Why?',hideWhy:'Hide why'}
 }[LANG];
 /* =========================================================
    NAV DATABASE (fictional, training only)
@@ -1014,6 +1023,132 @@ function clrAll(){ if(S.explain) return; S.msg=null; const had=!!S.scratch; S.sc
 const rowsEl=document.getElementById('rows');
 function esc(c){ return c==='<'?'&lt;':c==='>'?'&gt;':c==='&'?'&amp;':c; }
 const escText=t=>String(t).replace(/[<>&]/g,esc);
+
+/* Glossary: a: aliases matched in exercise and help text (case-sensitive), n: name, d: definition. Same ids in both languages. */
+const GLOSS={
+ es:{
+  MCDU:{a:['MCDU'],n:'MCDU — Multipurpose Control and Display Unit',d:'Teclado y pantalla con los que la tripulación dialoga con el FMGC y otros sistemas.'},
+  FMGC:{a:['FMGC'],n:'FMGC — Flight Management and Guidance Computer',d:'Computador que gestiona el plan de vuelo, la navegación, la performance y el guiado. Hay dos, uno por piloto.'},
+  LSK:{a:['LSK'],n:'LSK — Line Select Key',d:'Tecla junto a cada línea de la pantalla. Envía el scratchpad a ese campo o abre la opción indicada.'},
+  SCRATCH:{a:['scratchpad'],n:'Scratchpad',d:'Última línea de la pantalla. Todo lo que escribes queda aquí primero y luego lo envías a un campo con un LSK.'},
+  CLR:{a:['CLR'],n:'CLR — Clear',d:'Borra el scratchpad. Con el scratchpad vacío, prepara el borrado del dato o punto cuyo LSK pulses después.'},
+  CLOSEST:{a:['CLOSEST AIRPORTS'],n:'CLOSEST AIRPORTS',d:'Los aeropuertos más cercanos con rumbo, distancia y combustible estimado. Clave para decidir un desvío urgente.'},
+  INITA:{a:['INIT A'],n:'INIT A — Inicialización A',d:'Primera página de preparación: origen, destino, alterno, número de vuelo, cost index, nivel de crucero e IRS.'},
+  INITB:{a:['INIT B'],n:'INIT B — Inicialización B',d:'Pesos y combustible: ZFW, centro de gravedad y combustible a bordo. El FMGC calcula pesos y reservas.'},
+  INIT:{a:['INIT'],n:'INIT — Inicialización',d:'Tecla y páginas con los datos iniciales del vuelo (INIT A e INIT B).'},
+  FROMTO:{a:['FROM/TO'],n:'FROM/TO — Origen/Destino',d:'Aeropuertos de salida y llegada, en código OACI de 4 letras (MROC = San José, KMIA = Miami).'},
+  ALTN:{a:['ALTN','alterno'],n:'ALTN — Alterno',d:'Aeropuerto al que se desvía el vuelo si no puede aterrizar en destino. El FMGC reserva combustible para llegar a él.'},
+  CORTE:{a:['CO RTE','ruta de compañía'],n:'CO RTE — Company Route',d:'Ruta predefinida por la aerolínea en la base de datos. Carga el plan completo de una sola vez.'},
+  FLTNBR:{a:['FLT NBR','número de vuelo'],n:'FLT NBR — Número de vuelo',d:'Identifica el vuelo ante el control de tránsito y en los mensajes a la compañía. No afecta la navegación.'},
+  CI:{a:['COST INDEX','CI'],n:'COST INDEX (CI)',d:'Relación entre el costo del tiempo y el del combustible. 0 = máximo ahorro de combustible; más alto = más velocidad. El FMGC calcula con él las velocidades económicas.'},
+  FL:{a:['FL'],n:'FL — Flight Level (nivel de vuelo)',d:'Altitud en cientos de pies con el altímetro en presión estándar (1013 hPa). FL350 = 35 000 ft.'},
+  ISA:{a:['ISA'],n:'ISA — Atmósfera estándar internacional',d:'Atmósfera de referencia: 15 °C al nivel del mar y unos 2 °C menos cada 1000 ft. Se usa si no ingresas otra temperatura.'},
+  IRS:{a:['IRS'],n:'IRS — Inertial Reference System',d:'Giróscopos y acelerómetros que dan posición, actitud y rumbo. Se alinean con el avión inmóvil (unos 10 min).'},
+  ZFW:{a:['ZFW'],n:'ZFW — Zero Fuel Weight',d:'Peso del avión cargado (pasajeros, equipaje y carga) sin combustible, en toneladas. Sale de la hoja de carga.'},
+  ZFWCG:{a:['ZFWCG'],n:'ZFWCG — Centro de gravedad al ZFW',d:'Posición del centro de gravedad sin combustible, en % de la cuerda aerodinámica media (MAC). Afecta el trim y la performance.'},
+  BLOCK:{a:['BLOCK'],n:'BLOCK — Combustible a bordo',d:'Combustible total cargado antes de arrancar motores, en toneladas.'},
+  TAXI:{a:['TAXI','combustible de rodaje'],n:'TAXI — Combustible de rodaje',d:'Combustible previsto para rodar hasta la pista. Se quema en tierra, antes del despegue.'},
+  TOW:{a:['TOW'],n:'TOW — Takeoff Weight',d:'Peso al despegue: ZFW + BLOCK − TAXI.'},
+  LW:{a:['LW'],n:'LW — Landing Weight',d:'Peso estimado al aterrizar en destino, tras quemar el combustible del viaje.'},
+  EXTRA:{a:['EXTRA'],n:'EXTRA — Combustible extra',d:'Lo que sobra por encima de lo requerido (viaje, contingencia, alterno y reserva final). Es tu margen.'},
+  FUELPRED:{a:['FUEL PRED'],n:'FUEL PRED — Fuel Prediction',d:'Página que predice hora de llegada y combustible restante en destino y alterno.'},
+  EFOB:{a:['EFOB'],n:'EFOB — Estimated Fuel On Board',d:'Combustible que se estima tendrás al llegar a ese punto.'},
+  SECFPLN:{a:['SEC F-PLN','secundario'],n:'SEC F-PLN — Plan secundario',d:'Plan de respaldo (otra pista, un desvío) que se prepara sin tocar el activo y se puede activar en segundos.'},
+  FPLN:{a:['F-PLN'],n:'F-PLN — Flight Plan',d:'Secuencia de puntos que el avión sigue en modo NAV, con horas, velocidades y altitudes previstas.'},
+  DISCO:{a:['F-PLN DISCONTINUITY','discontinuidad'],n:'Discontinuidad',d:'Hueco en el plan: el FMGC no sabe cómo unir dos puntos y en modo NAV el avión no lo cruza.'},
+  LATREV:{a:['LAT REV','revisión lateral'],n:'LAT REV — Revisión lateral',d:'Página para modificar el plan desde un punto: salida, llegada, insertar el siguiente punto, esperas…'},
+  SID:{a:['SID'],n:'SID — Standard Instrument Departure',d:'Salida publicada desde una pista hasta la ruta. La asigna el control según la pista en uso.'},
+  NEXTWPT:{a:['NEXT WPT'],n:'NEXT WPT — Siguiente punto',d:'Opción de LAT REV que inserta un punto justo después del seleccionado.'},
+  TMPY:{a:['TMPY','plan temporal'],n:'TMPY — Plan temporal',d:'Copia en amarillo con tus cambios. El plan activo no cambia hasta que confirmas con INSERT*.'},
+  INSERT:{a:['INSERT*'],n:'INSERT*',d:'Confirma el plan temporal y lo convierte en activo. ERASE lo descarta.'},
+  DIRTO:{a:['DIR TO'],n:'DIR TO — Direct To',d:'Vuela directo desde la posición actual a un punto y descarta los intermedios.'},
+  PERF:{a:['PERF'],n:'PERF — Performance',d:'Páginas con velocidades y configuración de cada fase: despegue, ascenso, crucero, descenso y aproximación.'},
+  V1:{a:['V1'],n:'V1 — Velocidad de decisión',d:'Por debajo se puede abortar el despegue; por encima se continúa aunque falle un motor.'},
+  VR:{a:['VR'],n:'VR — Velocidad de rotación',d:'Velocidad a la que el piloto levanta la nariz para despegar.'},
+  V2:{a:['V2'],n:'V2 — Velocidad de seguridad al despegue',d:'Garantiza el ascenso mínimo exigido aun con un motor inoperativo.'},
+  FLAPS:{a:['FLAPS/THS'],n:'FLAPS/THS',d:'Configuración de flaps para el despegue y ajuste del estabilizador horizontal (THS) según el centro de gravedad.'},
+  FLEX:{a:['FLEX TO TEMP','FLEX'],n:'FLEX — Temperatura flexible',d:'Temperatura supuesta para despegar con empuje reducido cuando sobra pista. Ahorra desgaste de motores.'},
+  NEXTPH:{a:['NEXT PHASE'],n:'NEXT PHASE',d:'Avanza a la página PERF de la fase siguiente.'},
+  CLB:{a:['CLB'],n:'CLB — Climb',d:'Fase de ascenso.'},
+  CRZ:{a:['CRZ'],n:'CRZ — Cruise',d:'Fase de crucero.'},
+  DES:{a:['DES'],n:'DES — Descent',d:'Fase de descenso.'},
+  APPR:{a:['APPR'],n:'APPR — Approach',d:'Fase de aproximación: datos del aeropuerto de destino para aterrizar.'},
+  QNH:{a:['QNH'],n:'QNH',d:'Presión del aeródromo reducida al nivel del mar. Con ella el altímetro marca la altitud real sobre el mar.'},
+  DH:{a:['DH'],n:'DH — Decision Height',d:'Altura mínima (radioaltímetro) a la que hay que ver la pista para seguir. Si no, motor y al aire.'},
+  ILS:{a:['ILS'],n:'ILS — Instrument Landing System',d:'Guía de precisión lateral (localizador) y vertical (senda de planeo) hasta la pista. ILS08R = pista 08 derecha.'},
+  VOR:{a:['VOR'],n:'VOR — VHF Omnidirectional Range',d:'Radioayuda en tierra que indica en qué radial (rumbo magnético) estás respecto a la estación.'},
+  RADNAV:{a:['RAD NAV'],n:'RAD NAV — Radionavegación',d:'Página para sintonizar VOR, ILS y ADF. El FMGC las sintoniza solo, pero se pueden forzar.'},
+  KT:{a:['kt'],n:'kt — Nudos',d:'Millas náuticas por hora. 250 kt ≈ 463 km/h.'}},
+ en:{
+  MCDU:{a:['MCDU'],n:'MCDU — Multipurpose Control and Display Unit',d:'The keyboard and screen the crew uses to talk to the FMGC and other systems.'},
+  FMGC:{a:['FMGC'],n:'FMGC — Flight Management and Guidance Computer',d:'Computer that manages the flight plan, navigation, performance and guidance. There are two, one per pilot.'},
+  LSK:{a:['LSK'],n:'LSK — Line Select Key',d:'Key next to each screen line. It sends the scratchpad to that field or opens the option shown.'},
+  SCRATCH:{a:['scratchpad'],n:'Scratchpad',d:'Last line of the screen. Everything you type lands here first; then you send it to a field with an LSK.'},
+  CLR:{a:['CLR'],n:'CLR — Clear',d:'Clears the scratchpad. With an empty scratchpad, it arms deletion of the entry or waypoint whose LSK you press next.'},
+  CLOSEST:{a:['CLOSEST AIRPORTS'],n:'CLOSEST AIRPORTS',d:'The nearest airports with bearing, distance and estimated fuel. Key to deciding an urgent diversion.'},
+  INITA:{a:['INIT A'],n:'INIT A — Initialization A',d:'First preparation page: origin, destination, alternate, flight number, cost index, cruise level and IRS.'},
+  INITB:{a:['INIT B'],n:'INIT B — Initialization B',d:'Weights and fuel: ZFW, center of gravity and fuel on board. The FMGC computes weights and reserves.'},
+  INIT:{a:['INIT'],n:'INIT — Initialization',d:'Key and pages with the initial flight data (INIT A and INIT B).'},
+  FROMTO:{a:['FROM/TO'],n:'FROM/TO — Origin/Destination',d:'Departure and arrival airports as 4-letter ICAO codes (MROC = San José, KMIA = Miami).'},
+  ALTN:{a:['ALTN','alternate'],n:'ALTN — Alternate',d:'Airport the flight diverts to if it cannot land at the destination. The FMGC keeps fuel to get there.'},
+  CORTE:{a:['CO RTE','company route'],n:'CO RTE — Company Route',d:'Airline-defined route stored in the database. It loads the whole plan in one go.'},
+  FLTNBR:{a:['FLT NBR','flight number'],n:'FLT NBR — Flight number',d:'Identifies the flight to air traffic control and in messages to the company. It does not affect navigation.'},
+  CI:{a:['COST INDEX','CI'],n:'COST INDEX (CI)',d:'Ratio between the cost of time and the cost of fuel. 0 = maximum fuel saving; higher = faster. The FMGC uses it to compute economy speeds.'},
+  FL:{a:['FL'],n:'FL — Flight Level',d:'Altitude in hundreds of feet with the altimeter on standard pressure (1013 hPa). FL350 = 35,000 ft.'},
+  ISA:{a:['ISA'],n:'ISA — International Standard Atmosphere',d:'Reference atmosphere: 15 °C at sea level and about 2 °C colder every 1000 ft. Used unless you enter another temperature.'},
+  IRS:{a:['IRS'],n:'IRS — Inertial Reference System',d:'Gyros and accelerometers that give position, attitude and heading. They align while the aircraft is stationary (about 10 min).'},
+  ZFW:{a:['ZFW'],n:'ZFW — Zero Fuel Weight',d:'Weight of the loaded aircraft (passengers, bags and cargo) without fuel, in tonnes. It comes from the load sheet.'},
+  ZFWCG:{a:['ZFWCG'],n:'ZFWCG — Center of gravity at ZFW',d:'Center of gravity position without fuel, in % of the mean aerodynamic chord (MAC). It affects trim and performance.'},
+  BLOCK:{a:['BLOCK'],n:'BLOCK — Fuel on board',d:'Total fuel loaded before engine start, in tonnes.'},
+  TAXI:{a:['TAXI','taxi fuel'],n:'TAXI — Taxi fuel',d:'Fuel planned for taxiing to the runway. It burns on the ground, before takeoff.'},
+  TOW:{a:['TOW'],n:'TOW — Takeoff Weight',d:'Takeoff weight: ZFW + BLOCK − TAXI.'},
+  LW:{a:['LW'],n:'LW — Landing Weight',d:'Estimated weight on landing at the destination, after burning the trip fuel.'},
+  EXTRA:{a:['EXTRA'],n:'EXTRA — Extra fuel',d:'What is left above the required fuel (trip, contingency, alternate and final reserve). It is your margin.'},
+  FUELPRED:{a:['FUEL PRED'],n:'FUEL PRED — Fuel Prediction',d:'Page that predicts arrival time and remaining fuel at the destination and alternate.'},
+  EFOB:{a:['EFOB'],n:'EFOB — Estimated Fuel On Board',d:'Fuel you are expected to have when you reach that point.'},
+  SECFPLN:{a:['SEC F-PLN','secondary'],n:'SEC F-PLN — Secondary flight plan',d:'Backup plan (another runway, a diversion) prepared without touching the active one and ready to activate in seconds.'},
+  FPLN:{a:['F-PLN'],n:'F-PLN — Flight Plan',d:'Sequence of waypoints the aircraft follows in NAV mode, with predicted times, speeds and altitudes.'},
+  DISCO:{a:['F-PLN DISCONTINUITY','discontinuity'],n:'Discontinuity',d:'A gap in the plan: the FMGC does not know how to join two waypoints, and in NAV mode the aircraft will not fly past it.'},
+  LATREV:{a:['LAT REV','lateral revision'],n:'LAT REV — Lateral revision',d:'Page to modify the plan from a waypoint: departure, arrival, insert the next waypoint, holds…'},
+  SID:{a:['SID'],n:'SID — Standard Instrument Departure',d:'Published departure from a runway to the route. ATC assigns it based on the runway in use.'},
+  NEXTWPT:{a:['NEXT WPT'],n:'NEXT WPT — Next waypoint',d:'LAT REV option that inserts a waypoint right after the selected one.'},
+  TMPY:{a:['TMPY','temporary plan'],n:'TMPY — Temporary flight plan',d:'Yellow copy with your changes. The active plan does not change until you confirm with INSERT*.'},
+  INSERT:{a:['INSERT*'],n:'INSERT*',d:'Confirms the temporary plan and makes it active. ERASE discards it.'},
+  DIRTO:{a:['DIR TO'],n:'DIR TO — Direct To',d:'Flies straight from the present position to a waypoint and drops the ones in between.'},
+  PERF:{a:['PERF'],n:'PERF — Performance',d:'Pages with speeds and configuration for each phase: takeoff, climb, cruise, descent and approach.'},
+  V1:{a:['V1'],n:'V1 — Decision speed',d:'Below it the takeoff can be rejected; above it the takeoff continues even if an engine fails.'},
+  VR:{a:['VR'],n:'VR — Rotation speed',d:'Speed at which the pilot raises the nose to take off.'},
+  V2:{a:['V2'],n:'V2 — Takeoff safety speed',d:'Guarantees the required minimum climb even with one engine out.'},
+  FLAPS:{a:['FLAPS/THS'],n:'FLAPS/THS',d:'Flap setting for takeoff and the horizontal stabilizer (THS) trim set for the center of gravity.'},
+  FLEX:{a:['FLEX TO TEMP','FLEX'],n:'FLEX — Flexible temperature',d:'Assumed temperature for a reduced-thrust takeoff when there is runway to spare. It saves engine wear.'},
+  NEXTPH:{a:['NEXT PHASE'],n:'NEXT PHASE',d:'Moves to the PERF page of the next phase.'},
+  CLB:{a:['CLB'],n:'CLB — Climb',d:'Climb phase.'},
+  CRZ:{a:['CRZ'],n:'CRZ — Cruise',d:'Cruise phase.'},
+  DES:{a:['DES'],n:'DES — Descent',d:'Descent phase.'},
+  APPR:{a:['APPR'],n:'APPR — Approach',d:'Approach phase: destination airport data for landing.'},
+  QNH:{a:['QNH'],n:'QNH',d:'Airfield pressure reduced to sea level. With it the altimeter shows the real altitude above sea level.'},
+  DH:{a:['DH'],n:'DH — Decision Height',d:'Minimum height (radio altimeter) at which the runway must be in sight to continue. If not, go around.'},
+  ILS:{a:['ILS'],n:'ILS — Instrument Landing System',d:'Precision lateral (localizer) and vertical (glideslope) guidance down to the runway. ILS08R = runway 08 right.'},
+  VOR:{a:['VOR'],n:'VOR — VHF Omnidirectional Range',d:'Ground navaid that tells you which radial (magnetic bearing) you are on from the station.'},
+  RADNAV:{a:['RAD NAV'],n:'RAD NAV — Radio navigation',d:'Page to tune VOR, ILS and ADF. The FMGC tunes them by itself, but you can force them.'},
+  KT:{a:['kt'],n:'kt — Knots',d:'Nautical miles per hour. 250 kt ≈ 463 km/h.'}}
+}[LANG];
+// Longest alias first, so "SEC F-PLN" wins over "F-PLN" and "COST INDEX" over "CI".
+const GLOSS_ALIAS=Object.entries(GLOSS).flatMap(([id,g])=>g.a.map(a=>[a,id])).sort((x,y)=>y[0].length-x[0].length);
+const GLOSS_ID=new Map(GLOSS_ALIAS);
+// No letter/digit before; no letter after (so FL350, VOR1 and ILS08R still match, FLEX does not match FL).
+const GLOSS_RE=new RegExp(`(?<![\\p{L}\\p{N}])(${GLOSS_ALIAS.map(([a])=>a.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')})(?!\\p{L})`,'gu');
+// Escapes plain text and turns the first mention of each glossary term into a tooltip button.
+function gloss(text){
+  text=String(text); const seen=new Set(); let out='', last=0;
+  for(const m of text.matchAll(GLOSS_RE)){
+    const id=GLOSS_ID.get(m[1]);
+    out+=escText(text.slice(last,m.index));
+    out+=seen.has(id)?escText(m[1]):`<button type="button" class="term" data-term="${id}">${escText(m[1])}</button>`;
+    seen.add(id); last=m.index+m[1].length;
+  }
+  return out+escText(text.slice(last));
+}
 function render(){
   blank(); const pg=P[S.page]; pg.render();
   // scratchpad
@@ -1040,13 +1175,14 @@ function renderPageHelp(){
   if(lastHelpPage===S.page) return; lastHelpPage=S.page;
   const pg=P[S.page];
   document.getElementById('pgTitle').textContent=UI.thisPage+' · '+pg.name;
-  document.getElementById('pgDesc').textContent=pg.help.d;
+  document.getElementById('pgDesc').innerHTML=gloss(pg.help.d);
   const ul=document.getElementById('pgFields'); ul.innerHTML='';
   const keys=['L1','R1','L2','R2','L3','R3','L4','R4','L5','R5','L6','R6'].filter(k=>pg.help[k]);
   if(pg.slew) keys.push('←→'); if(pg.scroll) keys.push('↑↓');
   keys.forEach(k=>{ const li=document.createElement('li'); const txt=k==='←→'?(P[S.page]===P.INITA?UI.toInitB:UI.toInitA):k==='↑↓'?UI.scrollList:pg.help[k];
-    li.innerHTML=`<span class="lk">${k}</span><span>${escText(txt)}</span>`; li.dataset.lk=k;
+    li.innerHTML=`<span class="lk">${k}</span><span>${gloss(txt)}</span>`; li.dataset.lk=k;
     li.addEventListener('mouseenter',()=>hl(k,true)); li.addEventListener('mouseleave',()=>hl(k,false)); ul.appendChild(li); });
+  syncTip();
 }
 function hl(k,on){ let sel=null; if(/^[LR]\d$/.test(k)) sel=`[data-lsk="${k}"]`; else if(k==='←→') sel='[data-k="LEFT"],[data-k="RIGHT"]'; else if(k==='↑↓') sel='[data-k="UP"],[data-k="DOWN"]'; if(sel) document.querySelectorAll(sel).forEach(b=>b.classList.toggle('hl',on)); }
 
@@ -1125,21 +1261,67 @@ const LEVELS=[
    {t:'Ingresa el curso 090 para VOR1.',h:'Escribe 090 y pulsa L2.',ok:()=>S.rad.crs1===90},
    {t:'Sintoniza VOR2 por frecuencia: 113.30.',h:'Escribe 113.30 y pulsa R1.',ok:()=>S.rad.vor2?.f==='113.30'}]}
 ];
+// Why each task matters, operationally. One list per level, same order as LEVELS[i].tasks.
+const WHY=[
+ ['El MCDU es solo teclado y pantalla: puede hablar con varios sistemas. Entrar al FMGC es lo primero, porque ahí se prepara todo el vuelo.',
+  'DATA reúne información de consulta (posición, aeropuertos, puntos guardados). Sirve para revisar datos sin modificar el plan.',
+  'Ante una emergencia (fuego, un pasajero enfermo) la tripulación necesita saber en segundos qué aeropuertos tiene cerca, con rumbo, distancia y combustible.',
+  'Nada se escribe directo en un campo: todo pasa primero por el scratchpad. Así revisas el dato antes de enviarlo con un LSK.',
+  'Corregir errores de tecleo es constante. Borrar antes de enviar evita cargar un dato equivocado en el FMGC.',
+  'MCDU MENU elige con qué sistema habla el MCDU. Es tu punto de retorno si te pierdes.'],
+ ['INIT A es lo primero que se completa en la preparación de cabina: con estos datos el FMGC arma el plan y calcula combustible y performance.',
+  'Origen y destino son la base del plan: el FMGC carga ambos aeropuertos desde su base de datos y crea un plan inicial entre ellos.',
+  'Las normas exigen un alterno cuando el destino podría cerrarse por clima o tráfico. El FMGC suma el combustible necesario para llegar a él.',
+  'El número de vuelo identifica el vuelo ante el control de tránsito y en los mensajes a la compañía. No cambia la navegación.',
+  'La aerolínea fija el COST INDEX según sus costos. Con 35 el FMGC equilibra consumo y tiempo, y calcula con él las velocidades de ascenso, crucero y descenso.',
+  'El nivel de crucero define hasta dónde subes. El FMGC lo usa para el perfil vertical y para predecir tiempo y combustible.',
+  'Los IRS necesitan la posición inicial y alinearse con el avión quieto (unos 10 minutos). Sin IRS alineados no hay posición ni actitud y el avión no puede navegar; por eso se hace temprano.'],
+ ['INIT B se completa después de INIT A porque los cálculos de combustible necesitan la ruta, el nivel de crucero y el COST INDEX.',
+  'El ZFW y su centro de gravedad salen de la hoja de carga. Con ellos el FMGC calcula los pesos al despegue y al aterrizaje, y las velocidades.',
+  'Con el combustible a bordo, el FMGC comprueba que alcanza para el viaje y las reservas. EXTRA muestra cuánto sobra.',
+  'El valor por defecto (0.2 t) supone un rodaje corto. Si se espera más rodaje (aeropuerto congestionado, pista lejana) hay que corregirlo: ese combustible se quema en tierra y no estará disponible en vuelo. Por eso EXTRA baja.',
+  'Antes de salir se confirma con cuánto combustible llegarás al destino y al alterno. Si el EFOB queda por debajo de la reserva, el FMGC lo advierte.'],
+ ['F-PLN es la página central del vuelo: la ruta que el avión seguirá en modo NAV, con horas, velocidades y altitudes previstas.',
+  'Las revisiones laterales se hacen desde un punto del plan. En el aeropuerto de origen, LAT REV es la puerta para elegir la salida.',
+  'El control asigna la pista y la SID según el viento y el tráfico. Cargarlas le da al FMGC el recorrido exacto después del despegue.',
+  'Así se agregan puntos de la ruta autorizada que faltan en el plan. El cambio queda en el plan temporal para revisarlo antes de activarlo.',
+  'Es el atajo más usado para agregar un punto: escribirlo y pulsar el LSK donde va. Muy útil cuando el control cambia la ruta.',
+  'Una discontinuidad corta el plan: en modo NAV el avión no la cruza. Cuando la ruta está completa se borra, para que el plan sea continuo hasta el destino.'],
+ ['Las restricciones de altitud vienen de los procedimientos o del control («cruce BOLOS a FL240»). El FMGC ajusta el perfil vertical para cumplirlas.',
+  'Las restricciones de velocidad ayudan al control a separar el tráfico. Además, por debajo de 10 000 ft el límite habitual es 250 kt.',
+  'Si el control autoriza a omitir un punto o la ruta cambia, se elimina para que el avión no lo vuele.',
+  'El control suele dar directos para acortar la ruta. DIR TO vuela desde la posición actual (T-P) al punto elegido y descarta los anteriores.',
+  'En un plan largo, AIRPORT salta directo al destino para revisarlo sin desplazarte línea por línea.',
+  'El plan secundario prepara una alternativa (otra pista, un desvío) sin tocar el activo. Si se necesita, se activa en segundos.'],
+ ['La página TAKE OFF reúne los datos del despegue calculados para la pista, el peso y el clima del día.',
+  'Las velocidades salen del cálculo de performance. Aparecen en el indicador de velocidad y guían al piloto: hasta V1 puede abortar, en VR rota y con V2 asciende con seguridad.',
+  'Los flaps se eligen según la pista y el peso. El THS se ajusta al centro de gravedad para que la rotación requiera la fuerza esperada.',
+  'Despegar con empuje reducido cuando sobra pista alarga la vida de los motores y baja costos. FLEX indica qué temperatura simular.',
+  'Cada fase tiene su página PERF. Revisarlas antes de salir permite ver las velocidades previstas de ascenso, crucero y descenso.',
+  'Con el QNH del destino el FMGC calcula la aproximación con la presión real. La DH es el mínimo: si a esa altura no se ve la pista, motor y al aire.'],
+ ['La aproximación se carga antes del descenso, según la pista en uso en destino, para planificar la llegada y el combustible.',
+  'El ILS da guía de precisión lateral y vertical hasta la pista 08R. Insertarlo completa el plan hasta el aterrizaje.',
+  'El FMGC sintoniza solo las radioayudas del procedimiento. Verificarlo evita volar una aproximación con la frecuencia equivocada.',
+  'Sintonizar un VOR permite contrastar la posición del FMGC con una referencia en tierra.',
+  'El curso define el radial que quieres seguir o vigilar en la pantalla de navegación.',
+  'Si la estación no está en la base de datos o quieres una concreta, la sintonizas directo por frecuencia.']
+];
+LEVELS.forEach((L,i)=>L.tasks.forEach((T,j)=>{ T.w=WHY[i][j]; }));
 const prog=LEVELS.map(()=>0);
-let active=null, viewing=0, hintOpen=false;
+let active=null, viewing=0, hintOpen=false, whyOpen=false;
 
 function startLevel(i){
   S=Object.assign(fresh(),{explain:S.explain,brt:S.brt}); E={};
-  LEVELS[i].setup(); active=i; viewing=i; prog[i]=0; hintOpen=false; lastHelpPage=null;
+  LEVELS[i].setup(); active=i; viewing=i; prog[i]=0; hintOpen=false; whyOpen=false; lastHelpPage=null;
   after(); renderLevels(); toast(`${UI.lvl(i+1)}: ${LEVELS[i].name}`, true);
   if(window.matchMedia('(max-width: 980px)').matches) closePanel();
 }
 function checkTasks(){
   if(active==null) return; const L=LEVELS[active]; let i=prog[active], adv=false;
   while(i<L.tasks.length&&L.tasks[i].ok()){ i++; adv=true; }
-  if(adv){ prog[active]=i; hintOpen=false; toast(i===L.tasks.length?UI.lvlDone(active+1):UI.taskDone); renderLevels(); }
+  if(adv){ prog[active]=i; hintOpen=false; whyOpen=false; toast(i===L.tasks.length?UI.lvlDone(active+1):UI.taskDone); renderLevels(); }
 }
-function after(){ checkTasks(); render(); }
+function after(){ checkTasks(); render(); syncTip(); }
 
 const tb=document.getElementById('taskbar');
 function renderTaskbar(){
@@ -1148,8 +1330,10 @@ function renderTaskbar(){
   tb.className='taskbar';
   if(i>=n){ tb.innerHTML=`<div class="tb-head"><span class="lvl">${UI.lvl(active+1)} · ${L.name} · ${UI.completed}</span><button class="linkbtn" data-open="ex">${UI.viewLevels}</button></div><div class="task">${active<LEVELS.length-1?UI.nextUp(active+2,LEVELS[active+1].name):UI.lastDone}</div>${active<LEVELS.length-1?`<div><button class="btn primary" id="nextLv">${UI.startNext(active+2)}</button></div>`:''}`; const nb=document.getElementById('nextLv'); if(nb) nb.onclick=()=>startLevel(active+1); return; }
   const T=L.tasks[i];
-  tb.innerHTML=`<div class="tb-head"><span class="lvl">${UI.lvl(active+1)} · ${UI.taskOf(i+1,n)}</span><button class="linkbtn" id="tbHint">${hintOpen?UI.hideHint:UI.hint}</button></div><div class="task">${T.t}</div>${hintOpen?`<div class="hint">${T.h}</div>`:''}`;
+  tb.innerHTML=`<div class="tb-head"><span class="lvl">${UI.lvl(active+1)} · ${UI.taskOf(i+1,n)}</span><span class="tb-links"><button class="linkbtn" id="tbHint">${hintOpen?UI.hideHint:UI.hint}</button><button class="linkbtn" id="tbWhy">${whyOpen?UI.hideWhy:UI.why}</button></span></div><div class="task">${gloss(T.t)}</div>${hintOpen?`<div class="hint">${gloss(T.h)}</div>`:''}${whyOpen?`<div class="why">${gloss(T.w)}</div>`:''}`;
   document.getElementById('tbHint').onclick=()=>{ hintOpen=!hintOpen; renderTaskbar(); renderLevels(); };
+  document.getElementById('tbWhy').onclick=()=>{ whyOpen=!whyOpen; renderTaskbar(); renderLevels(); };
+  syncTip();
 }
 function renderLevels(){
   const box=document.getElementById('levels'); box.innerHTML='';
@@ -1158,13 +1342,13 @@ function renderLevels(){
     b.innerHTML=`<span class="n"><span>${UI.lvl(i+1)}</span><span>${active===i?UI.inProgress:(d>=n?'✓':d+'/'+n)}</span></span><span class="t">${L.name}</span><span class="bar"><i style="width:${d/n*100}%"></i></span>`;
     b.onclick=()=>{ viewing=i; renderLevels(); }; box.appendChild(b); });
   const L=LEVELS[viewing], c=document.getElementById('lvcard'), isAct=active===viewing, done=prog[viewing];
-  let h=`<h3>${UI.lvl(viewing+1)} · ${L.name}</h3><p class="intro">${L.intro}</p><div class="actions">`;
+  let h=`<h3>${UI.lvl(viewing+1)} · ${L.name}</h3><p class="intro">${gloss(L.intro)}</p><div class="actions">`;
   h+= isAct? `<button class="btn" id="lvRestart">${UI.restartLv}</button><button class="btn ghost" id="lvFree">${UI.exitFree}</button>` : `<button class="btn primary" id="lvStart">${UI.startLv(viewing+1)}</button>`;
   h+='</div>';
   if(isAct&&done>=L.tasks.length) h+=`<div class="complete">${UI.lvComplete} ${viewing<LEVELS.length-1?UI.lvMore:UI.allDone}</div>`;
   h+='<ol class="tasks">';
-  L.tasks.forEach((T,j)=>{ const st=j<done?'done':(isAct&&j===done?'cur':''); h+=`<li class="${st}"><span class="st">${j<done?'✓':(st==='cur'?'▸':j+1)}</span><div><div>${T.t}</div>`;
-    if(st==='cur'){ h+= hintOpen?`<div class="h">${T.h}</div>`:''; h+=`<div class="row-actions"><button class="linkbtn" data-act="hint">${hintOpen?UI.hideHint:UI.showHint}</button><button class="linkbtn" data-act="skip">${UI.skip}</button></div>`; }
+  L.tasks.forEach((T,j)=>{ const st=j<done?'done':(isAct&&j===done?'cur':''); h+=`<li class="${st}"><span class="st">${j<done?'✓':(st==='cur'?'▸':j+1)}</span><div><div>${gloss(T.t)}</div>`;
+    if(st==='cur'){ h+= hintOpen?`<div class="h">${gloss(T.h)}</div>`:''; h+= whyOpen?`<div class="w">${gloss(T.w)}</div>`:''; h+=`<div class="row-actions"><button class="linkbtn" data-act="hint">${hintOpen?UI.hideHint:UI.showHint}</button><button class="linkbtn" data-act="why">${whyOpen?UI.hideWhy:UI.why}</button><button class="linkbtn" data-act="skip">${UI.skip}</button></div>`; }
     h+='</div></li>'; });
   h+='</ol>';
   if(!isAct) h+=`<p class="note">${UI.startNote(viewing>1)}</p>`;
@@ -1173,7 +1357,9 @@ function renderLevels(){
   const r=document.getElementById('lvRestart'); if(r) r.onclick=()=>startLevel(viewing);
   const f=document.getElementById('lvFree'); if(f) f.onclick=()=>{ active=null; renderLevels(); render(); };
   c.querySelectorAll('[data-act="hint"]').forEach(b=>b.onclick=()=>{ hintOpen=!hintOpen; renderLevels(); renderTaskbar(); });
-  c.querySelectorAll('[data-act="skip"]').forEach(b=>b.onclick=()=>{ prog[active]++; hintOpen=false; renderLevels(); after(); });
+  c.querySelectorAll('[data-act="why"]').forEach(b=>b.onclick=()=>{ whyOpen=!whyOpen; renderLevels(); renderTaskbar(); });
+  c.querySelectorAll('[data-act="skip"]').forEach(b=>b.onclick=()=>{ prog[active]++; hintOpen=false; whyOpen=false; renderLevels(); after(); });
+  syncTip();
 }
 
 /* =========================================================
@@ -1200,6 +1386,34 @@ mcdu.addEventListener('click',e=>{
   const k=e.target.closest('[data-k]'); if(k){ if(k.dataset.k==='CLR'&&held){ held=false; return; } pressKey(k.dataset.k); }
 });
 const fine=window.matchMedia('(hover: hover) and (pointer: fine)');
+
+/* Glossary tooltip: one floating element shared by every .term button (hover/focus on desktop, tap on touch). */
+const tip=document.createElement('div'); tip.id='glossTip'; tip.className='gloss-tip'; tip.setAttribute('role','tooltip'); tip.hidden=true; document.body.appendChild(tip);
+let tipFor=null, tipAt=0;
+function showTip(btn){
+  const g=GLOSS[btn.dataset.term]; if(!g) return;
+  if(tipFor&&tipFor!==btn) tipFor.removeAttribute('aria-describedby');
+  tipFor=btn; tipAt=Date.now(); btn.setAttribute('aria-describedby','glossTip');
+  tip.innerHTML=`<b>${escText(g.n)}</b><span>${escText(g.d)}</span>`; tip.hidden=false;
+  const r=btn.getBoundingClientRect(), w=tip.offsetWidth, h=tip.offsetHeight, vw=document.documentElement.clientWidth;
+  tip.style.left=Math.max(16,Math.min(r.left+r.width/2-w/2,vw-16-w))+'px';
+  tip.style.top=(r.bottom+8+h>innerHeight&&r.top-8-h>0?r.top-8-h:r.bottom+8)+'px';
+}
+function hideTip(){ if(tipFor) tipFor.removeAttribute('aria-describedby'); tipFor=null; tip.hidden=true; }
+function syncTip(){ if(tipFor&&!tipFor.isConnected) hideTip(); }
+document.addEventListener('mouseover',e=>{ if(!fine.matches) return; const t=e.target.closest('.term'); if(t) showTip(t); });
+document.addEventListener('mouseout',e=>{ if(!fine.matches) return; const t=e.target.closest('.term'); if(t&&t===tipFor&&document.activeElement!==t) hideTip(); });
+document.addEventListener('focusin',e=>{ const t=e.target.closest?.('.term'); if(t) showTip(t); });
+document.addEventListener('focusout',e=>{ if(e.target===tipFor) hideTip(); });
+document.addEventListener('click',e=>{
+  const t=e.target.closest('.term');
+  // A tap may already have shown it through focus; only a later tap on the same term closes it.
+  if(t){ if(t===tipFor&&!fine.matches&&Date.now()-tipAt>400) hideTip(); else showTip(t); return; }
+  if(tipFor) hideTip();
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&tipFor) hideTip(); });
+addEventListener('scroll',()=>{ if(tipFor) hideTip(); },true);
+addEventListener('resize',()=>{ if(tipFor) hideTip(); });
 mcdu.addEventListener('mouseover',e=>{ if(!fine.matches) return; const l=e.target.closest('[data-lsk]'); if(l){ explainLSK(l.dataset.lsk,false); return; } const k=e.target.closest('[data-k]'); if(k) explainKey(k.dataset.k,false); });
 mcdu.addEventListener('focusin',e=>{ const l=e.target.closest('[data-lsk]'); if(l){ explainLSK(l.dataset.lsk,false); return; } const k=e.target.closest('[data-k]'); if(k) explainKey(k.dataset.k,false); });
 
@@ -1407,13 +1621,58 @@ const LEVELS_EN=[
    ['Tune VOR2 by frequency: 113.30.','Type 113.30 and press R1.']]}
 ];
 
+const WHY_EN=[
+ ['The MCDU is just a keyboard and screen: it can talk to several systems. Entering the FMGC comes first, because that is where the whole flight is prepared.',
+  'DATA gathers reference information (position, airports, stored waypoints). Use it to check data without changing the plan.',
+  'In an emergency (a fire, a sick passenger) the crew must know within seconds which airports are nearby, with bearing, distance and fuel.',
+  'Nothing is typed straight into a field: it all goes through the scratchpad first. That way you check the entry before sending it with an LSK.',
+  'Fixing typos happens all the time. Clearing before sending keeps a wrong entry out of the FMGC.',
+  'MCDU MENU picks which system the MCDU talks to. It is your way back if you get lost.'],
+ ['INIT A is the first thing completed during cockpit preparation: with this data the FMGC builds the plan and computes fuel and performance.',
+  'Origin and destination are the base of the plan: the FMGC loads both airports from its database and creates an initial plan between them.',
+  'Rules require an alternate when the destination could close for weather or traffic. The FMGC adds the fuel needed to get there.',
+  'The flight number identifies the flight to air traffic control and in messages to the company. It does not change navigation.',
+  'The airline sets the COST INDEX from its costs. With 35 the FMGC balances fuel burn against time and uses it to compute climb, cruise and descent speeds.',
+  'The cruise level sets how high you climb. The FMGC uses it for the vertical profile and to predict time and fuel.',
+  'The IRS need the starting position and must align while the aircraft is still (about 10 minutes). Without aligned IRS there is no position or attitude and the aircraft cannot navigate, so it is done early.'],
+ ['INIT B comes after INIT A because the fuel computations need the route, the cruise level and the COST INDEX.',
+  'ZFW and its center of gravity come from the load sheet. From them the FMGC computes takeoff and landing weights, and the speeds.',
+  'With the fuel on board, the FMGC checks that it covers the trip and the reserves. EXTRA shows how much is left over.',
+  'The default (0.2 t) assumes a short taxi. If a longer taxi is expected (busy airport, distant runway) it must be corrected: that fuel burns on the ground and will not be available in flight. That is why EXTRA drops.',
+  'Before departure you confirm how much fuel you will land with at the destination and the alternate. If the EFOB falls below the reserve, the FMGC warns you.'],
+ ['F-PLN is the central page of the flight: the route the aircraft will fly in NAV mode, with predicted times, speeds and altitudes.',
+  'Lateral revisions are made from a waypoint in the plan. At the departure airport, LAT REV is the door to choosing the departure.',
+  'ATC assigns the runway and SID based on wind and traffic. Loading them gives the FMGC the exact path after takeoff.',
+  'This is how you add waypoints of the cleared route that are missing from the plan. The change stays in the temporary plan so you can check it before activating it.',
+  'It is the most common shortcut to add a waypoint: type it and press the LSK where it goes. Very handy when ATC changes the route.',
+  'A discontinuity breaks the plan: in NAV mode the aircraft will not fly past it. Once the route is complete you delete it so the plan runs unbroken to the destination.'],
+ ['Altitude constraints come from procedures or from ATC (“cross BOLOS at FL240”). The FMGC adjusts the vertical profile to meet them.',
+  'Speed constraints help ATC keep traffic apart. Also, below 10,000 ft the usual limit is 250 kt.',
+  'If ATC clears you to skip a waypoint or the route changes, you remove it so the aircraft does not fly it.',
+  'ATC often gives directs to shorten the route. DIR TO flies from the present position (T-P) to the chosen waypoint and drops the ones before it.',
+  'In a long plan, AIRPORT jumps straight to the destination so you can check it without scrolling line by line.',
+  'The secondary plan prepares an alternative (another runway, a diversion) without touching the active one. If needed, it is activated in seconds.'],
+ ['The TAKE OFF page gathers the takeoff data computed for the day\'s runway, weight and weather.',
+  'The speeds come from the performance computation. They show on the speed tape and guide the pilot: up to V1 they can reject, at VR they rotate and at V2 they climb safely.',
+  'Flaps are chosen for the runway and weight. The THS is set for the center of gravity so the rotation takes the expected force.',
+  'Taking off with reduced thrust when there is runway to spare extends engine life and cuts costs. FLEX tells the engines which temperature to assume.',
+  'Each phase has its own PERF page. Checking them before departure shows the planned climb, cruise and descent speeds.',
+  'With the destination QNH the FMGC computes the approach with the real pressure. The DH is the minimum: if the runway is not in sight at that height, go around.'],
+ ['The approach is loaded before descent, based on the runway in use at the destination, to plan the arrival and the fuel.',
+  'The ILS gives precision lateral and vertical guidance down to runway 08R. Inserting it completes the plan all the way to landing.',
+  'The FMGC tunes the procedure\'s navaids by itself. Checking it avoids flying an approach on the wrong frequency.',
+  'Tuning a VOR lets you cross-check the FMGC position against a ground reference.',
+  'The course sets the radial you want to follow or monitor on the navigation display.',
+  'If the station is not in the database or you want a specific one, you tune it directly by frequency.']
+];
+
 function applyLanguage(){
   if(LANG!=='en') return;
   const lang=document.getElementById('langLink'), back=document.getElementById('backLink');
   for(const k in HELP_EN) P[k].help=HELP_EN[k];
   for(const k in KEY_HELP_EN) KEY_HELP[k][2]=KEY_HELP_EN[k];
   Object.assign(KEY_EX,KEY_EX_EN);
-  LEVELS_EN.forEach((l,i)=>{ const L=LEVELS[i]; L.name=l.name; L.intro=l.intro; l.tasks.forEach(([t,h],j)=>{ L.tasks[j].t=t; L.tasks[j].h=h; }); });
+  LEVELS_EN.forEach((l,i)=>{ const L=LEVELS[i]; L.name=l.name; L.intro=l.intro; l.tasks.forEach(([t,h],j)=>{ L.tasks[j].t=t; L.tasks[j].h=h; L.tasks[j].w=WHY_EN[i][j]; }); });
   // <head> metadata for /en/ is written statically at build time (scripts/localize-heads.mjs).
   document.documentElement.lang='en';
   document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent=STATIC_EN[el.dataset.i18n]; });
