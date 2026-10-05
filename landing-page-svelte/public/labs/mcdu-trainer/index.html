@@ -229,10 +229,37 @@ details code{font-family:var(--f-mono);color:var(--cyan);font-size:13px}
 @media (max-width: 980px){
   .fb-dialog{inset:auto 0 0 0;width:100%;height:auto;max-height:90vh;border-left:0;border-top:1px solid var(--line);border-radius:14px 14px 0 0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
 }
+/* Glossary panel: reuses the feedback panel's .fb-dialog/.fb-head/.fb-close look; modal, so ::backdrop instead of a div. */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.gl-dialog{padding:0}
+.gl-dialog::backdrop{background:#0b0f12b3}
+.gl-body{padding:0 24px calc(24px + env(safe-area-inset-bottom,0px));min-height:100%}
+.gl-top{position:sticky;top:0;z-index:1;background:var(--panel);padding:24px 0 8px}
+.gl-search{display:block;width:100%;margin-top:14px;background:var(--bg);border:1px solid var(--line);border-radius:4px;color:var(--fg);padding:10px;font:inherit}
+.gl-count{color:var(--muted);font-size:13px;margin:8px 0 0}
+.gl-list{margin:0;display:flex;flex-direction:column}
+.gl-item{padding:12px 0;border-top:1px solid var(--line)}
+.gl-item dt{font-family:var(--f-ui);font-weight:700;color:var(--amber);font-size:14px;letter-spacing:.02em}
+.gl-item dt span{color:var(--fg);font-weight:400;font-family:var(--f-body);letter-spacing:0;margin-left:6px}
+.gl-item dd{margin:4px 0 0;color:var(--muted);font-size:14px}
+.gl-empty{color:var(--muted);margin:16px 0}
 @media (prefers-reduced-motion: reduce){ *{transition:none!important} }
 </style>
 </head>
 <body>
+
+<dialog class="fb-dialog gl-dialog" id="glDialog" aria-labelledby="glTitle">
+  <div class="gl-body">
+    <div class="gl-top">
+    <div class="fb-head"><h2 id="glTitle" data-i18n="glossary">Glosario</h2><button type="button" class="fb-close" id="glClose" aria-label="Cerrar" data-i18n-attr="aria-label:close">×</button></div>
+    <label class="sr-only" for="glSearch" data-i18n="glSearch">Buscar término</label>
+    <input class="gl-search" id="glSearch" type="search" autocomplete="off" spellcheck="false" placeholder="Buscar término" data-i18n-attr="placeholder:glSearch" aria-controls="glList">
+    <p class="gl-count" id="glCount" aria-live="polite"></p>
+    </div>
+    <dl class="gl-list" id="glList"></dl>
+    <p class="gl-empty" id="glEmpty" hidden data-i18n="glEmpty">Sin resultados.</p>
+  </div>
+</dialog>
 
 <header class="top">
   <div class="brand">
@@ -247,6 +274,7 @@ details code{font-family:var(--f-mono);color:var(--cyan);font-size:13px}
     <button class="btn ghost" id="resetBtn" data-i18n="reset">Reiniciar MCDU</button>
     <button class="btn mobile-only" data-open="guide" data-i18n="guide">Guía</button>
     <button class="btn mobile-only" data-open="ex" data-i18n="exercises">Ejercicios</button>
+    <button class="btn" id="glossaryBtn" type="button" aria-haspopup="dialog" data-i18n="glossary">Glosario</button>
     <button class="btn" id="feedbackBtn" type="button" hidden>Feedback</button>
     <a class="btn" id="langLink" href="/en/labs/mcdu-trainer/" lang="en" aria-label="Switch to English">EN</a>
     <a class="btn ghost" id="backLink" href="/#labs" data-i18n="back">← Qub-its</a>
@@ -351,7 +379,7 @@ const UI={
   inspIdle:'Pasa el cursor por cualquier tecla para ver qué hace. En el teléfono, activa <b>Modo explicar</b> y toca la tecla.',
   keyTag:'TECLA',keyboard:'Teclado',typeChar:k=>`Escribe «${k}» en el scratchpad (última línea). Luego pulsa un LSK para llevar el texto a un campo.`,
   noFn:'Sin función en esta página.',lskName:(side,n)=>`LSK ${side==='L'?'izquierdo':'derecho'} ${n}`,thisPage:'Esta página',
-  toInitB:'Pasa a INIT B.',toInitA:'Vuelve a INIT A.',scrollList:'Desplazan la lista.',slash:'Barra',why:'¿Por qué?',hideWhy:'Ocultar por qué'},
+  toInitB:'Pasa a INIT B.',toInitA:'Vuelve a INIT A.',scrollList:'Desplazan la lista.',slash:'Barra',why:'¿Por qué?',hideWhy:'Ocultar por qué',terms:(n,t)=>n===t?`${t} términos`:`${n} de ${t} términos`},
  en:{lvl:n=>`Level ${n}`,lvlDone:n=>`Level ${n} complete`,taskDone:'✓ Task complete',mcduReset:'MCDU reset',
   free:'Free mode',pickEx:'Pick an exercise',freeTask:'Explore the MCDU at your own pace. Start with MCDU MENU → L1, or with INIT.',
   completed:'complete',viewLevels:'View levels',nextUp:(n,name)=>`Next: Level ${n}, ${name}.`,lastDone:'You finished the last level.',startNext:n=>`Start level ${n}`,
@@ -362,7 +390,7 @@ const UI={
   inspIdle:'Hover over any key to see what it does. On a phone, turn on <b>Explain mode</b> and tap the key.',
   keyTag:'KEY',keyboard:'Keyboard',typeChar:k=>`Types “${k}” into the scratchpad (last line). Then press an LSK to send the text to a field.`,
   noFn:'No function on this page.',lskName:(side,n)=>`${side==='L'?'Left':'Right'} LSK ${n}`,thisPage:'This page',
-  toInitB:'Goes to INIT B.',toInitA:'Back to INIT A.',scrollList:'Scroll the list.',slash:'Slash',why:'Why?',hideWhy:'Hide why'}
+  toInitB:'Goes to INIT B.',toInitA:'Back to INIT A.',scrollList:'Scroll the list.',slash:'Slash',why:'Why?',hideWhy:'Hide why',terms:(n,t)=>n===t?`${t} terms`:`${n} of ${t} terms`}
 }[LANG];
 /* =========================================================
    NAV DATABASE (fictional, training only)
@@ -1412,6 +1440,27 @@ document.addEventListener('click',e=>{
   if(tipFor) hideTip();
 });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&tipFor) hideTip(); });
+
+/* Glossary panel: the whole GLOSS, alphabetical, with an accent/case-insensitive filter. */
+const glDialog=document.getElementById('glDialog'), glSearch=document.getElementById('glSearch'), glList=document.getElementById('glList');
+const fold=t=>t.normalize('NFD').replace(/\p{M}/gu,'').toLowerCase();
+const glItems=Object.values(GLOSS).map(g=>{
+  const [, name]=g.n.split(' — '), el=document.createElement('div'); el.className='gl-item';
+  el.innerHTML=`<dt>${escText(g.a[0])}${name?` <span>${escText(name)}</span>`:''}</dt><dd>${escText(g.d)}</dd>`;
+  return {el, key:fold([...g.a,g.n,g.d].join(' ')), sort:fold(g.a[0])};
+}).sort((x,y)=>x.sort.localeCompare(y.sort));
+glItems.forEach(it=>glList.appendChild(it.el));
+function filterGlossary(){
+  const q=fold(glSearch.value.trim()); let n=0;
+  glItems.forEach(it=>{ const show=!q||it.key.includes(q); it.el.hidden=!show; if(show) n++; });
+  document.getElementById('glCount').textContent=UI.terms(n,glItems.length);
+  document.getElementById('glEmpty').hidden=n>0;
+}
+glSearch.addEventListener('input',filterGlossary);
+document.getElementById('glossaryBtn').onclick=()=>{ hideTip(); filterGlossary(); glDialog.showModal(); glSearch.focus(); };
+document.getElementById('glClose').onclick=()=>glDialog.close();
+// The dialog box itself only receives the click when it lands on the backdrop (content sits in .gl-body).
+glDialog.addEventListener('click',e=>{ if(e.target===glDialog) glDialog.close(); });
 addEventListener('scroll',()=>{ if(tipFor) hideTip(); },true);
 addEventListener('resize',()=>{ if(tipFor) hideTip(); });
 mcdu.addEventListener('mouseover',e=>{ if(!fine.matches) return; const l=e.target.closest('[data-lsk]'); if(l){ explainLSK(l.dataset.lsk,false); return; } const k=e.target.closest('[data-k]'); if(k) explainKey(k.dataset.k,false); });
@@ -1420,7 +1469,7 @@ mcdu.addEventListener('focusin',e=>{ const l=e.target.closest('[data-lsk]'); if(
 function flash(sel){ const b=document.querySelector(sel); if(!b) return; b.classList.add('pressed'); setTimeout(()=>b.classList.remove('pressed'),110); }
 document.addEventListener('keydown',e=>{
   if(e.ctrlKey||e.metaKey||e.altKey) return;
-  if(document.getElementById('fbDialog')?.open) return; // typing in the feedback panel must not drive the MCDU
+  if(document.getElementById('fbDialog')?.open||glDialog.open) return; // typing in a panel must not drive the MCDU
   const tag=(e.target.tagName||'').toLowerCase(); if(tag==='input'||tag==='textarea') return;
   if((e.key===' '||e.key==='Enter')&&tag==='button') return;
   const map={ArrowLeft:'LEFT',ArrowRight:'RIGHT',ArrowUp:'UP',ArrowDown:'DOWN',Backspace:'CLR',' ':'SP','-':'+/-'};
@@ -1442,6 +1491,7 @@ const STATIC_EN={
  subtitle:'Interactive Multipurpose Control & Display Unit simulator · fictional navigation data',
  explain:'? Explain mode',explainTitle:'When on, pressing a key explains it instead of running it',
  reset:'Reset MCDU',guide:'Guide',exercises:'Exercises',back:'← Qub-its',
+ glossary:'Glossary',glSearch:'Search terms',glEmpty:'No results.',close:'Close',
  simLabel:'Simulator',screenLabel:'MCDU screen',panelLabel:'Guide and exercises',closePanel:'Close panel',
  kbdNote:'Physical keyboard: letters, numbers, <kbd>/</kbd> <kbd>.</kbd> <kbd>space</kbd> · <kbd>⌫</kbd> = CLR · <kbd>Delete</kbd> = clear all · arrows = ← → ↑ ↓',
  colors:'Screen colors',
