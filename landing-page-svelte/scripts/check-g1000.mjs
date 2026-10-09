@@ -338,6 +338,15 @@ check('OBS: needs GPS + target; sets course to DTK; CRS knob turns it', () => {
   play(s, softBy(s, 'pfd', 'OBS')); assert.equal(s.pfd.obs, true);
   near(s.sel.obsCrs, Math.round(N.brgDeg(byId('SQ01'), byId('MIRA'))), 0);
   play(s, ev.knob('pfd', 'crsbaro', 'inner', 10)); near(guidance(s).dtk, s.sel.obsCrs, 1e-9);
+  // D→ SQ04 deactivates OBS; re-enable it, then cancelling the D→ must clear OBS too
+  play(s, ev.key('pfd', 'dto'), ...typeId('pfd', 'SQ04'), ev.key('pfd', 'ent'), ev.key('pfd', 'ent'));
+  assert.equal(s.pfd.obs, false);
+  play(s, softBy(s, 'pfd', 'OBS')); assert.equal(s.pfd.obs, true);
+  play(s, ev.key('pfd', 'dto'), ev.key('pfd', 'menu'), ev.key('pfd', 'ent'));
+  assert.equal(s.gps.dto, null); assert.equal(s.pfd.obs, false);
+  // OBS can always be switched off, even when its target is gone
+  s.pfd.obs = true; s.gps.fpl = { legs: [], active: -1 }; s.gps.dto = null;
+  assert.equal(play(s, softBy(s, 'pfd', 'OBS')), null); assert.equal(s.pfd.obs, false);
 });
 check('TMR/REF minimums with the FMS knob', () => {
   const s = createState('enroute'); play(s, softBy(s, 'pfd', 'TMR/REF'), ev.knob('pfd', 'fms', 'inner', 5), ev.knob('pfd', 'fms', 'outer', 2));

@@ -278,9 +278,9 @@ function openMenu(s, gdu) {
 function runMenu(s, item) {
   s.menu = null;
   const fpl = s.gps.fpl;
-  if (item === 'cancelDto') { s.gps.dto = null; s.dtoWin = null; return null; }
+  if (item === 'cancelDto') { s.gps.dto = null; s.dtoWin = null; s.pfd.obs = false; return null; }
   if (item === 'orient') { s.mfd.orient = s.mfd.orient === 'north' ? 'track' : 'north'; return null; }
-  if (item === 'deleteFpl') { s.gps.fpl = { legs: [], active: -1 }; s.mfd.cursor = -1; return null; }
+  if (item === 'deleteFpl') { s.gps.fpl = { legs: [], active: -1 }; s.mfd.cursor = -1; s.pfd.obs = false; return null; }
   if (item === 'activateLeg') {
     const f = mfdField(s);
     const n = f ? Number(f.slice(1)) : -1;
@@ -414,10 +414,11 @@ function soft(s, gdu, n) {
       case 'XPDR': p.menu = 'xpdr'; return null;
       case 'CODE': s.xpdr.entry = ''; p.menu = 'code'; return null;
       case 'OBS': {
+        if (p.obs) { p.obs = false; return null; }
         const tg = gpsTarget(s);
         if (p.cdi !== 'GPS' || !tg) return 'obsNeedsGps';
-        p.obs = !p.obs;
-        if (p.obs) s.sel.obsCrs = Math.round(brgDeg(tg.from, tg.to)) % 360;
+        p.obs = true;
+        s.sel.obsCrs = Math.round(brgDeg(tg.from, tg.to)) % 360;
         return null;
       }
       case 'CDI': p.cdi = p.cdi === 'GPS' ? 'VOR1' : p.cdi === 'VOR1' ? 'VOR2' : 'GPS'; p.obs = false; return null;
