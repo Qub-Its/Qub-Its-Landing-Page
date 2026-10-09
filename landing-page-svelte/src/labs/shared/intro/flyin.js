@@ -109,7 +109,8 @@ export async function createFlyin(canvas, { target = 'pfd', debugFail = false } 
         const loop = (now) => {
           if (t0 < 0) t0 = now;
           const t = Math.min(1, (now - t0) / (DURATION * 1000));
-          pose(t);
+          // A render error ends the intro instead of leaving the overlay up on a frozen frame.
+          try { pose(t); } catch (e) { console.warn('[intro]', e); stopLoop(); return; }
           if (t >= 1) stopLoop(); else raf = requestAnimationFrame(loop);
         };
         raf = requestAnimationFrame(loop);
@@ -131,6 +132,7 @@ export async function createFlyin(canvas, { target = 'pfd', debugFail = false } 
         for (const x of [].concat(m.material ?? [])) x.dispose?.();
       });
       mat.map?.dispose();
+      renderer.forceContextLoss(); // release the context now: replays would otherwise pile them up until GC
       renderer.dispose();
     },
     get frames() { return count; },

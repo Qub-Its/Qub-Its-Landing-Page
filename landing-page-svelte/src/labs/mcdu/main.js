@@ -1,3 +1,4 @@
+// MCDU trainer entry. The trainer is vanilla JS; this only wires styles, analytics and the shared lab modules.
 import { inject } from '@vercel/analytics'
 import './mcdu.css'
 import './trainer.js'

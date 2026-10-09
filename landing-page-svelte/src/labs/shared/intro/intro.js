@@ -17,10 +17,13 @@ const readSeen = () => { try { return localStorage.getItem(KEY); } catch { retur
 const markSeen = () => { try { localStorage.setItem(KEY, '1'); } catch { /* private mode */ } };
 
 let running = false;
+const MODIFIERS = ['Shift', 'Control', 'Alt', 'Meta', 'CapsLock'];
+
 let state = 'idle';
 /** @type {{frames: number}|null} */
-let current = null;
-if (query().get('debug3d') !== null) window.__intro = () => ({ state, frames: current?.frames ?? 0 });
+let current = null; // the playing view only; a finished one is dropped so its canvas can be collected
+let lastFrames = 0;
+if (query().get('debug3d') !== null) window.__intro = () => ({ state, frames: current?.frames ?? lastFrames });
 
 /** @param {{target?: 'pfd'|'mcdu', lang?: string, force?: boolean}} [opts] */
 export async function maybeIntro({ target = 'pfd', lang = 'es', force = false } = {}) {
@@ -28,7 +31,7 @@ export async function maybeIntro({ target = 'pfd', lang = 'es', force = false } 
   const q = query();
   const reducedMotion = !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   if (!shouldPlay({ force, param: q.get('intro'), seen: readSeen(), reducedMotion })) return;
-  running = true; state = 'loading'; current = null;
+  running = true; state = 'loading'; current = null; lastFrames = 0;
   markSeen();
 
   const t = TEXT[lang] ?? TEXT.es;
@@ -38,7 +41,8 @@ export async function maybeIntro({ target = 'pfd', lang = 'es', force = false } 
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
   el.setAttribute('aria-label', t.label);
-  el.innerHTML = '<canvas class="labs-intro-canvas"></canvas><p class="labs-intro-title"></p><button type="button" class="labs-intro-skip"></button>';
+  el.setAttribute('aria-describedby', 'labsIntroTitle');
+  el.innerHTML = '<canvas class="labs-intro-canvas"></canvas><p class="labs-intro-title" id="labsIntroTitle"></p><button type="button" class="labs-intro-skip"></button>';
   el.querySelector('.labs-intro-title').textContent = t.title;
   const skipBtn = /** @type {HTMLButtonElement} */ (el.querySelector('.labs-intro-skip'));
   skipBtn.textContent = t.skip;
@@ -53,7 +57,14 @@ export async function maybeIntro({ target = 'pfd', lang = 'es', force = false } 
   const skipP = new Promise((r) => { resolveSkip = r; });
   const skip = () => { skipped = true; view?.skip(); resolveSkip(); };
   // Window capture: runs before the page's own key handlers (PFD sidestick arrows) and keeps the key from them.
-  const onKey = (e) => { e.stopPropagation(); if (e.key === 'Escape') e.preventDefault(); skip(); };
+  // Modifiers alone (e.g. the start of a shortcut) do not skip; Tab keeps focus on the only control.
+  const onKey = (e) => {
+    e.stopPropagation();
+    if (MODIFIERS.includes(e.key)) return;
+    if (e.key === 'Tab') { e.preventDefault(); skipBtn.focus(); return; }
+    if (e.key === 'Escape') e.preventDefault();
+    skip();
+  };
   const fit = () => view?.resize(innerWidth, innerHeight);
   window.addEventListener('keydown', onKey, true);
   el.addEventListener('pointerdown', skip);
@@ -79,6 +90,7 @@ export async function maybeIntro({ target = 'pfd', lang = 'es', force = false } 
     window.removeEventListener('resize', fit);
     el.remove();
     document.documentElement.classList.remove('labs-intro-open');
+    lastFrames = view?.frames ?? 0; current = null;
     view?.dispose();
     if (prev && prev !== document.body && prev.isConnected) prev.focus();
     state = 'done'; running = false;
