@@ -98,5 +98,7 @@ export async function createExteriorView(canvas, getState, { camera = 'side', de
       renderer.dispose();
     },
     get frames() { return frames; },
+    /** Rendered camera position (debug/smoke checks). */
+    get cameraPosition() { return cam.position.toArray().map((n) => Math.round(n)); },
   };
 }
