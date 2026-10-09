@@ -10,6 +10,7 @@
   import Controls from './components/Controls.svelte';
   import Panel from './components/Panel.svelte';
   import PanelRail from './components/PanelRail.svelte';
+  import Exterior3d from './components/Exterior3d.svelte';
   import ExplainCard from './components/ExplainCard.svelte';
   import Exercises from './components/Exercises.svelte';
   import TaskBar from './components/TaskBar.svelte';
@@ -44,6 +45,21 @@
   // Desktop only: Guía / Ejercicios panel folded into a rail so PFD and controls fit side by side.
   const COLLAPSED_KEY = 'qubits.pfd.panelCollapsed';
   let collapsed = $state(readCollapsed());
+  // 3D exterior view: { open, camera } persisted; mounted on first open, then only hidden (keeps the WebGL context).
+  const VIEW3D_KEY = 'qubits.pfd.view3d';
+  let view3d = $state(readView3d());
+  let view3dMounted = $state(view3d.open);
+  function readView3d() {
+    try {
+      const v = JSON.parse(localStorage.getItem(VIEW3D_KEY) || '{}');
+      return { open: v.open === true, camera: ['side', 'rear', 'q34'].includes(v.camera) ? v.camera : 'side' };
+    } catch { return { open: false, camera: 'side' }; }
+  }
+  function saveView3d() {
+    try { localStorage.setItem(VIEW3D_KEY, JSON.stringify(view3d)); } catch { /* storage unavailable */ }
+  }
+  function toggle3d() { view3d.open = !view3d.open; if (view3d.open) view3dMounted = true; saveView3d(); }
+  function setCamera3d(id) { view3d.camera = id; saveView3d(); }
   let glossaryOpen = $state(false);
   let toastMsg = $state('');
   let toastShow = $state(false);
@@ -226,6 +242,7 @@
   </div>
   <div class="top-actions">
     <button class="btn" type="button" aria-pressed={explain} title={t.explainTitle} onclick={toggleExplain}>{t.explain}</button>
+    <button class="btn" type="button" data-3d aria-pressed={view3d.open} title={t.view3dTitle} onclick={toggle3d}>{t.view3d}</button>
     <button class="btn mobile-only" type="button" onclick={() => openPanel('guide')}>{t.guide}</button>
     <button class="btn mobile-only" type="button" onclick={() => openPanel('ex')}>{t.exercises}</button>
     <button class="btn" type="button" aria-haspopup="dialog" onclick={() => (glossaryOpen = true)}>{t.glossary}</button>
@@ -246,6 +263,7 @@
     <Pfd s={flight} {explain} {highlight} {onpart} label={t.pfdLabel} />
     <div class="sim-side">
       <Fcu {lang} />
+      {#if view3dMounted}<Exterior3d {lang} open={view3d.open} camera={view3d.camera} oncamera={setCamera3d} onclose={toggle3d} />{/if}
       <Controls {lang} />
     </div>
 

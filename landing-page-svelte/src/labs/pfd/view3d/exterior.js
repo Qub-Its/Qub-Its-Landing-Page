@@ -1,11 +1,17 @@
 // WebGL scene for the PFD trainer's 3D exterior view. The only module that imports three.js; loaded with a
 // dynamic import() by Exterior3d.svelte so three lands in its own chunk. Pure view of the flight state.
-import * as THREE from 'three';
+// Named imports (not `import * as`) so Vite can tree-shake three; THREE below is the subset this view and
+// buildA320 use.
+import {
+  ArrowHelper, BoxGeometry, BufferAttribute, BufferGeometry, Color, ConeGeometry, CylinderGeometry, DirectionalLight, ExtrudeGeometry, Fog, GridHelper, Group, HemisphereLight, Line, LineBasicMaterial, Mesh, MeshLambertMaterial, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry, Scene, Shape, Vector2, Vector3, WebGLRenderer,
+} from 'three';
 import { buildA320 } from '../../shared/three/aircraft.js';
 import { poseFrom, rotate } from './pose.js';
 
-const GROUND_Y = -40, CELL = 50, KT = 0.5144;
-const ARC_N = 24, ARC_R = 22;
+const THREE = { ArrowHelper, BoxGeometry, BufferAttribute, BufferGeometry, Color, ConeGeometry, CylinderGeometry, DirectionalLight, ExtrudeGeometry, Fog, GridHelper, Group, HemisphereLight, Line, LineBasicMaterial, Mesh, MeshLambertMaterial, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry, Scene, Shape, Vector2, Vector3, WebGLRenderer };
+
+const GROUND_Y = -120, CELL = 50, KT = 0.5144;
+const ARC_N = 24, ARC_R = 34;
 
 /**
  * @param {HTMLCanvasElement} canvas
@@ -36,14 +42,14 @@ export async function createExteriorView(canvas, getState, { camera = 'side', de
   const body = new THREE.Group(); body.rotation.order = 'YXZ'; scene.add(body);
   body.add(buildA320(THREE));
   // Body axis (white) and AoA arc (amber), both in the body frame.
-  const axis = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, -19), new THREE.Vector3(0, 0, -34)]),
+  const axis = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, -19), new THREE.Vector3(0, 0, -48)]),
     new THREE.LineBasicMaterial({ color: 0xffffff }));
   body.add(axis);
   const arcPos = new Float32Array(ARC_N * 3);
   const arcGeo = new THREE.BufferGeometry(); arcGeo.setAttribute('position', new THREE.BufferAttribute(arcPos, 3));
   const arc = new THREE.Line(arcGeo, new THREE.LineBasicMaterial({ color: 0xf3a533 }));
   body.add(arc);
-  const fpvArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 0, -1), new THREE.Vector3(0, 0, 0), 34, 0x45df80, 5, 3);
+  const fpvArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 0, -1), new THREE.Vector3(0, 0, 0), 48, 0x45df80, 6, 3.5);
   scene.add(fpvArrow);
 
   const cam = new THREE.PerspectiveCamera(38, 1, 1, 5000);
@@ -51,9 +57,9 @@ export async function createExteriorView(canvas, getState, { camera = 'side', de
     const f = new THREE.Vector3(Math.sin(hdgRad), 0, -Math.cos(hdgRad)), r = new THREE.Vector3(Math.cos(hdgRad), 0, Math.sin(hdgRad));
     const up = new THREE.Vector3(0, 1, 0), p = new THREE.Vector3();
     // side: right of the aircraft looking left, so the nose points right on screen.
-    if (camera === 'side') p.addScaledVector(r, 95).addScaledVector(up, 4);
-    else if (camera === 'rear') p.addScaledVector(f, -90).addScaledVector(up, 14);
-    else p.addScaledVector(f, -62).addScaledVector(r, -55).addScaledVector(up, 26);
+    if (camera === 'side') p.addScaledVector(r, 62).addScaledVector(f, -6).addScaledVector(up, 3);
+    else if (camera === 'rear') p.addScaledVector(f, -58).addScaledVector(up, 9);
+    else p.addScaledVector(f, -46).addScaledVector(r, -40).addScaledVector(up, 18);
     cam.position.copy(p); cam.lookAt(0, 0, 0);
   };
 
