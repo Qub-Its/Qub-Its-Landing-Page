@@ -3,6 +3,7 @@
   // why, Show me, done) or quiz (options). Prev / Next always available; Next on the last step finishes the lesson.
   import { glossHtml } from '../../content/glossary.js';
   import { UI, tr } from '../../i18n.js';
+  import { quizOrder } from '../../lib/course.js';
 
   /**
    * @type {{ lang: 'es'|'en', lesson: any, index: number, done: boolean, cueIndex: number, picked: number[], demoOpen: boolean,
@@ -14,7 +15,7 @@
   const st = $derived(lesson.steps[index]);
   const last = $derived(index === lesson.steps.length - 1);
   let hintOpen = $state(false), whyOpen = $state(false);
-  $effect(() => { index; hintOpen = false; whyOpen = false; });
+  $effect(() => { void (st.id ?? `${lesson.id}:${index}`); hintOpen = false; whyOpen = false; });
   const KIND = { scene: 'scene', explain: 'explainStep', task: 'task', quiz: 'quiz' };
 </script>
 
@@ -47,9 +48,9 @@
   {:else if st.kind === 'quiz'}
     <p class="task">{tr(st.q, lang)}</p>
     <div class="choices">
-      {#each st.options as o, i}
+      {#each quizOrder(st.id, st.options.length) as i}
         <button type="button" class="choice" class:bad={picked.includes(i)} class:good={done && i === st.answer}
-          disabled={done || picked.includes(i)} onclick={() => onanswer(i)}>{tr(o, lang)}</button>
+          disabled={done || picked.includes(i)} onclick={() => onanswer(i)}>{tr(st.options[i], lang)}</button>
       {/each}
     </div>
     {#if done}<p class="hint why"><span class="ok">✓ {t.correct}</span> {@html glossHtml(tr(st.why, lang), lang)}</p>

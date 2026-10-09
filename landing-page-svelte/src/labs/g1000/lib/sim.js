@@ -27,7 +27,6 @@ export const ahrsValid = (s) => upFor(s, POWER_TIMES.ahrs);
 /** Recomputes display power after a switch change: MASTER feeds the PFD, MASTER + AVIONICS the MFD. */
 export function applyPower(s) {
   const p = s.power;
-  if (!p.master) p.engine = false;
   p.pfdOn = p.master ? (p.pfdOn ?? s.t) : null;
   p.mfdOn = p.master && p.avionics ? (p.mfdOn ?? s.t) : null;
   if (p.mfdOn == null) p.dbOk = false;

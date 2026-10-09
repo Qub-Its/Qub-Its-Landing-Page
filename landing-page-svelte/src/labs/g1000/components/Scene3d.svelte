@@ -5,6 +5,7 @@
   import { onMount, untrack } from 'svelte';
   import Fallback3d from './Fallback3d.svelte';
   import { UI, tr } from '../i18n.js';
+  import { LRUS } from '../content/lru.js';
 
   /**
    * @type {{ lang: 'es'|'en', active: boolean, scene: 'cockpit'|'explode', cue: string, label?: {es: string, en: string}|null,
@@ -94,5 +95,10 @@
     <p class="s3d-msg">{t.loading3d}</p>
   {/if}
   {#if label}<span class="s3d-label">{tr(label, lang)}</span>{/if}
-  {#if pickable && status === 'ready'}<span class="s3d-hint">{t.pick3d}</span>{/if}
+  {#if pickable && status === 'ready'}
+    <span class="s3d-hint">{t.pick3d}</span>
+    <div class="sr-only s3d-picks" role="group" aria-label={t.pick3d}>
+      {#each LRUS as l}<button type="button" onclick={() => onpick(l.part)}>{l.model} — {tr(l.name, lang)}</button>{/each}
+    </div>
+  {/if}
 </div>

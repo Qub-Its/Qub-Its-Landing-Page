@@ -9,7 +9,7 @@ import { COCKPIT_NODES } from '../src/labs/shared/three/c172-panel.js';
 import { createState } from '../src/labs/g1000/lib/state.js';
 import { dispatch } from '../src/labs/g1000/lib/avionics.js';
 import { step, DT } from '../src/labs/g1000/lib/sim.js';
-import { loadPos, savePos, loadProgress, saveProgress, lessonProgress } from '../src/labs/g1000/lib/course.js';
+import { loadPos, savePos, loadProgress, saveProgress, lessonProgress, quizOrder } from '../src/labs/g1000/lib/course.js';
 
 let passed = 0, failed = 0;
 function check(name, fn) {
@@ -106,6 +106,20 @@ check('course: saved position round trip; corrupt or out-of-range position falls
   fakeStorage({ 'qubits.g1000.pos.v1': '{"lesson":42,"step":0}' }); assert.deepEqual(loadPos(), { lesson: 0, step: 0 });
   fakeStorage({ 'qubits.g1000.pos.v1': '{"lesson":0,"step":99}' }); assert.deepEqual(loadPos(), { lesson: 0, step: 0 });
   fakeStorage({ 'qubits.g1000.pos.v1': 'not json' }); assert.deepEqual(loadPos(), { lesson: 0, step: 0 });
+  fakeStorage({ 'qubits.g1000.pos.v1': '{"lesson":"1","step":0}' }); assert.deepEqual(loadPos(), { lesson: 0, step: 0 });
+});
+check('quizzes: quizOrder is a deterministic permutation and the correct answer is spread over positions', () => {
+  const pos = {}; let total = 0;
+  for (const l of LESSONS) for (const st of l.steps) {
+    if (st.kind !== 'quiz') continue;
+    const n = st.options.length, o = quizOrder(st.id, n);
+    assert.deepEqual([...o].sort((a, b) => a - b), Array.from({ length: n }, (_, i) => i), st.id);
+    assert.deepEqual(quizOrder(st.id, n), o, st.id);
+    const k = o.indexOf(st.answer); pos[k] = (pos[k] ?? 0) + 1; total++;
+  }
+  assert.ok(total > 0);
+  assert.ok(Object.keys(pos).length >= 2, JSON.stringify(pos));
+  assert.ok(Math.max(...Object.values(pos)) / total <= 0.7, JSON.stringify(pos));
 });
 check('course: blocked storage never throws; progress counts tasks and quizzes', () => {
   fakeStorage({}, { throws: true });

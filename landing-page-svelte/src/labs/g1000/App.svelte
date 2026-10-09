@@ -12,11 +12,13 @@
   import PanelRail from './components/course/PanelRail.svelte';
   import LessonView from './components/course/LessonView.svelte';
   import LessonList from './components/course/LessonList.svelte';
+  import ExplainCard from './components/course/ExplainCard.svelte';
   import Glossary from './components/course/Glossary.svelte';
   import { LESSONS } from './content/lessons.js';
   import { PARTS } from './content/parts.js';
   import { SCENARIOS } from './lib/state.js';
   import { g, ui, send, reset, onMessage, startLoop, stopLoop } from './lib/g1000.svelte.js';
+  import { gduPhase } from './lib/sim.js';
   import { loadProgress, saveProgress, loadPos, savePos } from './lib/course.js';
 
   const lang = detectLang();
@@ -170,7 +172,7 @@
     if (view !== 'g1000' || glossaryOpen || e.metaKey || e.ctrlKey || e.altKey) return;
     const inGdu = !!el.closest('.g1000 svg');
     if (!inGdu && el.closest('input, textarea, select, button, [role="button"], [role="tab"], a')) return;
-    const gdu = g.edit?.gdu ?? g.dtoWin?.gdu ?? g.menu?.gdu ?? ui.gdu;
+    const gdu = g.edit?.gdu ?? g.dtoWin?.gdu ?? g.menu?.gdu ?? (gduPhase(g, 'mfd') === 'db' ? 'mfd' : ui.gdu);
     if (/^[a-z0-9]$/i.test(e.key)) { send({ type: 'char', gdu, c: e.key }); e.preventDefault(); }
     else if (e.key === 'Enter' && !inGdu) { send({ type: 'key', gdu, id: 'ent' }); e.preventDefault(); }
     else if (e.key === 'Escape' || e.key === 'Backspace') { send({ type: 'key', gdu, id: 'clr' }); e.preventDefault(); }
@@ -248,6 +250,7 @@
     {/if}
 
     <Stage {lang} {view} {cue} {cueLabel} {explain} {highlight} {onpart} />
+    {#if explain}<div class="mobile-explain"><ExplainCard {lang} {part} {explain} onclear={() => (part = null)} /></div>{/if}
     <p class="kbd-note">{t.kbdNote}</p>
   </section>
 

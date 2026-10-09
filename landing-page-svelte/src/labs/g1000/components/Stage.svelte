@@ -29,11 +29,11 @@
 </script>
 
 <div class="stage" data-view={shown}>
-  <div class="stage-2d" class:off={shown !== 'g1000'}>
+  <div class="stage-2d" class:off={shown !== 'g1000'} inert={shown !== 'g1000'}>
     <G1000 {lang} {explain} {highlight} {onpart} />
   </div>
   {#if loaded3d}
-    <div class="stage-3d" class:off={shown === 'g1000'}>
+    <div class="stage-3d" class:off={shown === 'g1000'} inert={shown === 'g1000'}>
       <Scene3d bind:this={s3d} {lang} active={shown !== 'g1000'} {scene} {cue} label={cueLabel}
         pickable={scene === 'explode'} onpick={onpart} />
     </div>

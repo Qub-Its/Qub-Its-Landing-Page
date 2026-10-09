@@ -328,7 +328,7 @@ export const LESSONS = [
       { kind: 'task', id: 'l6.nrst', setup: { scenario: 'enroute', apply: (s) => { s.ac.lat = 10.5; s.ac.lon = -64.3; } }, part: 'pfd.nrst',
         task: L('Emergencia simulada: directo al aeródromo más cercano desde NRST del PFD.', 'Simulated emergency: direct to the nearest airport from the PFD NRST.'),
         hint: L('NRST, empuja FMS (el primero es el más cercano), D→, ENT, ENT.', 'NRST, push FMS (the first one is the nearest), D→, ENT, ENT.'),
-        why: L('Cuatro pulsaciones a un aeródromo: el uso más valioso del GPS en una emergencia.', 'Four presses to an airport: the most valuable use of GPS in an emergency.'),
+        why: L('Cinco pulsaciones a un aeródromo: el uso más valioso del GPS en una emergencia.', 'Five presses to an airport: the most valuable use of GPS in an emergency.'),
         check: (s) => !!s.gps.dto && s.gps.dto.id === nearest(s.gps.dto.from)[0].apt.id,
         demo: [{ say: L('NRST y cursor.', 'NRST and cursor.'), events: [SK('pfd', 'NRST'), P('pfd', 'fms')] }, { say: L('D→ ENT ENT.', 'D→ ENT ENT.'), events: [KEY('pfd', 'dto'), KEY('pfd', 'ent'), KEY('pfd', 'ent')] }] },
       { kind: 'task', id: 'l6.obs', setup: { scenario: 'enroute', apply: (s) => { s.gps.fpl = { legs: ['SQ01', 'MIRA', 'SQ02'], active: 1 }; } }, part: 'pfd.hsi',

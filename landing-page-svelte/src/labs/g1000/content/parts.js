@@ -84,8 +84,8 @@ export const PARTS = {
   // ---------- audio panel and switches
   'audio.panel': P(['Panel de audio GMA 1347', 'Elige con qué radio transmites (MIC) y cuáles escuchas.', 'Tecla iluminada = activa. COM MIC también activa su escucha.', 'Puedes oír ATIS en COM2 mientras hablas por COM1.'],
     ['GMA 1347 audio panel', 'Picks which radio you transmit on (MIC) and which you hear.', 'Lit key = on. COM MIC also turns its audio on.', 'You can hear the ATIS on COM2 while talking on COM1.']),
-  'audio.backup': P(['DISPLAY BACKUP', 'Botón rojo del panel de audio: modo reversionario manual.', 'Con una pantalla fallada, ambas muestran PFD + EIS.', 'Lo verás en la lección de emergencias (próximamente).'],
-    ['DISPLAY BACKUP', 'Red button on the audio panel: manual reversionary mode.', 'With a display failed, both show PFD + EIS.', 'Covered in the emergencies lesson (coming soon).']),
+  'audio.backup': P(['DISPLAY BACKUP', 'Botón rojo del panel de audio: modo reversionario manual.', 'Si una pantalla falla, la otra pasa sola a modo reversionario (PFD + EIS); el botón lo fuerza a mano.', 'Lo verás en la lección de emergencias (próximamente).'],
+    ['DISPLAY BACKUP', 'Red button on the audio panel: manual reversionary mode.', 'If a display fails, the other one goes reversionary on its own (PFD + EIS); the button forces it manually.', 'Covered in the emergencies lesson (coming soon).']),
   'sw.master': P(['MASTER', 'Batería y alternador. Da energía al bus esencial (PFD).', 'Arriba = ON.', 'Primer interruptor del arranque.'],
     ['MASTER', 'Battery and alternator. Powers the essential bus (PFD).', 'Up = ON.', 'First switch of the start-up.']),
   'sw.avionics': P(['AVIONICS', 'Bus de aviónica: MFD, COM2/NAV2 y el resto.', 'Arriba = ON, después del arranque del motor en la práctica real.', 'Protege la aviónica de picos del arranque.'],

@@ -252,6 +252,7 @@ check('MFD: FMS outer cycles page groups, inner pages; CLR long returns to the m
   play(s, ev.knob('mfd', 'fms', 'outer', 1), ev.knob('mfd', 'fms', 'inner', 1)); assert.equal(pageId(s), 'AUX_GPS');
   play(s, ev.knob('mfd', 'fms', 'outer', 1)); assert.equal(pageId(s), 'NRST_APT');
   play(s, ev.key('mfd', 'clr', true)); assert.equal(pageId(s), 'MAP_NAV');
+  play(s, ev.knob('mfd', 'fms', 'outer', -41)); assert.equal(typeof pageId(s), 'string');
 });
 check('MFD map: MENU → orientation track up; RANGE knob steps', () => {
   const s = createState('enroute');

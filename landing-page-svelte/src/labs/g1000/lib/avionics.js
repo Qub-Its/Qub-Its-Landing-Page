@@ -143,11 +143,11 @@ function fms(s, gdu, ring, d) {
   if (m.win === 'fpl') return null;
   if (ring === 'outer') {
     const i = GROUPS.indexOf(m.group);
-    m.group = GROUPS[(i + d + GROUPS.length * 4) % GROUPS.length];
+    m.group = GROUPS[(((i + d) % GROUPS.length) + GROUPS.length) % GROUPS.length];
     m.page = 0;
   } else {
     const n = PAGES[m.group].length;
-    m.page = (m.page + d + n * 4) % n;
+    m.page = (((m.page + d) % n) + n) % n;
   }
   return null;
 }
@@ -162,7 +162,7 @@ function editKnob(e, ring, d) {
   if (ring === 'inner') {
     const ch = value[e.pos];
     const cur = ch ? CHARSET.indexOf(ch) : -1;
-    const next = cur < 0 ? (d > 0 ? 0 : CHARSET.length - 1) : (cur + d + CHARSET.length) % CHARSET.length;
+    const next = cur < 0 ? (d > 0 ? 0 : CHARSET.length - 1) : (((cur + d) % CHARSET.length) + CHARSET.length) % CHARSET.length;
     e.typed = value.slice(0, e.pos) + CHARSET[next];
   } else if (d > 0) {
     if (e.pos < value.length) { e.typed = value.slice(0, e.pos + 1); e.pos = Math.min(e.pos + 1, 5); }

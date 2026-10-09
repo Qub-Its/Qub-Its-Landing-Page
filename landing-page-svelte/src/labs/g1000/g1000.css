@@ -240,7 +240,7 @@ details code, .inspector code{font-family:var(--f-mono);color:var(--cyan);font-s
 .gl-item dd{margin:4px 0 0;color:var(--muted);font-size:14px}
 .gl-empty{color:var(--muted);margin:16px 0}
 
-@media (prefers-reduced-motion: reduce){ *{transition:none!important;scroll-behavior:auto!important} }
+@media (prefers-reduced-motion: reduce){ *{transition:none!important;scroll-behavior:auto!important} .hl{animation:none} }
 
 /* ---------- G1000 course ---------- */
 .g1000-layout{max-width:1440px;grid-template-columns:minmax(0,1fr) minmax(300px,380px)}
@@ -307,3 +307,4 @@ details code, .inspector code{font-family:var(--f-mono);color:var(--cyan);font-s
   .unit-audio svg{max-height:60vh}
 }
 .knob{touch-action:none}
+.s3d-picks button:focus{position:static;width:auto;height:auto;clip:auto;margin:8px;white-space:normal}
