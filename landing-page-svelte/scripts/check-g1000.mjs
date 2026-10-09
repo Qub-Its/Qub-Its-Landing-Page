@@ -60,6 +60,9 @@ check('world ids unique, frequencies on grid', () => {
   assert.equal(new Set(W.ALL.map((w) => w.id)).size, W.ALL.length);
   for (const a of W.AIRPORTS) for (const f of a.freqs) near(Math.round(f.f * 1000) % 25, 0, 0, `${a.id} ${f.f}`);
   for (const v of W.VORS) assert.ok(v.freq >= 108 && v.freq <= 117.95 && Math.round(v.freq * 100) % 5 === 0, v.id);
+  const MORSE = { A: '·—', B: '—···', D: '—··', E: '·', L: '·—··', R: '·—·', V: '···—' };
+  const decode = (m) => m.split(' ').map((c) => Object.keys(MORSE).find((k) => MORSE[k] === c) ?? '?').join('');
+  for (const v of W.VORS) assert.equal(decode(v.morse), v.id, `${v.id} morse`);
 });
 check('complete(): alphabetical prefix match', () => {
   assert.equal(W.complete('SQ0'), 'SQ01'); assert.equal(W.complete('SQ04'), 'SQ04');
