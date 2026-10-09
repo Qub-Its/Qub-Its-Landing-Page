@@ -18,6 +18,11 @@ export function buildCockpit(THREE) {
   // Interior shell seen from inside (BackSide) so the cabin is closed once the camera is in the fuselage.
   const shell = new THREE.CylinderGeometry(1.9, 1.9, 3.1, 16, 1, true); shell.rotateX(Math.PI / 2);
   add('shell', shell, new THREE.MeshStandardMaterial({ color: 0x2a3138, side: THREE.BackSide, roughness: 0.9 }), [0, 0, -14.05]);
+  // Nose bulkhead: closes the open nose cone below the glareshield, so from the seat the sky shows only through
+  // the windshield. Circle of radius 1.85 m cut flat at y = 0.9 m, facing aft.
+  const R = 1.85, TOP = 0.9, a0 = Math.asin(TOP / R), arc = [];
+  for (let i = 0; i <= 24; i++) { const a = Math.PI - a0 + (i / 24) * (Math.PI + 2 * a0); arc.push(new THREE.Vector2(R * Math.cos(a), R * Math.sin(a))); }
+  add('bulkhead', new THREE.ShapeGeometry(new THREE.Shape(arc)), darkMat, [0, 0, -15.5]);
   add('panel', new THREE.BoxGeometry(1.8, 0.5, 0.12), panelMat, [0, 0.55, -15.25]);
   add('glareshield', new THREE.BoxGeometry(1.9, 0.12, 0.35), darkMat, [0, 0.86, -15.12]);
   add('pedestal', new THREE.BoxGeometry(0.5, 0.5, 0.8), panelMat, [0, 0.05, -14.75]);

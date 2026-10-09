@@ -1,7 +1,13 @@
 # Labs — cockpit fly-in intro (MVP2, part 4)
 
 Status: implemented (2026-10-09). Implementation notes: overlay classes are `labs-intro*` (`.intro` already styles the
-level cards); `buildA320`'s nose cone is open-ended, because its base disc walled off the flight deck from inside. Fourth MVP2 sub-project from `2026-10-09-pfd-trainer-design.md`
+level cards); `buildA320`'s nose cone is open-ended, because its base disc walled off the flight deck from inside.
+After visual review the path changed: the flight deck faces aft, so flying in through the windshield forced a
+180° turn of the view. The camera now flies up to the glass, a dark veil (`veilAt`) hides a cut to the captain's
+eye point, and it moves in to the target screen. The target screen shows a stylised PFD / MCDU MENU texture (not
+plain green), the other displays a dim "powered" tint, a nose `bulkhead` closes the cabin below the glareshield,
+and portrait screens widen the vertical FOV (`fovFor`, ≤ 80°). Time starts at the first animation frame, and the
+overlay always fades out (it catches the click after a skipping tap). Fourth MVP2 sub-project from `2026-10-09-pfd-trainer-design.md`
 (done: MCDU Vite migration, PFD 3D exterior view, MCDU 3D F-PLN map; later: PFD Build mode).
 
 All paths are relative to `landing-page-svelte/` unless stated.

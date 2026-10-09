@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { shouldPlay } from '../src/labs/shared/intro/decide.js';
-import { keyframes, cameraAt, DURATION, FADE } from '../src/labs/shared/intro/path.js';
+import { keyframes, cameraAt, veilAt, fovFor, T_CUT, DURATION, FADE } from '../src/labs/shared/intro/path.js';
 import { buildCockpit, SCREENS } from '../src/labs/shared/three/cockpit.js';
 import { buildA320 } from '../src/labs/shared/three/aircraft.js';
 
@@ -37,7 +37,7 @@ const plane = buildA320(THREE);
 const deck = buildCockpit(THREE);
 plane.add(deck);
 plane.updateMatrixWorld(true);
-const PARTS = ['shell', 'glareshield', 'panel', 'pfdL', 'ndL', 'ewd', 'sd', 'ndR', 'pfdR', 'pedestal', 'mcduL', 'mcduR'];
+const PARTS = ['shell', 'bulkhead', 'glareshield', 'panel', 'pfdL', 'ndL', 'ewd', 'sd', 'ndR', 'pfdR', 'pedestal', 'mcduL', 'mcduR'];
 await check('flight deck: group name and all parts', () => {
   assert.equal(deck.name, 'flightDeck');
   for (const n of PARTS) assert.ok(deck.getObjectByName(n), `missing ${n}`);
@@ -46,9 +46,11 @@ await check('flight deck: every part inside the fuselage (r ≤ 2 m, z ∈ [−1
   for (const n of PARTS) {
     const o = deck.getObjectByName(n), box = new THREE.Box3().setFromObject(o);
     assert.ok(box.min.z >= -15.7 && box.max.z <= -12.4, `${n} z ${box.min.z}..${box.max.z}`);
-    if (n === 'shell') { assert.ok(o.geometry.parameters.radiusTop <= 2, 'shell radius'); continue; }
-    for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y])
-      assert.ok(Math.hypot(x, y) <= 2, `${n} corner (${x}, ${y})`);
+    const p = o.geometry.attributes.position, v = new THREE.Vector3();
+    for (let i = 0; i < p.count; i++) {
+      v.fromBufferAttribute(p, i).applyMatrix4(o.matrixWorld);
+      assert.ok(Math.hypot(v.x, v.y) <= 2, `${n} vertex (${v.x}, ${v.y})`);
+    }
   }
 });
 const screenPose = (name) => {
@@ -64,18 +66,53 @@ await check('SCREENS map to screen meshes facing the pilots (+z)', () => {
   for (const n of ['pfdL', 'ndL', 'ewd', 'sd', 'ndR', 'pfdR', 'mcduL', 'mcduR'])
     assert.equal(deck.getObjectByName(n).userData.screen, true, n);
 });
+await check('bulkhead closes the nose below the glareshield only (sky through the windshield)', () => {
+  const box = new THREE.Box3().setFromObject(deck.getObjectByName('bulkhead'));
+  assert.ok(box.max.y <= 0.95 && box.min.y < -1.5, `bulkhead y ${box.min.y}..${box.max.y}`);
+  assert.ok(box.max.z < -15.31, `bulkhead must sit ahead of the panel, z ${box.max.z}`);
+});
 await check('screens have their own materials (lighting one does not light the others)', () => {
   assert.notEqual(deck.getObjectByName('pfdL').material, deck.getObjectByName('ndL').material);
 });
 
 // ---- camera path
 await check('timing constants', () => { assert.equal(DURATION, 3.5); assert.equal(FADE, 0.4); });
+await check('portrait screens widen the vertical FOV so the aircraft fits (capped at 80°)', () => {
+  assert.equal(fovFor(1.6), 50); assert.equal(fovFor(1), 50);
+  const v = fovFor(0.46), h = 2 * Math.atan(Math.tan(v * Math.PI / 360) * 0.46) * 180 / Math.PI;
+  assert.ok(v > 50 && v <= 80 && h >= 40, `v ${v} h ${h}`);
+  assert.ok(Number.isFinite(fovFor(0)) && fovFor(0) <= 80);
+});
 for (const target of ['pfd', 'mcdu']) {
   const { pos: sp, normal: sn } = screenPose(SCREENS[target]);
   const frames = keyframes(target, sp, sn);
-  await check(`${target}: keyframe t strictly increasing from 0 to 1`, () => {
+  await check(`${target}: keyframe t increasing from 0 to 1 (equal only at the cut)`, () => {
     assert.equal(frames[0].t, 0); assert.equal(frames.at(-1).t, 1);
-    for (let i = 1; i < frames.length; i++) assert.ok(frames[i].t > frames[i - 1].t);
+    for (let i = 1; i < frames.length; i++)
+      assert.ok(frames[i].t > frames[i - 1].t || (frames[i].cut && frames[i].t === frames[i - 1].t), `frame ${i}`);
+  });
+  // The flight deck faces aft, so a continuous path in through the windshield has to turn the view 180°.
+  // Instead the camera reaches the glass, the view goes dark (veil) and cuts to the captain's eye point.
+  const ease = (t) => t * t * (3 - 2 * t);
+  const viewDir = (t) => { const { pos, look } = cameraAt(frames, t); const d = sub(look, pos); return d.map((v) => v / len(d)); };
+  await check(`${target}: the view never swings more than 6° per 1/400 of the intro, except across the cut`, () => {
+    for (let i = 1; i <= 400; i++) {
+      const a = (i - 1) / 400, b = i / 400;
+      if (ease(a) < T_CUT && ease(b) >= T_CUT) continue;
+      const deg = Math.acos(Math.min(1, dot(viewDir(a), viewDir(b)))) * 180 / Math.PI;
+      assert.ok(deg < 6, `t ${a}→${b}: ${deg.toFixed(1)}°`);
+    }
+  });
+  await check(`${target}: before the cut outside at the glass, after it inside behind the panel looking forward`, () => {
+    let tc = 0; while (ease(tc) < T_CUT) tc += 1 / 4000;
+    const before = cameraAt(frames, tc - 1 / 4000), after = cameraAt(frames, tc);
+    assert.ok(before.pos[2] < -16.3, `before z ${before.pos[2]}`);
+    assert.ok(after.pos[2] > -15.19 && after.look[2] < after.pos[2], `after ${after.pos} → ${after.look}`);
+  });
+  await check(`${target}: veil fully dark at the cut, clear at start and end`, () => {
+    let tc = 0; while (ease(tc) < T_CUT) tc += 1 / 4000;
+    assert.ok(veilAt(tc) > 0.95, `veil ${veilAt(tc)}`);
+    assert.equal(veilAt(0), 0); assert.equal(veilAt(1), 0); assert.equal(veilAt(0.25), 0);
   });
   await check(`${target}: starts outside, > 30 m from the CG`, () => {
     const p = cameraAt(frames, 0).pos;

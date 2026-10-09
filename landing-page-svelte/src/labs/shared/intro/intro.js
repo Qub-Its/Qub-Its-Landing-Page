@@ -69,10 +69,12 @@ export async function maybeIntro({ target = 'pfd', lang = 'es', force = false } 
     if (view && !skipped) {
       current = view; fit(); state = 'playing';
       await Promise.race([view.play(), skipP]);
-      el.classList.add('labs-intro-out');
-      await wait(FADE * 1000);
     }
   } finally {
+    // Always fade, even when skipped while loading: the overlay stays up a moment longer and catches the click
+    // that follows a skipping tap, so it does not land on the page underneath.
+    el.classList.add('labs-intro-out');
+    await wait(FADE * 1000);
     window.removeEventListener('keydown', onKey, true);
     window.removeEventListener('resize', fit);
     el.remove();
