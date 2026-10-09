@@ -141,7 +141,7 @@
 </script>
 
 <section class="controls" aria-label="Controls">
-  <div class="row top">
+  <div class="row head">
     <label class="sel">
       <span class="lbl">{t.scenario}</span>
       <select value={flight.scenario} onchange={(e) => loadScenario(e.currentTarget.value)}>
@@ -216,7 +216,7 @@
     gap: 14px;
   }
   .row { display: flex; gap: 14px; flex-wrap: wrap; }
-  .top { align-items: flex-end; justify-content: space-between; }
+  .head { align-items: flex-end; justify-content: space-between; }
   .mid { align-items: flex-start; }
   .lbl {
     font-family: var(--f-ui);

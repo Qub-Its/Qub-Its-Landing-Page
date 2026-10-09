@@ -1,5 +1,8 @@
 # PFD Trainer — MVP1 implementation plan
 
+Status: MVP1 implemented (2026-10-09). Deviations: Task B added `setLever`, `setFlaps`, `toggleGearLever` and a
+`flight.lever` field; integration added `scripts/check-pfd-exercises.mjs`.
+
 Spec: `docs/superpowers/specs/2026-10-09-pfd-trainer-design.md`. All paths below are relative to
 `landing-page-svelte/`. Svelte 5 runes only (`$state`, `$derived`, `$props`, `$effect`); no new runtime
 dependencies unless the task says so. Plain JS with JSDoc (`checkJs` is on).
