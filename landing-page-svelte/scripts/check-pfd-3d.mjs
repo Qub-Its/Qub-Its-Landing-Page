@@ -46,5 +46,26 @@ await check('matches the sim AoA while airborne (cruise + manual, 30 s with stic
   }
 });
 
+const THREE = await import('three');
+const { buildA320 } = await import('../src/labs/shared/three/aircraft.js');
+await check('A320 model: named parts', () => {
+  const g = buildA320(THREE);
+  assert.equal(g.name, 'A320');
+  for (const n of ['fuselage', 'noseCone', 'tailCone', 'cockpit', 'wingL', 'wingR', 'stabL', 'stabR', 'fin', 'engineL', 'engineR'])
+    assert.ok(g.getObjectByName(n), `missing ${n}`);
+});
+await check('A320 model: real proportions, nose toward −z', () => {
+  const g = buildA320(THREE); g.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(g), size = box.getSize(new THREE.Vector3());
+  assert.ok(size.z >= 35 && size.z <= 40, `length ${size.z}`);
+  assert.ok(size.x >= 33 && size.x <= 38, `span ${size.x}`);
+  const c = new THREE.Vector3(); g.getObjectByName('cockpit').getWorldPosition(c);
+  assert.ok(c.z < -10, `cockpit z ${c.z}`);
+  const wl = new THREE.Box3().setFromObject(g.getObjectByName('wingL'));
+  assert.ok(wl.max.x < 0, 'left wing on −x');
+  const fin = new THREE.Box3().setFromObject(g.getObjectByName('fin')).getCenter(new THREE.Vector3());
+  assert.ok(fin.z > 10 && fin.y > 3, `fin centre ${fin.toArray()}`);
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
