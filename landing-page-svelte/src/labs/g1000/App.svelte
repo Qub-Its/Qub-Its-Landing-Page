@@ -139,7 +139,7 @@
 
   function closeDemo() {
     demoTask = null;
-    if (step.kind === 'task' && !done[step.id]) reset(step.setup.scenario, step.setup.apply);
+    if (step.kind === 'task' && !done[step.id]) { reset(step.setup.scenario, step.setup.apply); ctx = { lastPart: null }; }
   }
 
   // Scene steps: advance the camera cue every 3.2 s until the last shot.
@@ -168,10 +168,11 @@
     if (e.key === 'Escape' && sheetOpen && !glossaryOpen) { sheetOpen = false; return; }
     const el = /** @type {HTMLElement} */ (e.target);
     if (view !== 'g1000' || glossaryOpen || e.metaKey || e.ctrlKey || e.altKey) return;
-    if (el.closest('input, textarea, select, button, [role="button"], [role="tab"], a')) return;
+    const inGdu = !!el.closest('.g1000 svg');
+    if (!inGdu && el.closest('input, textarea, select, button, [role="button"], [role="tab"], a')) return;
     const gdu = g.edit?.gdu ?? g.dtoWin?.gdu ?? g.menu?.gdu ?? ui.gdu;
     if (/^[a-z0-9]$/i.test(e.key)) { send({ type: 'char', gdu, c: e.key }); e.preventDefault(); }
-    else if (e.key === 'Enter') { send({ type: 'key', gdu, id: 'ent' }); e.preventDefault(); }
+    else if (e.key === 'Enter' && !inGdu) { send({ type: 'key', gdu, id: 'ent' }); e.preventDefault(); }
     else if (e.key === 'Escape' || e.key === 'Backspace') { send({ type: 'key', gdu, id: 'clr' }); e.preventDefault(); }
   }
 
@@ -222,7 +223,7 @@
     {#if mode === 'course'}
       <StepBar {lang} {lesson} index={stepIdx} done={stepDone} {cueIndex} {picked} demoOpen={!!demoTask}
         onprev={prev} onnext={next} oncue={(i) => (cueIndex = i)} onanswer={answer}
-        onshowme={() => { if (step.kind === 'task') demoTask = step; }} />
+        onshowme={() => { if (step.kind === 'task') { ctx = { lastPart: null }; demoTask = step; } }} />
       {#key demoTask}
         {#if demoTask}<DemoBar {lang} task={demoTask} {onpart} onclose={closeDemo} />{/if}
       {/key}

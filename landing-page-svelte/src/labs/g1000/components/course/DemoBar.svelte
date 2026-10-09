@@ -32,11 +32,12 @@
       const ev = typeof e === 'function' ? e(g) : e;
       ui.flash = flashOf(ev);
       await sleep(ev.type === 'char' ? 120 : 380);
+      if (me !== run) { ui.flash = null; return; }
       send(ev);
       ui.flash = null;
     }
     if (d.wait) for (let k = 0; k < 12 && me === run; k++) { fastForward(d.wait / 12); await sleep(100); }
-    if (d.part) onpart(d.part);
+    if (d.part && me === run) onpart(d.part);
     if (me === run) playing = false;
   }
 
