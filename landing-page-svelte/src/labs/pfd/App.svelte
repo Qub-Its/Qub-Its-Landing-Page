@@ -163,7 +163,7 @@
 
   const highlight = $derived(explain && part ? part : hintOpen && status === 'active' && task?.part ? task.part : null);
 
-  // ---- feedback (shared module of the MCDU trainer, same Web3Forms key)
+  // ---- feedback (shared with the MCDU trainer, same Web3Forms key; lazy chunk, only when a key is set)
   const feedbackKey = import.meta.env.VITE_WEB3FORMS_FEEDBACK_KEY;
 
   onMount(() => {
@@ -175,10 +175,10 @@
     document.addEventListener('keydown', onKey);
 
     if (feedbackKey) {
-      document.querySelector('meta[name="feedback-key"]')?.setAttribute('content', feedbackKey);
-      // Path in a variable: it is a public/ file, so Vite must not try to analyse (dev) or bundle (build) the import.
-      const panelUrl = '/labs/mcdu-trainer/feedback-panel.js';
-      tick().then(() => import(/* @vite-ignore */ panelUrl)).catch(() => {});
+      tick()
+        .then(() => import('../shared/feedback/feedback-panel.js'))
+        .then((m) => m.mountFeedback({ key: feedbackKey }))
+        .catch(() => {});
     }
     return () => { off?.(); stop?.(); document.removeEventListener('keydown', onKey); clearTimeout(toastTimer); };
   });
