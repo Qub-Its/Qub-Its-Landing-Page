@@ -26,7 +26,8 @@ export function buildA320(THREE) {
   // Fuselage: 30 m barrel + 4.4 m nose cone + 3.2 m tail cone = 37.6 m, radius 2 m.
   const barrel = new THREE.CylinderGeometry(2, 2, 30, 16); barrel.rotateX(Math.PI / 2);
   add('fuselage', barrel, white, [0, 0, 0]);
-  const nose = new THREE.ConeGeometry(2, 4.4, 16); nose.rotateX(-Math.PI / 2);
+  // Open-ended: the base disc would sit at z = −15 facing aft and wall off the flight deck in the cockpit intro.
+  const nose = new THREE.ConeGeometry(2, 4.4, 16, 1, true); nose.rotateX(-Math.PI / 2);
   add('noseCone', nose, white, [0, 0, -17.2]);
   const tail = new THREE.ConeGeometry(2, 3.2, 16); tail.rotateX(Math.PI / 2);
   add('tailCone', tail, white, [0, 0.4, 16.6]);

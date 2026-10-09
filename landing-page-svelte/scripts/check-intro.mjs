@@ -92,6 +92,19 @@ for (const target of ['pfd', 'mcdu']) {
       if (z > -19.4) assert.ok(Math.abs(x) <= 1, `t ${i / 400}: x ${x} at z ${z}`);
     }
   });
+  await check(`${target}: inside the cabin nothing of the exterior hides the view (raycast to the look point)`, () => {
+    // flyin.js hides the exterior window mesh ('cockpit') once inside; everything else must stay out of the way.
+    const deckMeshes = new Set(); deck.traverse((o) => deckMeshes.add(o));
+    const others = []; plane.traverse((o) => { if (o.isMesh && o.name !== 'cockpit') others.push(o); });
+    for (const t of [0.8, 0.9, 1]) {
+      const { pos, look } = cameraAt(frames, t);
+      const from = new THREE.Vector3(...pos), dir = new THREE.Vector3(...look).sub(from).normalize();
+      const hit = new THREE.Raycaster(from, dir, 0.01, 50).intersectObjects(others, false).find((h) => h.object.name !== 'shell');
+      // No hit = sky through the windshield, fine; a hit must belong to the flight deck.
+      assert.ok(!hit || deckMeshes.has(hit.object), `t ${t}: first hit ${hit?.object.name}`);
+      if (t === 1) assert.equal(hit?.object.name, SCREENS[target]);
+    }
+  });
   await check(`${target}: clamps t and stays finite`, () => {
     assert.deepEqual(cameraAt(frames, -1), cameraAt(frames, 0));
     assert.deepEqual(cameraAt(frames, 2), cameraAt(frames, 1));

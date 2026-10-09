@@ -34,16 +34,16 @@ export async function maybeIntro({ target = 'pfd', lang = 'es', force = false } 
   const t = TEXT[lang] ?? TEXT.es;
   const prev = /** @type {HTMLElement|null} */ (document.activeElement);
   const el = document.createElement('div');
-  el.className = 'intro';
+  el.className = 'labs-intro';
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
   el.setAttribute('aria-label', t.label);
-  el.innerHTML = '<canvas class="intro-canvas"></canvas><p class="intro-title"></p><button type="button" class="intro-skip"></button>';
-  el.querySelector('.intro-title').textContent = t.title;
-  const skipBtn = /** @type {HTMLButtonElement} */ (el.querySelector('.intro-skip'));
+  el.innerHTML = '<canvas class="labs-intro-canvas"></canvas><p class="labs-intro-title"></p><button type="button" class="labs-intro-skip"></button>';
+  el.querySelector('.labs-intro-title').textContent = t.title;
+  const skipBtn = /** @type {HTMLButtonElement} */ (el.querySelector('.labs-intro-skip'));
   skipBtn.textContent = t.skip;
   document.body.append(el);
-  document.documentElement.classList.add('intro-open');
+  document.documentElement.classList.add('labs-intro-open');
   skipBtn.focus();
 
   /** @type {any} */
@@ -69,14 +69,14 @@ export async function maybeIntro({ target = 'pfd', lang = 'es', force = false } 
     if (view && !skipped) {
       current = view; fit(); state = 'playing';
       await Promise.race([view.play(), skipP]);
-      el.classList.add('intro-out');
+      el.classList.add('labs-intro-out');
       await wait(FADE * 1000);
     }
   } finally {
     window.removeEventListener('keydown', onKey, true);
     window.removeEventListener('resize', fit);
     el.remove();
-    document.documentElement.classList.remove('intro-open');
+    document.documentElement.classList.remove('labs-intro-open');
     view?.dispose();
     if (prev && prev !== document.body && prev.isConnected) prev.focus();
     state = 'done'; running = false;
