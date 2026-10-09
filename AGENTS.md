@@ -33,7 +33,7 @@ npx postcss HTML/css/*.css -o HTML/css/output.css  # or similar
 - **Svelte 5**: uses `mount()` API (not `new App()`), runes syntax likely in components
 - **Tailwind v4**: configured in `tailwind.config.js` with `darkMode: "class"`
 - **jsconfig.json**: `checkJs: true` — Svelte files are type-checked
-- Vite is multi-page: `index.html` (landing), `labs/mcdu-trainer/index.html` (MCDU trainer, vanilla JS in `src/labs/mcdu/`) and `labs/pfd-trainer/index.html` (PFD trainer) are separate entries in `vite.config.js`
+- Vite is multi-page: `index.html` (landing), `labs/mcdu-trainer/index.html` (MCDU trainer, vanilla JS in `src/labs/mcdu/`) and `labs/pfd-trainer/index.html` (PFD trainer) and `labs/e6b-trainer/index.html` (E6B trainer) are separate entries in `vite.config.js`
 - No test framework, no ESLint/Prettier, no CI
 
 ## Contact Form
@@ -66,3 +66,14 @@ Both trainers have a "Feedback" button that submits to Web3Forms. Shared module 
 - Feedback: with `VITE_WEB3FORMS_FEEDBACK_KEY` set, the page lazy-loads the shared panel (`src/labs/shared/feedback/`).
 - The MCDU trainer promotes the PFD from a left-edge tab (`src/labs/shared/pfd-promo.js`, expands once per session; `?pfdPromo=expand` forces it).
 - Checks (from `landing-page-svelte/`): `node scripts/check-pfd.mjs` (flight model/autoflight), `node scripts/check-pfd-content.mjs` (ES/EN content coverage), `node scripts/check-pfd-exercises.mjs` (plays every Fly/Automation exercise against the sim), `node scripts/check-pfd-3d.mjs` (3D pose math + procedural model).
+
+## E6B Trainer
+
+`/labs/e6b-trainer/` is a Svelte 5 page (Vite entry `labs/e6b-trainer/index.html` → `src/labs/e6b/`), a mechanical E6B flight computer (both faces) built as interactive SVG. Docs: spec `docs/superpowers/specs/2026-10-09-e6b-trainer-design.md`, plan `docs/superpowers/plans/2026-10-09-e6b-trainer.md`, traditional use `docs/e6b/uso-tradicional-e6b.md`.
+
+- Structure: `lib/` (pure JS: `scales.js` log scales + ISA, `wind.js` wind triangle and wind-face geometry, `answers.js` typed-answer parsing/tolerance, `practice.js` seeded problem generator), `content/` (`parts.js`, `guide.js`, `glossary.js`, `exercises.js`), `components/` (instrument `E6b.svelte`, `CalcFace`, `WindFace`, `Lupa`; shell `Panel`, `PanelRail`, `Exercises`, `Practice`, `TaskBar`, `AnswerFields`, `DemoBar`, `ExplainCard`, `Glossary`).
+- Store: `lib/e6b.svelte.js` (`e6b`: face, rot, cursor, dir, slide, dots, pencil, dragging; `applyState`, `resetState`, `animateTo`) is the only reactive module. Instruments are pure views of it and mark clickable parts with `data-part="<id>"`.
+- Exercise contract: `{ id, level, setup?, part?, explain?, task, hint, why, check?(s, ctx) | quiz | answers[], demo? }`. `check` is evaluated by `App.svelte` in an `$effect` only while `e6b.dragging` is false (and on part clicks, `ctx.lastPart`); typed `answers` use `parseAnswer`/`isClose`; `demo` (Show me) is a list of state patches with a caption, played by `DemoBar.svelte` through `animateTo` (also used by Practice).
+- Practice: `lib/practice.js` `generate(kind, seed)` is deterministic per seed (kinds tsd, fuel, conv, tas, da, wind, navlog); streak and best streak live in `localStorage` `qubits.e6b.practice.v1`, progress in `qubits.e6b.progress.v1`, panel state in `qubits.e6b.panelCollapsed`.
+- Shell mirrors the PFD trainer (header, collapsible panel/rail, bottom sheet ≤ 980px, glossary, toast, lazy feedback panel with `VITE_WEB3FORMS_FEEDBACK_KEY`). English head is written by `scripts/localize-heads.mjs` from `seo.e6b`.
+- Checks (from `landing-page-svelte/`): `node scripts/check-e6b.mjs` (scales, atmosphere, wind, answers, generator), `node scripts/check-e6b-content.mjs` (content coverage, exercises and demos against the model).

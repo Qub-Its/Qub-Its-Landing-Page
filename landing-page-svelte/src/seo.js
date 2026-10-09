@@ -62,5 +62,25 @@ export const seo = {
       ogDescription: 'Learn to read the A320 Primary Flight Display with an interactive simulator and level-based exercises.',
       imageAlt: 'Qub-its logo'
     }
+  },
+  e6b: {
+    es: {
+      lang: 'es',
+      ogLocale: 'es_ES',
+      url: `${siteUrl}/labs/e6b-trainer/`,
+      title: 'Entrenador E6B · Computadora de vuelo | Qub-its Labs',
+      description: 'Aprende a usar la computadora de vuelo E6B (regla circular): tiempo-velocidad-distancia, combustible, TAS, altitud densidad y triángulo de viento, con ejercicios por niveles y práctica ilimitada.',
+      ogDescription: 'Aprende a usar la computadora de vuelo E6B con un simulador interactivo, ejercicios por niveles y práctica.',
+      imageAlt: 'Logo de Qub-its'
+    },
+    en: {
+      lang: 'en',
+      ogLocale: 'en_US',
+      url: `${siteUrl}/en/labs/e6b-trainer/`,
+      title: 'E6B Flight Computer Trainer | Qub-its Labs',
+      description: 'Learn to use the E6B flight computer (whiz wheel): time-speed-distance, fuel, TAS, density altitude and the wind triangle, with level-based exercises and unlimited practice.',
+      ogDescription: 'Learn the E6B flight computer with an interactive simulator, level-based exercises and practice.',
+      imageAlt: 'Qub-its logo'
+    }
   }
 };

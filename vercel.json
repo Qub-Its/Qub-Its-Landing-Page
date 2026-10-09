@@ -28,6 +28,18 @@
       "destination": "/en/labs/pfd-trainer/index.html"
     },
     {
+      "source": "/labs/e6b-trainer",
+      "destination": "/labs/e6b-trainer/index.html"
+    },
+    {
+      "source": "/en/labs/e6b-trainer",
+      "destination": "/en/labs/e6b-trainer/index.html"
+    },
+    {
+      "source": "/en/labs/e6b-trainer/",
+      "destination": "/en/labs/e6b-trainer/index.html"
+    },
+    {
       "source": "/en",
       "destination": "/en/index.html"
     },

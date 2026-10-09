@@ -82,3 +82,13 @@ write('en/labs/pfd-trainer/index.html', localizeHead(readSpanish('labs/pfd-train
   labs.item = `${seo.home.en.url}#labs`;
   Object.assign(page, { name: 'A320 PFD Trainer', item: pfd.url });
 }));
+
+const e6b = seo.e6b.en;
+write('en/labs/e6b-trainer/index.html', localizeHead(readSpanish('labs/e6b-trainer/index.html', seo.e6b.es), e6b, (graph) => {
+  const app = byType(graph, 'WebApplication');
+  Object.assign(app, { '@id': `${e6b.url}#app`, name: 'E6B Flight Computer Trainer', url: e6b.url, description: e6b.description, inLanguage: 'en' });
+  const [site, labs, page] = byType(graph, 'BreadcrumbList').itemListElement;
+  site.item = seo.home.en.url;
+  labs.item = `${seo.home.en.url}#labs`;
+  Object.assign(page, { name: 'E6B Flight Computer Trainer', item: e6b.url });
+}));
