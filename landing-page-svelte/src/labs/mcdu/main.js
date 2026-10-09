@@ -2,8 +2,10 @@
 import { inject } from '@vercel/analytics'
 import './mcdu.css'
 import './trainer.js'
+import { initPlanTab } from './fpln3d/tab.js'
 import { mountFeedback } from '../shared/feedback/feedback-panel.js'
 import '../shared/pfd-promo.js'
 
+initPlanTab()
 mountFeedback({ key: import.meta.env.VITE_WEB3FORMS_FEEDBACK_KEY })
 inject()

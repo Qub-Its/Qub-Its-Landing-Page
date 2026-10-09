@@ -129,7 +129,7 @@ Build mode, 3D, 737 skin, flight plan from the MCDU, wind, failures, alternate/d
 ## Roadmap
 
 - **MVP2:** (MCDU migration done 2026-10-08, see `2026-10-08-mcdu-vite-migration-design.md`) light migration of the MCDU Trainer to a Vite entry (shared feedback module, no inject script);
-  3D "exterior view" (done 2026-10-08 with plain three.js, not Threlte — see 2026-10-08-pfd-exterior-3d-design.md) 3D aircraft synced with the PFD attitude + FPV/AoA vectors, 3D F-PLN in the MCDU
+  3D "exterior view" (done 2026-10-08 with plain three.js, not Threlte — see 2026-10-08-pfd-exterior-3d-design.md) 3D aircraft synced with the PFD attitude + FPV/AoA vectors, 3D F-PLN in the MCDU (done 2026-10-08, see 2026-10-08-mcdu-fpln-3d-design.md)
   Trainer, shared cockpit fly-in intro; Build mode.
 - **MVP3:** Boeing 737 skin and A320/737 comparison; MCDU flight plan flown by the PFD (shared
   `localStorage` state); advanced scenarios (unusual attitudes, alpha floor, go-around).

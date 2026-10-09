@@ -92,6 +92,7 @@
     <div class="tabs" role="tablist">
       <button class="tab" role="tab" id="tabGuide" aria-selected="true" aria-controls="guideBody" data-i18n="guide">Guía</button>
       <button class="tab" role="tab" id="tabEx" aria-selected="false" aria-controls="exBody" data-i18n="exercises">Ejercicios</button>
+      <button class="tab" role="tab" id="tabMap" aria-selected="false" aria-controls="mapBody" data-i18n="map3d">Mapa 3D</button>
       <button class="close-sheet" id="closeSheet" aria-label="Cerrar panel" data-i18n-attr="aria-label:closePanel">×</button>
     </div>
 
@@ -142,6 +143,25 @@
       </section>
       <section class="lvcard" id="lvcard"></section>
       <p class="note" data-i18n="progressNote">No hay base de datos: el progreso vive solo en esta pestaña y se reinicia al recargar la página.</p>
+    </div>
+    <div class="tabbody" id="mapBody" role="tabpanel" aria-labelledby="tabMap" hidden>
+      <div class="map3d" id="map3d" data-status="idle">
+        <div class="map3d-stage" id="map3dStage">
+          <canvas id="map3dCanvas"></canvas>
+          <div class="map3d-labels" id="map3dLabels" aria-hidden="true"></div>
+          <p class="map3d-msg" id="map3dLoading" hidden data-i18n="mapLoading">Cargando mapa 3D…</p>
+          <p class="map3d-msg" id="map3dNoWebgl" hidden data-i18n="mapNoWebgl">Tu navegador no soporta WebGL: el mapa 3D no está disponible.</p>
+          <div class="map3d-msg" id="map3dError" hidden><p data-i18n="mapError">No se pudo cargar el mapa 3D.</p><button class="btn" type="button" id="map3dReload" data-i18n="mapReload">Recargar página</button></div>
+          <p class="map3d-empty" id="map3dEmpty" hidden data-i18n="mapEmpty">Introduce origen y destino en INIT A (p. ej. MROC/KMIA → R1) para ver la ruta.</p>
+        </div>
+        <div class="map3d-bar">
+          <button class="btn primary" type="button" id="map3dFly" data-i18n="mapFly">Volar ruta ▶</button>
+          <button class="btn" type="button" id="map3dPause" data-i18n="mapPause">Pausa</button>
+          <span class="map3d-legend"><i class="sw act"></i><span data-i18n="mapActive">Plan activo</span><i class="sw tmp"></i><span data-i18n="mapTmpy">Plan temporal (TMPY)</span></span>
+        </div>
+        <p class="map3d-note" data-i18n="mapScale">Escala vertical exagerada ×20. Perfil simplificado: subida 2,5 NM por 1000 ft, descenso 3 NM por 1000 ft.</p>
+        <p class="map3d-note warn" id="map3dNoCrz" hidden data-i18n="mapNoCrz">Sin FL de crucero: introdúcelo en INIT A (p. ej. 350 → L6) para ver el perfil vertical.</p>
+      </div>
     </div>
   </aside>
 </main>
