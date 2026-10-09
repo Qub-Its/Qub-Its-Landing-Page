@@ -1,6 +1,6 @@
 # MCDU Trainer — 3D flight plan map (MVP2, part 3)
 
-Status: approved in conversation (2026-10-08). Third MVP2 sub-project from `2026-10-09-pfd-trainer-design.md`
+Status: implemented (2026-10-08). Third MVP2 sub-project from `2026-10-09-pfd-trainer-design.md`
 (done: MCDU Vite migration, PFD 3D exterior view; later: cockpit fly-in intro, PFD Build mode).
 
 All paths are relative to `landing-page-svelte/` unless stated.

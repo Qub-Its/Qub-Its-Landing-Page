@@ -48,6 +48,12 @@ Both trainers have a "Feedback" button that submits to Web3Forms. Shared module 
 - Use a dedicated feedback key with **hCaptcha enabled** in the Web3Forms dashboard — it is the only anti-spam layer a direct API caller cannot skip. Rotate the key if it gets abused.
 - Logic checks: `node scripts/check-feedback.mjs` (from `landing-page-svelte/`).
 
+## MCDU Trainer
+
+`/labs/mcdu-trainer/` is a vanilla-JS Vite entry (`labs/mcdu-trainer/index.html` → `src/labs/mcdu/`, logic in `trainer.js`).
+
+- 3D map tab ("Mapa 3D"): `trainer.js` publishes a plain-data `mcdu:plan` snapshot after every interaction (also `window.__mcduPlan`) and fires `mcdu:tab` from `setTab`. `src/labs/mcdu/fpln3d/`: `route.js` (pure projection + simplified profile, `node scripts/check-mcdu-fpln3d.mjs`), `map.js` (the only module importing `three`, lazy), `tab.js` (eager, three-free wiring). Renders only while the tab is selected, on screen and visible; `?debug3d` exposes `window.__mcduMap()`, `?debug3d=nowebgl` forces the fallback.
+
 ## PFD Trainer
 
 `/labs/pfd-trainer/` is a Svelte 5 page (Vite entry `labs/pfd-trainer/index.html` → `src/labs/pfd/`); the MCDU trainer is a vanilla-JS Vite entry (`src/labs/mcdu/`). Design: `docs/superpowers/specs/2026-10-09-pfd-trainer-design.md`; plan: `docs/superpowers/plans/2026-10-09-pfd-trainer.md`.
