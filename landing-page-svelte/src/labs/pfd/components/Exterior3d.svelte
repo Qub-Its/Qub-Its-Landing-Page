@@ -48,7 +48,9 @@
   }
 
   $effect(() => { open; sync(); });
-  $effect(() => { view?.setCamera(camera); });
+  // Read `camera` before touching `view`: view is null until the lazy scene loads, and `view?.setCamera(camera)` would
+  // short-circuit without reading the prop, so the effect would never subscribe to camera changes.
+  $effect(() => { const id = camera; view?.setCamera(id); });
   // Retry only on a closed → open transition, never in a loop. Covers scene-creation errors; a failed chunk fetch is
   // cached by the browser's module map until reload, hence the reload button in the error message.
   let wasOpen = untrack(() => open); // initial value on purpose: the effect tracks transitions
@@ -64,7 +66,10 @@
     const io = new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; sync(); });
     if (stage) { ro.observe(stage); io.observe(stage); }
     document.addEventListener('visibilitychange', sync);
-    if (debug !== null) /** @type {any} */ (window).__pfd3dFrames = () => view?.frames ?? 0;
+    if (debug !== null) {
+      /** @type {any} */ (window).__pfd3dFrames = () => view?.frames ?? 0;
+      /** @type {any} */ (window).__pfd3dCam = () => view?.cameraPosition ?? null;
+    }
     return () => {
       gone = true;
       ro.disconnect(); io.disconnect();
