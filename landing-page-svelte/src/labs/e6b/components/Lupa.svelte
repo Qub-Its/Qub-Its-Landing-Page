@@ -1,11 +1,12 @@
 <script module>
   import { pt } from './geom.js';
+  import { innerAt, norm360 } from '../lib/scales.js';
   const T = {
-    es: { lupa: 'Lupa', cursor: 'cursor', grommet: 'ojal' },
-    en: { lupa: 'Magnifier', cursor: 'cursor', grommet: 'grommet' }
+    es: { lupa: 'Lupa', outer: 'exterior', inner: 'interior', grommet: 'ojal' },
+    en: { lupa: 'Magnifier', outer: 'outer', inner: 'inner', grommet: 'grommet' }
   };
-  const readAt = (a) => Math.pow(10, 1 + (((a % 360) + 360) % 360) / 360);
-  const ZOOM = { calc: 3.5, wind: 2.6 };
+  // Calc: whole digits of both scales, with the nearest labels on either side of the cursor, fit in the lens.
+  const ZOOM = { calc: 2.2, wind: 2.6 };
 </script>
 
 <script>
@@ -24,8 +25,12 @@
     const [px, py] = pt(200, 200, 168, s.cursor);
     return `scale(${ZOOM.calc}) rotate(${-s.cursor}) translate(${-px} ${-py})`;
   });
-  const caption = $derived(
-    calc ? `${t.lupa} · ${t.cursor} ${readAt(s.cursor).toFixed(1)}` : `${t.lupa} · ${t.grommet} ${s.slide.toFixed(0)} kt`
+  // Outer value under the cursor, and the inner value that sits under it.
+  const outer = $derived(Math.pow(10, 1 + norm360(s.cursor) / 360));
+  const lines = $derived(
+    calc
+      ? [`${t.outer} ${outer.toFixed(1)}`, `${t.inner} ${innerAt(s.rot, outer).toFixed(1)}`]
+      : [`${t.grommet} ${s.slide.toFixed(0)} kt`]
   );
 </script>
 
@@ -41,11 +46,12 @@
     </g>
     <circle r="57.5" fill="none" stroke="#6b757d" stroke-width="2.4" />
   </svg>
-  <figcaption>{caption}</figcaption>
+  <figcaption>{#each lines as l}<span>{l}</span>{/each}</figcaption>
 </figure>
 
 <style>
-  .e6b-lupa { margin: 0; width: 132px; flex: none; text-align: center; }
+  .e6b-lupa { margin: 0; width: 168px; flex: none; text-align: center; }
   svg { display: block; width: 100%; height: auto; border-radius: 50%; box-shadow: 0 4px 12px #0008; }
-  figcaption { margin-top: 4px; font: 11px var(--f-mono, 'B612 Mono', ui-monospace, monospace); color: var(--muted, #97a5b1); }
+  figcaption { margin-top: 4px; font: 11px/1.4 var(--f-mono, 'B612 Mono', ui-monospace, monospace); color: var(--muted, #97a5b1); }
+  figcaption span { display: block; }
 </style>
