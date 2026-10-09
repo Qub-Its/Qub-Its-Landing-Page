@@ -26,7 +26,8 @@
   let lastIas = 0, lastT = 0;
   $effect(() => {
     const ias = s.ac.ias, t = s.t;
-    if (t - lastT >= 0.5) { trend = t > lastT ? ((ias - lastIas) / (t - lastT)) * 6 : 0; lastIas = ias; lastT = t; }
+    if (t < lastT) { trend = 0; lastIas = ias; lastT = t; }
+    else if (t - lastT >= 0.5) { trend = t > lastT ? ((ias - lastIas) / (t - lastT)) * 6 : 0; lastIas = ias; lastT = t; }
   });
 
   const ATT_C = { x: 512, y: 290 };
@@ -34,7 +35,7 @@
   const IAS_PX = 4, ALT_PX = 0.5;
   const tap = (id) => () => onpart(id);
   const X = (r) => `M ${r[0]} ${r[1]} L ${r[0] + r[2]} ${r[1] + r[3]} M ${r[0] + r[2]} ${r[1]} L ${r[0]} ${r[1] + r[3]}`;
-  const hl = $derived(highlight && REGIONS[highlight] ? REGIONS[highlight] : null);
+  const hl = $derived(highlight?.startsWith('pfd.') && REGIONS[highlight] ? REGIONS[highlight] : null);
   const d3 = (v) => String(Math.round(v)).padStart(3, '0');
 </script>
 

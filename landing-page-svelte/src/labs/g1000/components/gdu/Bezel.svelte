@@ -28,6 +28,7 @@
     clearTimeout(clrTimer);
     clrTimer = setTimeout(() => { clrLong = true; pressKey('clr', 'key.clr', true); }, 900);
   }
+  function clrCancel() { clearTimeout(clrTimer); clrLong = true; }
   function clrUp() {
     clearTimeout(clrTimer);
     if (!clrLong) pressKey('clr', 'key.clr');
@@ -57,7 +58,7 @@
       aria-label={keys[i].label ?? `softkey ${i + 1}`} data-part={`${gdu}.softkeys`}
       fill={flash === `soft:${gdu}:${i}` ? C.cyan : C.key} stroke={C.bezelEdge} style="cursor:pointer"
       onclick={() => { if (!explained(`${gdu}.softkeys`)) send({ type: 'soft', gdu, n: i }); }}
-      onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); send({ type: 'soft', gdu, n: i }); } }} />
+      onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!explained(`${gdu}.softkeys`)) send({ type: 'soft', gdu, n: i }); } }} />
   {/each}
 
   {#each Object.entries(KNOBS) as [id, k]}
@@ -73,6 +74,8 @@
     <g role="button" tabindex="0" aria-label={k.label} data-part={k.part} style="cursor:pointer"
       onpointerdown={id === 'clr' ? clrDown : undefined}
       onpointerup={id === 'clr' ? clrUp : undefined}
+      onpointercancel={id === 'clr' ? clrCancel : undefined}
+      onpointerleave={id === 'clr' ? clrCancel : undefined}
       onclick={id === 'clr' ? undefined : () => pressKey(id, k.part)}
       onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pressKey(id, k.part); } }}>
       {#if highlight === k.part}<rect x={k.x - 5} y={k.y - 5} width={k.w + 10} height={k.h + 10} rx="8" fill="none" stroke={C.cyan} stroke-width="4" class="hl" />{/if}

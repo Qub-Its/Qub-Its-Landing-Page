@@ -61,6 +61,7 @@
   function key(e) {
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
       e.preventDefault();
+      if (onexplain()) return;
       turn(e.shiftKey && dual ? 'outer' : 'inner', e.key === 'ArrowUp' ? 1 : -1);
     } else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!onexplain()) onpush(); }
   }

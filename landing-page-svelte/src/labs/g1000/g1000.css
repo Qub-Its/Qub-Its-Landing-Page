@@ -306,3 +306,4 @@ details code, .inspector code{font-family:var(--f-mono);color:var(--cyan);font-s
   .units[data-tab="audio"] .unit-audio{display:block;max-width:180px;margin:0 auto}
   .unit-audio svg{max-height:60vh}
 }
+.knob{touch-action:none}

@@ -27,7 +27,7 @@
   const ete = $derived(gd.valid && s.ac.gs > 30 ? gd.dis / s.ac.gs : null);
   const fmtEte = (h) => `${Math.floor(h)}:${String(Math.round((h % 1) * 60)).padStart(2, '0')}`;
   const tap = (id) => () => onpart(id);
-  const hl = $derived(highlight && REGIONS[highlight] ? REGIONS[highlight] : null);
+  const hl = $derived(highlight?.startsWith('mfd.') && REGIONS[highlight] ? REGIONS[highlight] : null);
   const wptEdit = $derived(s.edit?.target === 'wpt' ? editValue(s.edit) : null);
   const fplEdit = $derived(s.edit?.target === 'fpl' ? editValue(s.edit) : null);
   const apt = $derived(wptAirport(s));
