@@ -29,7 +29,7 @@ export const AIRPORTS = [
 
 /** @type {Vor[]} */
 export const VORS = [
-  { id: 'ALB', kind: 'vor', name: 'ALBA', lat: 10.05, lon: -64.05, freq: 113.3, morse: '·— —··· ·—··' },
+  { id: 'ALB', kind: 'vor', name: 'ALBA', lat: 10.05, lon: -64.05, freq: 113.3, morse: '·— ·—·· —···' },
   { id: 'VRD', kind: 'vor', name: 'VERDE', lat: 10.3, lon: -63.75, freq: 116.6, morse: '···— ·—· —··' },
 ];
 
