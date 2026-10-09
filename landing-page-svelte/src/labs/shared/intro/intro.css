@@ -1,0 +1,9 @@
+/* Cockpit fly-in intro overlay (shared by the labs trainers). Above toasts (80) and dialogs (61). */
+.intro{position:fixed;inset:0;z-index:100;background:#0b0f12;opacity:1;transition:opacity .4s ease}
+.intro.intro-out{opacity:0}
+.intro-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.intro-title{position:absolute;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 24px);margin:0;color:#e8eef2;font:600 15px/1.4 system-ui,sans-serif;text-shadow:0 1px 4px #000}
+.intro-skip{position:absolute;right:16px;top:calc(env(safe-area-inset-top,0px) + 16px);padding:8px 14px;border:1px solid #ffffff55;border-radius:6px;background:#0b0f12b3;color:#e8eef2;font:600 14px/1 system-ui,sans-serif;cursor:pointer}
+.intro-skip:focus-visible{outline:2px solid #3ccbe8;outline-offset:2px}
+html.intro-open{overflow:hidden}
+@media (prefers-reduced-motion: reduce){.intro{transition:none}}
