@@ -16,7 +16,7 @@ Success means:
 - `scripts/inject-feedback-key.mjs` is gone; both trainers get the Web3Forms key from `import.meta.env`.
 - The feedback panel and the PFD promo live in `src/labs/shared/` and are bundled, not served from `public/`.
 - `/labs/mcdu-trainer/` and `/en/labs/mcdu-trainer/` behave exactly as today (levels, tasks, glossary, tooltips,
-  explain notes, ES/EN, feedback, PFD promo, saved progress, analytics) and keep the same `<head>` metadata.
+  explain notes, ES/EN, feedback, PFD promo, analytics) and keep the same `<head>` metadata.
 
 ## Decisions
 
@@ -74,7 +74,8 @@ The body is today's `init()`; language detection and copy stay as they are. Call
 
 ## Unchanged on purpose
 
-- `localStorage` / `sessionStorage` keys (progress and promo state survive the deploy).
+- The promo `sessionStorage` key `qubits.pfdPromo.expanded`. (MCDU progress is in-memory only and resets on reload,
+  as today.)
 - The `mcdu:task-complete` event and the promo behaviour (`?pfdPromo=expand` still forces it).
 - Language detection (`/en/…` or `?lang=en` in dev) and the runtime English copy in `trainer.js`.
 - URLs. The only URLs that disappear are `/labs/mcdu-trainer/feedback-panel.js`, `/labs/mcdu-trainer/feedback.js`
@@ -97,7 +98,7 @@ The body is today's `init()`; language detection and copy stay as they are. Call
 2. Diff `dist/labs/mcdu-trainer/index.html` and `dist/en/labs/mcdu-trainer/index.html` `<head>` against a build
    from `main`.
 3. In Chromium (`npm run build && npm run preview`, desktop and ~390px phone), ES and EN: complete a task in each
-   level, glossary dialog and tooltips, explain/why notes, panel/bottom sheet, progress kept after reload, PFD promo
+   level, glossary dialog and tooltips, explain/why notes, panel/bottom sheet, PFD promo
    expands (`?pfdPromo=expand`), no console errors.
 4. With `VITE_WEB3FORMS_FEEDBACK_KEY` in `.env.local`: the Feedback button shows on both trainers and the dialog
    opens (do not submit to the real endpoint); without it the button stays hidden.
