@@ -47,7 +47,14 @@
     if (active && onScreen && !document.hidden) view.start(); else view.stop();
   }
 
-  $effect(() => { active; sync(); });
+  let wasActive = false;
+  $effect(() => {
+    const a = active;
+    sync();
+    // Coming back from the 2D G1000: pushIn moved the camera, so frame the cue again.
+    if (a && !wasActive) untrack(() => view?.cue(cue));
+    wasActive = a;
+  });
   $effect(() => { const sc = scene; if (view && view.scene !== sc) { view.setScene(sc); view.cue(untrack(() => cue)); } });
   $effect(() => { const c = cue; view?.cue(c); });
 

@@ -127,6 +127,15 @@ export async function createDirector(canvas, { debugFail = false, reduced = fals
     const b = new Box3().setFromObject(obj);
     return { min: /** @type {[number,number,number]} */ (b.min.toArray()), max: /** @type {[number,number,number]} */ (b.max.toArray()) };
   }
+  /** Framing box of the FINAL exploded layout (the live meshes start packed at the origin). */
+  function explodedBox(lrus) {
+    const min = [Infinity, Infinity, Infinity], max = [-Infinity, -Infinity, -Infinity];
+    for (const l of lrus) for (let i = 0; i < 3; i++) {
+      min[i] = Math.min(min[i], l.pos[i] - l.size[i] / 2);
+      max[i] = Math.max(max[i], l.pos[i] + l.size[i] / 2);
+    }
+    return { min: /** @type {[number,number,number]} */ (min), max: /** @type {[number,number,number]} */ (max) };
+  }
   function flyTo(frame, ms = 900) {
     const t = tweenAt(performance.now());
     from = t; to = frame; tween0 = performance.now(); tweenMs = reduced ? 1 : ms;
@@ -140,15 +149,17 @@ export async function createDirector(canvas, { debugFail = false, reduced = fals
     focusFlow = null;
     haloTarget = null;
     let obj = null;
+    let box = null;
     if (sceneId === 'explode') {
       const flow = FLOWS.find((f) => f.id === focus);
       if (flow) { focusFlow = flow.id; obj = lruGroup; }
       else obj = focus === 'all' ? lruGroup : lruMesh[focus] ?? lruGroup;
+      box = explodedBox(obj === lruGroup ? LRUS : LRUS.filter((l) => l.id === focus));
     } else obj = focus === 'panel' ? panel : sc.getObjectByName(focus) ?? panel;
     if (obj !== lruGroup && obj !== panel) haloTarget = obj;
     sc.add(halo);
     halo.visible = !!haloTarget;
-    return flyTo(frameBox(boxOf(obj), FOV, camera.aspect));
+    return flyTo(frameBox(box ?? boxOf(obj), FOV, camera.aspect));
   }
 
   function setScene(id) {
