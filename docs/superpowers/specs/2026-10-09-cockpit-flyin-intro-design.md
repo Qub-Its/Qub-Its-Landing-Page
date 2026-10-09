@@ -43,7 +43,7 @@ src/labs/shared/intro/intro.css    overlay styles (imported by intro.js)
 
 ### `cockpit.js`
 
-`export function buildCockpit(THREE)` returns a `Group` named `cockpit`, in the same metres/axes as
+`export function buildCockpit(THREE)` returns a `Group` named `flightDeck` (not `cockpit`: `buildA320` already has a `cockpit` window mesh), in the same metres/axes as
 `buildA320` (nose −z, right +x, up +y), meant to be added to the aircraft group as is. Children (all named):
 
 - `shell`: dark interior (`BackSide` cylinder, radius 1.9 m) from z = −12.5 to −15.6 so the cabin is closed
@@ -85,7 +85,7 @@ directional light, ground grid far below), `buildA320` with `buildCockpit` added
 
 - `play()` → `Promise<void>`: runs the path with `requestAnimationFrame` over `DURATION`; in the last 15 %
   of t the target screen lights up; resolves when t reaches 1. The exterior `cockpit` window mesh of
-  `buildA320` is hidden once the camera is inside (t > 0.7) so it does not cover the view.
+  `buildA320` is hidden once the camera reaches it (camera z > −16.4) so it does not cover the view.
 - `skip()`: stops the loop and resolves the pending `play()`.
 - `resize(w, h)`, `dispose()` (renderer, geometries, materials).
 - `frames` getter (frames rendered) for checks.
