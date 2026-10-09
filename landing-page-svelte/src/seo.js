@@ -42,5 +42,25 @@ export const seo = {
       ogDescription: 'Learn the A320 MCDU with an interactive simulator and level-based exercises.',
       imageAlt: 'Qub-its logo'
     }
+  },
+  pfd: {
+    es: {
+      lang: 'es',
+      ogLocale: 'es_ES',
+      url: `${siteUrl}/labs/pfd-trainer/`,
+      title: 'Entrenador PFD A320 | Qub-its Labs',
+      description: 'Simulador interactivo y gratuito del PFD del Airbus A320: aprende a leer actitud, cintas de velocidad y altitud, FMA e ILS, vuela con el FCU y practica con ejercicios por niveles.',
+      ogDescription: 'Aprende a leer el Primary Flight Display del A320 con un simulador interactivo y ejercicios por niveles.',
+      imageAlt: 'Logo de Qub-its'
+    },
+    en: {
+      lang: 'en',
+      ogLocale: 'en_US',
+      url: `${siteUrl}/en/labs/pfd-trainer/`,
+      title: 'A320 PFD Trainer | Qub-its Labs',
+      description: 'Free interactive Airbus A320 PFD simulator: learn to read attitude, speed and altitude tapes, FMA and ILS, fly with the FCU and practice with level-based exercises.',
+      ogDescription: 'Learn to read the A320 Primary Flight Display with an interactive simulator and level-based exercises.',
+      imageAlt: 'Qub-its logo'
+    }
   }
 };

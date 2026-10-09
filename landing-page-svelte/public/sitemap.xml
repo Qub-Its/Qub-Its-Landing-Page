@@ -36,4 +36,22 @@
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+  <url>
+    <loc>https://www.qub-its.com/labs/pfd-trainer/</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.qub-its.com/labs/pfd-trainer/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.qub-its.com/en/labs/pfd-trainer/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.qub-its.com/labs/pfd-trainer/" />
+    <lastmod>2026-10-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.qub-its.com/en/labs/pfd-trainer/</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.qub-its.com/labs/pfd-trainer/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.qub-its.com/en/labs/pfd-trainer/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.qub-its.com/labs/pfd-trainer/" />
+    <lastmod>2026-10-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
 </urlset>

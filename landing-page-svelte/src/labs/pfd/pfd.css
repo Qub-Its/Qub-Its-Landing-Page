@@ -1,0 +1,11 @@
+/* STUB — page styles for the PFD trainer (shell owner). Shares the MCDU trainer's tokens. */
+:root{
+  --bg:#141a1f; --panel:#1d252c; --panel-2:#252f37; --line:#34414c; --fg:#e4eaef; --muted:#97a5b1;
+  --cyan:#3ccbe8; --amber:#f3a533; --green:#45df80; --magenta:#e566e1; --yellow:#f3e24c; --danger:#ff6b5b;
+  --bezel-a:#3a3f45; --bezel-b:#25292d;
+  --f-mono:'B612 Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  --f-ui:'B612', 'Segoe UI', system-ui, sans-serif;
+  --f-body:'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme:dark;
+}
+html,body{background:var(--bg);color:var(--fg);margin:0}
