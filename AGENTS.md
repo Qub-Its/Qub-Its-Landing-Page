@@ -13,6 +13,8 @@ The root `package.json` (Tailwind/PostCSS/Autoprefixer) only serves the `HTML/` 
 
 ## Developer Commands
 
+**Node:** 22 LTS (`.nvmrc` at the root and in `landing-page-svelte/`, `engines.node: "22.x"` for Vercel). Vite 8 needs ≥ 20.19 and the check scripts use `import.meta.dirname`; run `nvm use` first.
+
 **Svelte project:**
 ```bash
 cd landing-page-svelte
