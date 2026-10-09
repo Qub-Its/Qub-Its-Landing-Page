@@ -1,7 +1,7 @@
 // WebGL scene for the MCDU trainer's 3D flight plan map. The only module of the tab that imports three.js (named
 // imports so the lazy chunk tree-shakes). 1 world unit = 1 NM horizontally; altitude exaggerated ×20.
 import {
-  BoxGeometry, BufferGeometry, Color, ConeGeometry, CylinderGeometry, DirectionalLight, ExtrudeGeometry, Fog,
+  Box3, BoxGeometry, BufferGeometry, Color, ConeGeometry, CylinderGeometry, DirectionalLight, ExtrudeGeometry, Fog,
   GridHelper, Group, HemisphereLight, Line, LineBasicMaterial, LineCurve3, LineDashedMaterial, Mesh,
   MeshBasicMaterial, MeshLambertMaterial, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry, RingGeometry,
   Scene, Shape, SphereGeometry, TubeGeometry, Vector2, Vector3, WebGLRenderer, CurvePath, DoubleSide,
@@ -10,7 +10,8 @@ import { buildA320 } from '../../shared/three/aircraft.js';
 import { buildRoute, pointAt, runwayHeading } from './route.js';
 
 const THREE = { Group, Mesh, MeshStandardMaterial, Shape, Vector2, ExtrudeGeometry, CylinderGeometry, ConeGeometry, BoxGeometry };
-const FT_PER_NM = 6076, VEX = 20, RWY_X = 4, PLANE_NM = 6, FLY_S = 20;
+// The plane is drawn at 8 % of the route's extent (min 6 NM): true scale would be a few pixels on a 1000 NM route.
+const FT_PER_NM = 6076, VEX = 20, RWY_X = 4, PLANE_NM = 6, PLANE_FRAC = 0.08, FLY_S = 20;
 const GREEN = 0x45df80, YELLOW = 0xf3e24c, CYAN = 0x3ccbe8, GREY = 0x97a5b1;
 const toY = (ft) => (ft / FT_PER_NM) * VEX;
 
@@ -111,6 +112,7 @@ export async function createPlanMap(canvas, { onLabels, debugFail = false } = {}
     cam.position.set(cx + px * dist * Math.cos(el), top / 2 + dist * Math.sin(el), cz + pz * dist * Math.cos(el));
     cam.lookAt(cx, top / 2, cz);
     cam.far = dist * 8; cam.updateProjectionMatrix();
+    model.scale.setScalar(Math.max(PLANE_NM, along * 2 * PLANE_FRAC) / 37.6);
   }
 
   function emitLabels() {
@@ -189,8 +191,18 @@ export async function createPlanMap(canvas, { onLabels, debugFail = false } = {}
       renderer.dispose();
     },
     get frames() { return frames; },
+    /** On-screen size of the plane (px, largest side of its projected bounding box). */
+    get planePx() {
+      if (!plane.visible) return 0;
+      plane.updateMatrixWorld(true); cam.updateMatrixWorld();
+      const b = new Box3().setFromObject(plane), xs = [], ys = [];
+      for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) {
+        const v = new Vector3(x, y, z).project(cam); xs.push(((v.x + 1) / 2) * size.w); ys.push(((1 - v.y) / 2) * size.h);
+      }
+      return Math.round(Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)));
+    },
     get debug() {
-      return { points: route?.points.length ?? 0, color, flying, t: flyT, renders, rebuilds, plane: plane.position.toArray().map((n) => Math.round(n * 10) / 10) };
+      return { points: route?.points.length ?? 0, color, flying, t: flyT, renders, rebuilds, planePx: this.planePx, plane: plane.position.toArray().map((n) => Math.round(n * 10) / 10) };
     },
   };
 }
