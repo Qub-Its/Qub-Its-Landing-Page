@@ -8,9 +8,9 @@
 
   /**
    * @type {{ lang: 'es'|'en', tab: 'guide'|'ex', open: boolean, part: string|null, explain: boolean,
-   *   onclearpart: () => void, onclose: () => void, exercises: import('svelte').Snippet }}
+   *   onclearpart: () => void, onclose: () => void, oncollapse: () => void, exercises: import('svelte').Snippet }}
    */
-  let { lang, tab = $bindable(), open, part, explain, onclearpart, onclose, exercises } = $props();
+  let { lang, tab = $bindable(), open, part, explain, onclearpart, onclose, oncollapse, exercises } = $props();
 
   const t = $derived(UI[lang]);
   const sections = $derived(GUIDE[lang]);
@@ -20,6 +20,8 @@
   <div class="tabs" role="tablist">
     <button class="tab" role="tab" id="tabGuide" aria-selected={tab === 'guide'} aria-controls="guideBody" onclick={() => (tab = 'guide')}>{t.guide}</button>
     <button class="tab" role="tab" id="tabEx" aria-selected={tab === 'ex'} aria-controls="exBody" onclick={() => (tab = 'ex')}>{t.exercises}</button>
+    <button class="collapse-panel" type="button" data-collapse aria-controls="panel" aria-expanded="true" aria-label={t.collapsePanel}
+      title={t.collapsePanel} onclick={oncollapse}>»</button>
     <button class="close-sheet" aria-label={t.closePanel} onclick={onclose}>×</button>
   </div>
 

@@ -1,6 +1,7 @@
 <script>
   // PFD trainer page shell: header, PFD + FCU + controls on the left, Guía / Ejercicios panel on the right
-  // (bottom sheet ≤ 980px), explain mode, exercise runner, glossary, feedback and head metadata.
+  // (collapsible to a rail on desktop, bottom sheet ≤ 980px), explain mode, exercise runner, glossary, feedback
+  // and head metadata.
   import { onMount, tick } from 'svelte';
   import { seo } from '../../seo.js';
   import { detectLang, UI } from './i18n.js';
@@ -8,6 +9,7 @@
   import Fcu from './components/Fcu.svelte';
   import Controls from './components/Controls.svelte';
   import Panel from './components/Panel.svelte';
+  import PanelRail from './components/PanelRail.svelte';
   import ExplainCard from './components/ExplainCard.svelte';
   import Exercises from './components/Exercises.svelte';
   import TaskBar from './components/TaskBar.svelte';
@@ -39,6 +41,9 @@
   let part = $state(/** @type {string|null} */ (null));
   let tab = $state(/** @type {'guide'|'ex'} */ ('guide'));
   let sheetOpen = $state(false);
+  // Desktop only: Guía / Ejercicios panel folded into a rail so PFD and controls fit side by side.
+  const COLLAPSED_KEY = 'qubits.pfd.panelCollapsed';
+  let collapsed = $state(readCollapsed());
   let glossaryOpen = $state(false);
   let toastMsg = $state('');
   let toastShow = $state(false);
@@ -51,7 +56,30 @@
     toastTimer = setTimeout(() => (toastShow = false), 1800);
   }
 
-  function openPanel(which) { tab = which; sheetOpen = true; }
+  function readCollapsed() {
+    try { return localStorage.getItem(COLLAPSED_KEY) === '1'; } catch { return false; }
+  }
+
+  function setCollapsed(value) {
+    collapsed = value;
+    try { localStorage.setItem(COLLAPSED_KEY, value ? '1' : '0'); } catch { /* storage unavailable: state lives for this load */ }
+  }
+
+  const isDesktop = () => window.matchMedia('(max-width: 980px)').matches === false;
+
+  function openPanel(which) { tab = which; sheetOpen = true; setCollapsed(false); }
+
+  /** Rail button: expand on a tab and move focus into the panel. */
+  function expandPanel(which) {
+    openPanel(which);
+    tick().then(() => document.getElementById(which === 'ex' ? 'tabEx' : 'tabGuide')?.focus());
+  }
+
+  /** » button: fold the panel and keep focus on the rail. */
+  function collapsePanel() {
+    setCollapsed(true);
+    tick().then(() => document.querySelector('.rail [data-tab]')?.focus());
+  }
 
   function toggleExplain() {
     explain = !explain;
@@ -98,6 +126,8 @@
     if (!next) return;
     startTask(next);
     sheetOpen = false;
+    // Fly / Automation levels need the stick and FCU in view; Read (level 0) leans on the guide, so it stays open.
+    if (l >= 1 && isDesktop()) setCollapsed(true);
   }
 
   function restartLevel(l) {
@@ -157,7 +187,7 @@
     if (!PARTS[id]) return;
     part = id;
     ctx.lastPart = id;
-    if (window.matchMedia('(max-width: 980px)').matches === false) tab = 'guide';
+    if (isDesktop()) { tab = 'guide'; if (collapsed) setCollapsed(false); }
     evaluate(0);
   }
 
@@ -206,7 +236,7 @@
   </div>
 </header>
 
-<main class="layout">
+<main class="layout" class:collapsed>
   <section class="sim" aria-label={t.simLabel}>
     <TaskBar {lang} {status} {level} {index} count={levelTasks.length} {task} {hintOpen} {whyOpen} {held}
       need={task?.hold ?? 0} {picked} {wrong} {explain}
@@ -214,19 +244,23 @@
       onopen={() => openPanel('ex')} onnext={next} onskip={skip} onanswer={answer} />
 
     <Pfd s={flight} {explain} {highlight} {onpart} label={t.pfdLabel} />
-    <Fcu {lang} />
-    <Controls {lang} />
+    <div class="sim-side">
+      <Fcu {lang} />
+      <Controls {lang} />
+    </div>
 
     {#if explain}<div class="mobile-explain"><ExplainCard {lang} {part} {explain} onclear={() => (part = null)} /></div>{/if}
     <p class="kbd-note">{t.kbdNote}</p>
     <p class="kbd-note"><a class="mcdu-link" href={t.mcduHref}>{t.mcduFooter}</a></p>
   </section>
 
-  <Panel {lang} bind:tab open={sheetOpen} {part} {explain} onclearpart={() => (part = null)} onclose={() => (sheetOpen = false)}>
+  <Panel {lang} bind:tab open={sheetOpen} {part} {explain} onclearpart={() => (part = null)} onclose={() => (sheetOpen = false)}
+    oncollapse={collapsePanel}>
     {#snippet exercises()}
       <Exercises {lang} {done} activeLevel={level} {taskId} onstart={startLevel} onrestart={restartLevel} onreset={resetProgress} />
     {/snippet}
   </Panel>
+  {#if collapsed}<PanelRail {lang} onexpand={expandPanel} />{/if}
 </main>
 
 <footer class="foot"><p>{t.disclaimer}</p></footer>
