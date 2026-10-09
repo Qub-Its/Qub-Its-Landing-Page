@@ -9,7 +9,7 @@ import { COCKPIT_NODES } from '../src/labs/shared/three/c172-panel.js';
 import { createState } from '../src/labs/g1000/lib/state.js';
 import { dispatch } from '../src/labs/g1000/lib/avionics.js';
 import { step, DT } from '../src/labs/g1000/lib/sim.js';
-import { loadPos, savePos, loadProgress, saveProgress, lessonProgress, quizOrder } from '../src/labs/g1000/lib/course.js';
+import { loadPos, savePos, loadProgress, saveProgress, lessonProgress, quizOrder, loadView, saveView } from '../src/labs/g1000/lib/course.js';
 
 let passed = 0, failed = 0;
 function check(name, fn) {
@@ -107,6 +107,12 @@ check('course: saved position round trip; corrupt or out-of-range position falls
   fakeStorage({ 'qubits.g1000.pos.v1': '{"lesson":0,"step":99}' }); assert.deepEqual(loadPos(), { lesson: 0, step: 0 });
   fakeStorage({ 'qubits.g1000.pos.v1': 'not json' }); assert.deepEqual(loadPos(), { lesson: 0, step: 0 });
   fakeStorage({ 'qubits.g1000.pos.v1': '{"lesson":"1","step":0}' }); assert.deepEqual(loadPos(), { lesson: 0, step: 0 });
+});
+check('course: saved unit view round trip; unknown or blocked storage falls back to all', () => {
+  fakeStorage(); assert.equal(loadView(), 'all');
+  saveView('mfd'); assert.equal(loadView(), 'mfd');
+  fakeStorage({ 'qubits.g1000.view.v1': 'cockpit' }); assert.equal(loadView(), 'all');
+  fakeStorage({}, { throws: true }); assert.equal(loadView(), 'all'); saveView('pfd');
 });
 check('quizzes: quizOrder is a deterministic permutation and the correct answer is spread over positions', () => {
   const pos = {}; let total = 0;

@@ -3,6 +3,8 @@ import { LESSONS, progressIds } from '../content/lessons.js';
 
 const PROGRESS_KEY = 'qubits.g1000.progress.v1';
 const POS_KEY = 'qubits.g1000.pos.v1';
+const VIEW_KEY = 'qubits.g1000.view.v1';
+const VIEWS = ['all', 'pfd', 'mfd', 'audio'];
 
 /** @returns {Record<string, true>} */
 export function loadProgress() {
@@ -22,6 +24,15 @@ export function loadPos() {
 }
 export function savePos(pos) {
   try { localStorage.setItem(POS_KEY, JSON.stringify(pos)); } catch { /* ignore */ }
+}
+
+/** G1000 unit view: everything side by side, or one unit enlarged. @returns {'all'|'pfd'|'mfd'|'audio'} */
+export function loadView() {
+  try { const v = localStorage.getItem(VIEW_KEY); if (VIEWS.includes(v)) return /** @type {any} */ (v); } catch { /* fall through */ }
+  return 'all';
+}
+export function saveView(v) {
+  try { localStorage.setItem(VIEW_KEY, v); } catch { /* ignore */ }
 }
 
 /** Done / total counted steps of a lesson. */

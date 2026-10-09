@@ -7,9 +7,10 @@
 
   /**
    * @type {{ lang: 'es'|'en', view: 'g1000'|'cockpit'|'explode', cue: string, cueLabel?: {es: string, en: string}|null,
-   *   explain: boolean, highlight: string|null, onpart: (id: string) => void }}
+   *   explain: boolean, highlight: string|null, onpart: (id: string) => void,
+   *   zoomed?: boolean, onzoom?: (on: boolean) => void }}
    */
-  let { lang, view, cue, cueLabel = null, explain, highlight, onpart } = $props();
+  let { lang, view, cue, cueLabel = null, explain, highlight, onpart, zoomed = false, onzoom } = $props();
 
   let shown = $state(/** @type {'g1000'|'cockpit'|'explode'} */ ('g1000'));
   let loaded3d = $state(false);
@@ -30,7 +31,7 @@
 
 <div class="stage" data-view={shown}>
   <div class="stage-2d" class:off={shown !== 'g1000'} inert={shown !== 'g1000'}>
-    <G1000 {lang} {explain} {highlight} {onpart} />
+    <G1000 {lang} {explain} {highlight} {onpart} {zoomed} {onzoom} />
   </div>
   {#if loaded3d}
     <div class="stage-3d" class:off={shown === 'g1000'} inert={shown === 'g1000'}>

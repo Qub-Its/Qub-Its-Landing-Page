@@ -47,6 +47,12 @@
   let part = $state(/** @type {string|null} */ (null));
   let tab = $state(/** @type {'lesson'|'lessons'|'explain'} */ ('lesson'));
   let sheetOpen = $state(false);
+  // "Enlarge": the course column (step bar + G1000) fills the window; the page behind it stops scrolling.
+  let zoomed = $state(false);
+  $effect(() => {
+    document.documentElement.classList.toggle('g1000-zoomed', zoomed);
+    return () => document.documentElement.classList.remove('g1000-zoomed');
+  });
   const COLLAPSED_KEY = 'qubits.g1000.panelCollapsed';
   let collapsed = $state(readCollapsed());
   let glossaryOpen = $state(false);
@@ -168,6 +174,7 @@
   // ---- keyboard: identifiers, Enter = ENT, Esc/Backspace = CLR on the G1000 being used
   function onKey(e) {
     if (e.key === 'Escape' && sheetOpen && !glossaryOpen) { sheetOpen = false; return; }
+    if (e.key === 'Escape' && zoomed && !glossaryOpen) { zoomed = false; return; }
     const el = /** @type {HTMLElement} */ (e.target);
     if (view !== 'g1000' || glossaryOpen || e.metaKey || e.ctrlKey || e.altKey) return;
     const inGdu = !!el.closest('.g1000 svg');
@@ -229,7 +236,7 @@
   </div>
 </header>
 
-<main class="layout g1000-layout" class:collapsed>
+<main class="layout g1000-layout" class:collapsed class:zoomed>
   <section class="sim" aria-label={t.stageLabel}>
     {#if mode === 'course'}
       <StepBar {lang} {lesson} index={stepIdx} done={stepDone} {cueIndex} {picked} demoOpen={!!demoTask}
@@ -249,7 +256,7 @@
       </div>
     {/if}
 
-    <Stage {lang} {view} {cue} {cueLabel} {explain} {highlight} {onpart} />
+    <Stage {lang} {view} {cue} {cueLabel} {explain} {highlight} {onpart} {zoomed} onzoom={(on) => (zoomed = on)} />
     {#if explain}<div class="mobile-explain"><ExplainCard {lang} {part} {explain} onclear={() => (part = null)} /></div>{/if}
     <p class="kbd-note">{t.kbdNote}</p>
   </section>
