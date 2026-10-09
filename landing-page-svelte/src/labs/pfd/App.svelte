@@ -60,6 +60,8 @@
   }
   function toggle3d() { view3d.open = !view3d.open; if (view3d.open) view3dMounted = true; saveView3d(); }
   function setCamera3d(id) { view3d.camera = id; saveView3d(); }
+  /** × inside the window: close and give focus back to the header toggle (the window becomes hidden). */
+  function close3d() { toggle3d(); tick().then(() => /** @type {HTMLElement|null} */ (document.querySelector('[data-3d]'))?.focus()); }
   let glossaryOpen = $state(false);
   let toastMsg = $state('');
   let toastShow = $state(false);
@@ -263,7 +265,7 @@
     <Pfd s={flight} {explain} {highlight} {onpart} label={t.pfdLabel} />
     <div class="sim-side">
       <Fcu {lang} />
-      {#if view3dMounted}<Exterior3d {lang} open={view3d.open} camera={view3d.camera} oncamera={setCamera3d} onclose={toggle3d} />{/if}
+      {#if view3dMounted}<Exterior3d {lang} open={view3d.open} camera={view3d.camera} oncamera={setCamera3d} onclose={close3d} />{/if}
       <Controls {lang} />
     </div>
 

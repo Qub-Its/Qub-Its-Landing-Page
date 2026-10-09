@@ -6,7 +6,7 @@ import {
   ArrowHelper, BoxGeometry, BufferAttribute, BufferGeometry, Color, ConeGeometry, CylinderGeometry, DirectionalLight, ExtrudeGeometry, Fog, GridHelper, Group, HemisphereLight, Line, LineBasicMaterial, Mesh, MeshLambertMaterial, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry, Scene, Shape, Vector2, Vector3, WebGLRenderer,
 } from 'three';
 import { buildA320 } from '../../shared/three/aircraft.js';
-import { poseFrom, rotate } from './pose.js';
+import { poseFrom, aoaArc } from './pose.js';
 
 const THREE = { ArrowHelper, BoxGeometry, BufferAttribute, BufferGeometry, Color, ConeGeometry, CylinderGeometry, DirectionalLight, ExtrudeGeometry, Fog, GridHelper, Group, HemisphereLight, Line, LineBasicMaterial, Mesh, MeshLambertMaterial, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry, Scene, Shape, Vector2, Vector3, WebGLRenderer };
 
@@ -71,13 +71,8 @@ export async function createExteriorView(canvas, getState, { camera = 'side', de
     const s = getState(), p = poseFrom(s);
     body.rotation.set(p.pitch, p.yaw, p.roll);
     fpvArrow.setDirection(v.set(...p.fpv));
-    // AoA arc: from the body nose axis to the FPV, in the body's vertical plane.
-    const fb = rotate(rotate(rotate(p.fpv, { yaw: -p.yaw, pitch: 0, roll: 0 }), { yaw: 0, pitch: -p.pitch, roll: 0 }), { yaw: 0, pitch: 0, roll: -p.roll });
-    const a = Math.atan2(fb[1], -fb[2]);
-    for (let i = 0; i < ARC_N; i++) {
-      const t = (a * i) / (ARC_N - 1);
-      arcPos.set([0, ARC_R * Math.sin(t), -ARC_R * Math.cos(t)], i * 3);
-    }
+    // AoA arc: from the nose axis to the FPV, in the plane they span (ends on the FPV at any bank).
+    arcPos.set(aoaArc(p, ARC_N, ARC_R).points);
     arcGeo.attributes.position.needsUpdate = true;
     // Ground grid scrolls under the aircraft along the track (IAS as a speed proxy: decorative, not to scale).
     const speed = (Number.isFinite(s.ias) ? s.ias : 0) * KT * Math.cos(p.fpa * Math.PI / 180);

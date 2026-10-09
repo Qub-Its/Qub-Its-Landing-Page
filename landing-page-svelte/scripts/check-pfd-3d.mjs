@@ -1,7 +1,7 @@
 // Checks for the PFD 3D exterior view: pose math, consistency with the sim, procedural model.
 // Run from landing-page-svelte/:  node scripts/check-pfd-3d.mjs
 import assert from 'node:assert/strict';
-import { poseFrom, rotate } from '../src/labs/pfd/view3d/pose.js';
+import { poseFrom, rotate, aoaArc } from '../src/labs/pfd/view3d/pose.js';
 import { createInitialState } from '../src/labs/pfd/lib/schema.js';
 import { step, applyStick } from '../src/labs/pfd/lib/sim.js';
 import { applyScenario } from '../src/labs/pfd/lib/scenarios.js';
@@ -44,6 +44,22 @@ await check('matches the sim AoA while airborne (cruise + manual, 30 s with stic
       if (s.alt - s.groundElev > 50) near(poseFrom(s).aoa, s.aoa, 0.01, `${id} t=${(i / 30).toFixed(1)}`);
     }
   }
+});
+
+await check('AoA arc ends on the FPV and spans pitch − fpa at any bank', () => {
+  for (const bank of [0, 30, 60, -45]) {
+    const p = poseFrom({ ...base, pitch: 5, fpa: 0, bank, hdg: 40, track: 40 });
+    const { points, angle } = aoaArc(p, 24, 1);
+    near(angle, 5, 1e-6, `bank ${bank} angle`);
+    const last = rotate([points[69], points[70], points[71]], p);
+    p.fpv.forEach((c, i) => near(last[i], c, 1e-6, `bank ${bank} end[${i}]`));
+    const first = rotate([points[0], points[1], points[2]], p), nose = rotate([0, 0, -1], p);
+    nose.forEach((c, i) => near(first[i], c, 1e-6, `bank ${bank} start[${i}]`));
+  }
+});
+await check('AoA arc: zero angle stays finite', () => {
+  const { points, angle } = aoaArc(poseFrom(base), 24, 1);
+  assert.equal(angle, 0); assert.ok([...points].every(Number.isFinite));
 });
 
 const THREE = await import('three');

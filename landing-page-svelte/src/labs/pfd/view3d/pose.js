@@ -28,3 +28,26 @@ export function rotate([x, y, z], { yaw, pitch, roll }) {
   const y2 = y1 * Math.cos(pitch) - z1 * Math.sin(pitch), z2 = y1 * Math.sin(pitch) + z1 * Math.cos(pitch);
   return [x1 * Math.cos(yaw) + z2 * Math.sin(yaw), y2, -x1 * Math.sin(yaw) + z2 * Math.cos(yaw)];
 }
+
+/** World → body frame: undoes 'YXZ' in reverse order (Ry⁻¹, then Rx⁻¹, then Rz⁻¹). */
+export function toBody(v, { yaw, pitch, roll }) {
+  return rotate(rotate(rotate(v, { yaw: -yaw, pitch: 0, roll: 0 }), { yaw: 0, pitch: -pitch, roll: 0 }), { yaw: 0, pitch: 0, roll: -roll });
+}
+
+/**
+ * AoA arc in the body frame: n points of radius r from the nose axis (0, 0, −1) to the FPV, in the plane those two
+ * span (a slerp), so it always ends on the FPV, whatever the bank.
+ * @param {ReturnType<typeof poseFrom>} p
+ * @returns {{points: Float32Array, angle: number}} angle in degrees between nose and FPV
+ */
+export function aoaArc(p, n, r) {
+  const a = [0, 0, -1], b = toBody(p.fpv, p);
+  const ang = Math.acos(Math.min(1, Math.max(-1, -b[2])));
+  const points = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) {
+    const t = i / (n - 1);
+    const [wa, wb] = ang < 1e-6 ? [1 - t, t] : [Math.sin((1 - t) * ang) / Math.sin(ang), Math.sin(t * ang) / Math.sin(ang)];
+    for (let k = 0; k < 3; k++) points[i * 3 + k] = r * (wa * a[k] + wb * b[k]);
+  }
+  return { points, angle: (ang * 180) / Math.PI };
+}
