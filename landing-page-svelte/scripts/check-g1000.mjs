@@ -8,6 +8,9 @@ import { distNm, radialOf } from '../src/labs/g1000/lib/nav.js';
 import { createState } from '../src/labs/g1000/lib/state.js';
 import { step, DT, gduPhase, applyPower, adcValid, ahrsValid, indicatedAlt } from '../src/labs/g1000/lib/sim.js';
 import { guidance } from '../src/labs/g1000/lib/guidance.js';
+import { dispatch, tuneFreq, editValue } from '../src/labs/g1000/lib/avionics.js';
+import { MENUS, softkeys } from '../src/labs/g1000/lib/softkeys.js';
+import { pageId, mfdField, nrstAirport } from '../src/labs/g1000/lib/pages.js';
 
 let passed = 0, failed = 0;
 function check(name, fn) {
@@ -163,6 +166,213 @@ check('no guidance in auto mode → the instructor flies the HDG bug', () => {
   const s = createState('enroute'); s.wind.kt = 0; s.sel.hdg = 90; run(s, 40); near(s.ac.hdg, 90, 1);
 });
 check('XPDR IDENT counts down', () => { const s = createState('enroute'); s.xpdr.ident = 18; run(s, 18.5); assert.equal(s.xpdr.ident, 0); });
+
+// ---- avionics
+const ev = {
+  knob: (gdu, id, ring, d = 1) => ({ type: 'knob', gdu, id, ring, d }),
+  push: (gdu, id) => ({ type: 'push', gdu, id }),
+  key: (gdu, id, long = false) => ({ type: 'key', gdu, id, long }),
+  soft: (gdu, n) => ({ type: 'soft', gdu, n }),
+  char: (gdu, c) => ({ type: 'char', gdu, c }),
+};
+/** Dispatches events in order (a function is called with the state first, for softkeys found by label), returns the last message. */
+function play(s, ...events) {
+  let msg = null;
+  for (const e of events) msg = dispatch(s, typeof e === 'function' ? e(s) : e);
+  return msg;
+}
+const typeId = (gdu, id) => [...id].map((c) => ev.char(gdu, c));
+/** Softkey by label in the menu shown when the event runs. */
+const softBy = (_s, gdu, label) => (st) => ev.soft(gdu, MENUS[gdu][st[gdu].menu].indexOf(label));
+
+check('tuneFreq: COM 25 kHz inner wraps inside the MHz, outer wraps 118–136', () => {
+  near(tuneFreq(118.975, 'com', 'inner', 1), 118.0, 1e-9);
+  near(tuneFreq(118.0, 'com', 'inner', -1), 118.975, 1e-9);
+  near(tuneFreq(136.5, 'com', 'outer', 1), 118.5, 1e-9);
+  near(tuneFreq(113.3, 'nav', 'inner', 1), 113.35, 1e-9);
+  near(tuneFreq(108.0, 'nav', 'outer', -1), 117.0, 1e-9);
+});
+check('COM: tune standby, swap, push toggles COM1/COM2 tuning', () => {
+  const s = createState('enroute');
+  play(s, ev.knob('pfd', 'com', 'outer', -6), ev.knob('pfd', 'com', 'inner', 2));
+  near(s.com[0].stby, 131.35, 1e-9);
+  play(s, ev.key('mfd', 'comSwap')); near(s.com[0].act, 131.35, 1e-9); near(s.com[0].stby, 124.35, 1e-9);
+  play(s, ev.push('pfd', 'com')); assert.equal(s.comTune, 1);
+  play(s, ev.knob('pfd', 'com', 'inner', 1)); near(s.com[1].stby, 121.525, 1e-9);
+});
+check('NAV: tune standby to 116.60 and swap', () => {
+  const s = createState('enroute'); s.nav[0] = { act: 110.0, stby: 113.3 };
+  play(s, ev.knob('pfd', 'nav', 'outer', 3), ev.knob('pfd', 'nav', 'inner', 6), ev.key('pfd', 'navSwap'));
+  near(s.nav[0].act, 116.6, 1e-9);
+});
+check('bugs: HDG knob/push sync, ALT 1000/100, BARO, STD BARO', () => {
+  const s = createState('enroute');
+  play(s, ev.knob('pfd', 'hdg', 'inner', -50)); assert.equal(s.sel.hdg, 355);
+  play(s, ev.push('pfd', 'hdg')); assert.equal(s.sel.hdg, 45);
+  play(s, ev.knob('pfd', 'alt', 'outer', 1), ev.knob('pfd', 'alt', 'inner', -3)); assert.equal(s.sel.alt, 5200);
+  s.sel.baro = 29.92; play(s, ev.knob('pfd', 'crsbaro', 'outer', 20)); near(s.sel.baro, 30.12, 1e-9);
+  play(s, softBy(s, 'pfd', 'PFD'), softBy(s, 'pfd', 'STD BARO')); near(s.sel.baro, 29.92, 1e-9);
+});
+check('XPDR: CODE 4-7-2-1 activates, VFR → 1200, modes, IDENT only when not STBY', () => {
+  const s = createState('cold'); s.power.master = true; s.power.avionics = true; applyPower(s); s.t += 20; s.power.dbOk = true;
+  play(s, softBy(s, 'pfd', 'XPDR'), softBy(s, 'pfd', 'CODE'));
+  assert.equal(s.pfd.menu, 'code'); assert.equal(s.xpdr.entry, '');
+  play(s, ev.soft('pfd', 4), ev.soft('pfd', 7), ev.soft('pfd', 9), ev.soft('pfd', 2), ev.soft('pfd', 1)); // 4 7 BKSP 2 1 → 421?
+  assert.equal(s.xpdr.entry, '421');
+  play(s, ev.soft('pfd', 7)); assert.equal(s.xpdr.code, '4217'); assert.equal(s.pfd.menu, 'xpdr');
+  play(s, softBy(s, 'pfd', 'IDENT')); assert.equal(s.xpdr.ident, 0, 'STBY: no ident');
+  play(s, softBy(s, 'pfd', 'XPDR'), softBy(s, 'pfd', 'ALT')); assert.equal(s.xpdr.mode, 'ALT');
+  play(s, softBy(s, 'pfd', 'VFR')); assert.equal(s.xpdr.code, '1200');
+  play(s, softBy(s, 'pfd', 'IDENT')); assert.equal(s.xpdr.ident, 18); assert.equal(s.pfd.menu, 'root');
+});
+check('softkeys: unsupported → "na"; labels/on state', () => {
+  const s = createState('enroute');
+  assert.equal(play(s, softBy(s, 'pfd', 'DME')), 'na');
+  play(s, softBy(s, 'pfd', 'INSET')); assert.equal(s.pfd.inset, true);
+  assert.equal(softkeys(s, 'pfd')[0].label, 'OFF');
+  play(s, softBy(s, 'pfd', 'OFF')); assert.equal(s.pfd.inset, false); assert.equal(s.pfd.menu, 'root');
+  assert.equal(softkeys(s, 'pfd')[1].on, false);
+  play(s, softBy(s, 'mfd', 'DCLTR')); assert.equal(softkeys(s, 'mfd')[10].label, 'DCLTR-1');
+});
+check('CDI cycles GPS → VOR1 → VOR2 → GPS; BRG1 cycles OFF → NAV1 → GPS → OFF', () => {
+  const s = createState('enroute');
+  for (const want of ['VOR1', 'VOR2', 'GPS']) { play(s, softBy(s, 'pfd', 'CDI')); assert.equal(s.pfd.cdi, want); }
+  play(s, softBy(s, 'pfd', 'PFD'));
+  for (const want of ['nav1', 'gps', 'off']) { play(s, softBy(s, 'pfd', 'BRG1')); assert.equal(s.pfd.brg1, want); }
+});
+check('CRS knob sets VOR1 course; CRS push centres with TO', () => {
+  const s = createState('enroute'); play(s, softBy(s, 'pfd', 'CDI'));
+  play(s, ev.knob('pfd', 'crsbaro', 'inner', 30)); assert.equal(s.sel.crs1, 30);
+  play(s, ev.push('pfd', 'crsbaro'));
+  const g = guidance(s); assert.equal(g.toFrom, 'TO'); assert.ok(Math.abs(g.defl) < 0.06, `defl ${g.defl}`);
+});
+check('MFD: FMS outer cycles page groups, inner pages; CLR long returns to the map', () => {
+  const s = createState('enroute');
+  play(s, ev.knob('mfd', 'fms', 'outer', 1)); assert.equal(pageId(s), 'WPT_APT');
+  play(s, ev.knob('mfd', 'fms', 'outer', 1), ev.knob('mfd', 'fms', 'inner', 1)); assert.equal(pageId(s), 'AUX_GPS');
+  play(s, ev.knob('mfd', 'fms', 'outer', 1)); assert.equal(pageId(s), 'NRST_APT');
+  play(s, ev.key('mfd', 'clr', true)); assert.equal(pageId(s), 'MAP_NAV');
+});
+check('MFD map: MENU → orientation track up; RANGE knob steps', () => {
+  const s = createState('enroute');
+  play(s, ev.key('mfd', 'menu'), ev.key('mfd', 'ent')); assert.equal(s.mfd.orient, 'track'); assert.equal(s.menu, null);
+  play(s, ev.knob('mfd', 'range', 'inner', -2)); assert.equal(s.mfd.range, 10);
+  play(s, ev.knob('pfd', 'range', 'inner', 1)); assert.equal(s.pfd.insetRange, 10);
+});
+check('WPT Airport Info: type SQ04, ENT; load TWR frequency into COM1 standby', () => {
+  const s = createState('enroute');
+  play(s, ev.knob('mfd', 'fms', 'outer', 1), ev.push('mfd', 'fms')); assert.equal(mfdField(s), 'ident');
+  play(s, ...typeId('mfd', 'SQ04'), ev.key('mfd', 'ent')); assert.equal(s.mfd.wpt, 'SQ04');
+  assert.equal(play(s, ev.key('mfd', 'ent')), null);
+  play(s, ev.knob('mfd', 'fms', 'outer', 3)); assert.equal(mfdField(s), 'f2');
+  assert.equal(play(s, ev.key('mfd', 'ent')), 'freqLoaded'); near(s.com[0].stby, 119.1, 1e-9);
+  play(s, ev.knob('mfd', 'fms', 'outer', -3)); assert.equal(mfdField(s), 'ident');
+  assert.equal(play(s, ...typeId('mfd', 'ALB'), ev.key('mfd', 'ent')), 'notAirport');
+});
+check('identifier entry with the small knob: A completes to ALB, S to SQ01; outer moves the cursor', () => {
+  const s = createState('enroute');
+  play(s, ev.key('pfd', 'dto'), ev.knob('pfd', 'fms', 'inner', 1));
+  assert.equal(editValue(s.edit), 'ALB');
+  play(s, ev.knob('pfd', 'fms', 'inner', 18)); assert.equal(editValue(s.edit), 'SQ01');
+  play(s, ev.knob('pfd', 'fms', 'outer', 1), ev.knob('pfd', 'fms', 'outer', 1), ev.knob('pfd', 'fms', 'outer', 1));
+  play(s, ev.knob('pfd', 'fms', 'inner', 3)); assert.equal(editValue(s.edit), 'SQ04');
+});
+check('Direct-To by identifier: D→, type SQ04, ENT, ENT → active, CDI GPS guidance', () => {
+  const s = createState('enroute');
+  play(s, ev.key('pfd', 'dto'), ...typeId('pfd', 'SQ04'), ev.key('pfd', 'ent'));
+  assert.equal(s.dtoWin?.field, 1);
+  play(s, ev.key('pfd', 'ent')); assert.equal(s.gps.dto?.id, 'SQ04'); assert.equal(s.dtoWin, null);
+  assert.equal(guidance(s).id, 'SQ04');
+  assert.equal(play(s, ev.key('pfd', 'dto'), ...typeId('pfd', 'ZZZ'), ev.key('pfd', 'ent')), 'notFound');
+});
+check('Direct-To from the PFD NRST window (prefilled); cancel via MENU', () => {
+  const s = createState('enroute'); s.ac.lat = 10.5; s.ac.lon = -64.3;
+  play(s, softBy(s, 'pfd', 'NRST'), ev.push('pfd', 'fms'));
+  assert.equal(s.pfd.cursor, 0);
+  play(s, ev.key('pfd', 'dto')); assert.equal(s.dtoWin?.id, 'SQ04');
+  play(s, ev.key('pfd', 'ent'), ev.key('pfd', 'ent')); assert.equal(s.gps.dto?.id, 'SQ04');
+  play(s, ev.key('pfd', 'dto'), ev.key('pfd', 'menu')); assert.deepEqual(s.menu?.items, ['cancelDto']);
+  play(s, ev.key('pfd', 'ent')); assert.equal(s.gps.dto, null);
+});
+check('NRST page: ENT on an airport jumps to its frequencies; ENT loads one', () => {
+  const s = createState('enroute');
+  play(s, ev.knob('mfd', 'fms', 'outer', -1), ev.push('mfd', 'fms'));
+  assert.equal(pageId(s), 'NRST_APT');
+  play(s, ev.key('mfd', 'ent')); assert.equal(mfdField(s), 'f0');
+  assert.equal(play(s, ev.key('mfd', 'ent')), 'freqLoaded');
+  near(s.com[0].stby, nrstAirport(s).freqs[0].f, 1e-9);
+});
+check('flight plan: build SQ01 → MIRA → SQ02, activate leg, delete with CLR+ENT', () => {
+  const s = createState('enroute');
+  assert.equal(play(s, ev.key('pfd', 'fpl')), 'useMfd');
+  play(s, ev.key('mfd', 'fpl'), ev.push('mfd', 'fms'));
+  play(s, ...typeId('mfd', 'SQ01'), ev.key('mfd', 'ent'));
+  play(s, ...typeId('mfd', 'MIRA'), ev.key('mfd', 'ent'));
+  play(s, ...typeId('mfd', 'SQ02'), ev.key('mfd', 'ent'));
+  assert.deepEqual(s.gps.fpl.legs, ['SQ01', 'MIRA', 'SQ02']); assert.equal(s.gps.fpl.active, 1);
+  play(s, ev.knob('mfd', 'fms', 'outer', -1)); assert.equal(mfdField(s), 'r2');
+  play(s, ev.key('mfd', 'menu'), ev.key('mfd', 'ent')); assert.equal(s.gps.fpl.active, 2);
+  // insert TOLKA before MIRA (row 1): active TO (SQ02) shifts to index 3
+  play(s, ev.knob('mfd', 'fms', 'outer', -1), ...typeId('mfd', 'TOLKA'), ev.key('mfd', 'ent'));
+  assert.deepEqual(s.gps.fpl.legs, ['SQ01', 'TOLKA', 'MIRA', 'SQ02']); assert.equal(s.gps.fpl.active, 3);
+  play(s, ev.knob('mfd', 'fms', 'outer', -1)); assert.equal(mfdField(s), 'r1');
+  play(s, ev.key('mfd', 'clr')); assert.deepEqual(s.confirm, { action: 'delete', idx: 1 });
+  play(s, ev.key('mfd', 'ent')); assert.deepEqual(s.gps.fpl.legs, ['SQ01', 'MIRA', 'SQ02']); assert.equal(s.gps.fpl.active, 2);
+  play(s, ev.key('mfd', 'menu'), ev.knob('mfd', 'fms', 'inner', 1), ev.key('mfd', 'ent'));
+  assert.deepEqual(s.gps.fpl, { legs: [], active: -1 });
+});
+check('activate leg needs a waypoint row', () => {
+  const s = createState('enroute'); s.gps.fpl = { legs: ['SQ01', 'MIRA'], active: 1 };
+  play(s, ev.key('mfd', 'fpl')); assert.equal(play(s, ev.key('mfd', 'menu'), ev.key('mfd', 'ent')), 'pickLeg');
+});
+check('D→ to a flight plan waypoint rejoins the plan', () => {
+  const s = createState('enroute'); s.gps.fpl = { legs: ['SQ01', 'MIRA', 'SQ02'], active: 1 };
+  play(s, ev.key('mfd', 'fpl'), ev.push('mfd', 'fms'), ev.knob('mfd', 'fms', 'outer', 2), ev.key('mfd', 'dto'));
+  assert.equal(s.dtoWin?.id, 'SQ02');
+  play(s, ev.key('mfd', 'ent'), ev.key('mfd', 'ent')); assert.equal(s.gps.fpl.active, 2); assert.equal(s.gps.dto?.id, 'SQ02');
+});
+check('OBS: needs GPS + target; sets course to DTK; CRS knob turns it', () => {
+  const s = createState('enroute');
+  assert.equal(play(s, softBy(s, 'pfd', 'OBS')), 'obsNeedsGps');
+  s.gps.fpl = { legs: ['SQ01', 'MIRA', 'SQ02'], active: 1 };
+  play(s, softBy(s, 'pfd', 'OBS')); assert.equal(s.pfd.obs, true);
+  near(s.sel.obsCrs, Math.round(N.brgDeg(byId('SQ01'), byId('MIRA'))), 0);
+  play(s, ev.knob('pfd', 'crsbaro', 'inner', 10)); near(guidance(s).dtk, s.sel.obsCrs, 1e-9);
+});
+check('TMR/REF minimums with the FMS knob', () => {
+  const s = createState('enroute'); play(s, softBy(s, 'pfd', 'TMR/REF'), ev.knob('pfd', 'fms', 'inner', 5), ev.knob('pfd', 'fms', 'outer', 2));
+  assert.equal(s.sel.mins, 750); play(s, ev.key('pfd', 'clr')); assert.equal(s.pfd.win, null);
+});
+check('EIS and MAP softkeys', () => {
+  const s = createState('enroute');
+  play(s, softBy(s, 'mfd', 'ENGINE'), softBy(s, 'mfd', 'LEAN')); assert.equal(s.mfd.eis, 'LEAN');
+  play(s, softBy(s, 'mfd', 'BACK'), softBy(s, 'mfd', 'MAP'), softBy(s, 'mfd', 'TOPO')); assert.equal(s.mfd.topo, false);
+});
+check('audio panel: mic select also monitors; cannot unmonitor the mic radio', () => {
+  const s = createState('enroute');
+  play(s, { type: 'audio', id: 'com2mic' }); assert.equal(s.audio.mic, 1); assert.equal(s.audio.com2, true);
+  play(s, { type: 'audio', id: 'com2' }); assert.equal(s.audio.com2, true);
+  play(s, { type: 'audio', id: 'com1' }); assert.equal(s.audio.com1, false);
+  play(s, { type: 'audio', id: 'nav1' }); assert.equal(s.audio.nav1, true);
+  assert.equal(play(s, { type: 'audio', id: 'backup' }), 'na');
+});
+check('power: controls ignored while off/booting; MFD database page needs ENT', () => {
+  const s = createState('cold');
+  play(s, ev.knob('pfd', 'hdg', 'inner', 10)); assert.equal(s.sel.hdg, 90);
+  assert.equal(play(s, { type: 'switch', id: 'engine', on: true }), 'noPower');
+  play(s, { type: 'switch', id: 'master', on: true }, { type: 'switch', id: 'avionics', on: true });
+  play(s, ev.knob('pfd', 'hdg', 'inner', 10)); assert.equal(s.sel.hdg, 90, 'booting');
+  s.t += 5;
+  play(s, ev.knob('pfd', 'hdg', 'inner', 10)); assert.equal(s.sel.hdg, 100);
+  play(s, ev.knob('mfd', 'fms', 'outer', 1)); assert.equal(s.mfd.group, 'MAP', 'db page swallows input');
+  play(s, ev.key('mfd', 'ent')); assert.equal(s.power.dbOk, true); assert.equal(gduPhase(s, 'mfd'), 'ready');
+});
+check('MFD pan: RANGE push toggles, joystick moves by a quarter range', () => {
+  const s = createState('enroute');
+  play(s, ev.push('mfd', 'range'), { type: 'pan', gdu: 'mfd', dx: 0, dy: 1 });
+  near(s.mfd.pan.lat, s.ac.lat + 5 / 60, 1e-9);
+  play(s, ev.push('mfd', 'range')); assert.equal(s.mfd.pan, null);
+});
 
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
