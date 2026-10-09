@@ -33,7 +33,7 @@ npx postcss HTML/css/*.css -o HTML/css/output.css  # or similar
 - **Svelte 5**: uses `mount()` API (not `new App()`), runes syntax likely in components
 - **Tailwind v4**: configured in `tailwind.config.js` with `darkMode: "class"`
 - **jsconfig.json**: `checkJs: true` — Svelte files are type-checked
-- Vite is multi-page: `index.html` (landing), `labs/mcdu-trainer/index.html` (MCDU trainer, vanilla JS in `src/labs/mcdu/`) and `labs/pfd-trainer/index.html` (PFD trainer) and `labs/e6b-trainer/index.html` (E6B trainer) are separate entries in `vite.config.js`
+- Vite is multi-page: `index.html` (landing), `labs/mcdu-trainer/index.html` (MCDU trainer, vanilla JS in `src/labs/mcdu/`) and `labs/pfd-trainer/index.html` (PFD trainer) and `labs/e6b-trainer/index.html` (E6B trainer) and `labs/g1000-trainer/index.html` (G1000 course) are separate entries in `vite.config.js`
 - No test framework, no ESLint/Prettier, no CI
 
 ## Contact Form
@@ -81,3 +81,14 @@ Both trainers play a short 3D fly-in on first visit (`localStorage` `qubits.labs
 - Practice: `lib/practice.js` `generate(kind, seed)` is deterministic per seed (kinds tsd, fuel, conv, tas, da, wind, navlog); streak and best streak live in `localStorage` `qubits.e6b.practice.v1`, progress in `qubits.e6b.progress.v1`, panel state in `qubits.e6b.panelCollapsed`.
 - Shell mirrors the PFD trainer (header, collapsible panel/rail, bottom sheet ≤ 980px, glossary, toast, lazy feedback panel with `VITE_WEB3FORMS_FEEDBACK_KEY`). English head is written by `scripts/localize-heads.mjs` from `seo.e6b`.
 - Checks (from `landing-page-svelte/`): `node scripts/check-e6b.mjs` (scales, atmosphere, wind, answers, generator), `node scripts/check-e6b-content.mjs` (content coverage, exercises and demos against the model).
+
+## G1000 Course
+
+`/labs/g1000-trainer/` is a Svelte 5 page (Vite entry `labs/g1000-trainer/index.html` → `src/labs/g1000/`): a guided Garmin G1000 (C172 NAV III) course with a live 2D G1000 and 3D scenes. Docs: spec `docs/superpowers/specs/2026-10-09-g1000-course-design.md`, plan `docs/superpowers/plans/2026-10-09-g1000-course.md`, syllabus sources `docs/g1000/pensum.md`.
+
+- Model (pure JS, `lib/`): `world.js` (fictional airports/VORs/fixes, variation 0), `nav.js`, `state.js` (`createState(scenario)`), `guidance.js`, `sim.js` (instructor-flown kinematic C172, power-up timeline, FPL sequencing), `softkeys.js`, `pages.js`, `avionics.js` (`dispatch(state, event)` for every control → toast key). `g1000.svelte.js` is the only rune store (`g`, `send`, `reset`, loop).
+- 2D G1000: `components/gdu/` are pure SVG views of the store; colours are presentation attributes (the 3D cockpit serializes `#gdu-pfd > svg` / `#gdu-mfd > svg` into textures). Clickable regions carry `data-part` (content in `content/parts.js`).
+- Lessons: `content/lessons.js` (steps scene / explain / task / quiz; a task has `setup`, `check(s, ctx)` and a replayable `demo`). Progress in `localStorage` `qubits.g1000.progress.v1`, position `qubits.g1000.pos.v1`, panel `qubits.g1000.panelCollapsed`. MVP2/MVP3 roadmap in the spec.
+- 3D: `view3d/director.js` is the only module importing `three` (lazy). Cockpit model `src/labs/shared/three/c172-panel.js`, LRU data `content/lru.js`. SVG fallback without WebGL; `?debug3d` exposes `window.__g1000_3d()`, `?debug3d=nowebgl` forces the fallback.
+- English head written by `scripts/localize-heads.mjs` from `seo.g1000`.
+- Checks (from `landing-page-svelte/`): `node scripts/check-g1000.mjs` (world, nav, sim, avionics), `node scripts/check-g1000-content.mjs` (content coverage, every task solved by replaying its demo, progress storage), `node scripts/check-g1000-3d.mjs` (framing, explosion maths, procedural panel).
