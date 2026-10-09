@@ -218,7 +218,7 @@
     </clipPath>
   </defs>
 
-  <g id="e6bCalcFace">
+  <g id="e6bCalcFace" class="e6b-face">
     <rect width="400" height="470" fill="#1b2025" />
     <circle cx={CX} cy={CY} r={R_BASE} fill="#2a3137" stroke="#0f1316" stroke-width="2" />
 
@@ -322,17 +322,18 @@
 
 <style>
   .e6b-svg { display: block; width: 100%; height: auto; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; }
-  .e6b-svg text { font-family: var(--f-mono, 'B612 Mono', ui-monospace, Menlo, Consolas, monospace); fill: #eef2f5; text-anchor: middle; dominant-baseline: central; }
-  .e6b-svg text.sc { font-size: 7.6px; }
-  .e6b-svg text.sc.oat { font-size: 5.6px; }
-  .e6b-svg text.hr { font-size: 6px; fill: #f3a533; fill-opacity: 0.9; }
-  .e6b-svg text.cv { font-size: 5.4px; fill: #3ccbe8; }
-  .e6b-svg text.ix { font-size: 5px; fill: #f3a533; }
-  .e6b-svg text.cap { font-size: 4.8px; fill: #97a5b1; letter-spacing: 0.04em; }
-  .e6b-svg text.logo { font-size: 15px; font-weight: 700; fill: #eef2f5; letter-spacing: 0.08em; }
-  .e6b-svg text.logo2 { font-size: 5.5px; fill: #97a5b1; }
-  .e6b-svg .tk { stroke: #eef2f5; fill: none; }
-  .e6b-svg .hit { fill: none; stroke: transparent; }
+  /* Drawing rules hang on the root group (not .e6b-svg) so the magnifier's <use> copy gets them too. */
+  .e6b-face text { font-family: var(--f-mono, 'B612 Mono', ui-monospace, Menlo, Consolas, monospace); fill: #eef2f5; text-anchor: middle; dominant-baseline: central; }
+  .e6b-face text.sc { font-size: 7.6px; }
+  .e6b-face text.sc.oat { font-size: 5.6px; }
+  .e6b-face text.hr { font-size: 6px; fill: #f3a533; fill-opacity: 0.9; }
+  .e6b-face text.cv { font-size: 5.4px; fill: #3ccbe8; }
+  .e6b-face text.ix { font-size: 5px; fill: #f3a533; }
+  .e6b-face text.cap { font-size: 4.8px; fill: #97a5b1; letter-spacing: 0.04em; }
+  .e6b-face text.logo { font-size: 15px; font-weight: 700; fill: #eef2f5; letter-spacing: 0.08em; }
+  .e6b-face text.logo2 { font-size: 5.5px; fill: #97a5b1; }
+  .e6b-face .tk { stroke: #eef2f5; fill: none; }
+  .e6b-face .hit { fill: none; stroke: transparent; }
   .e6b-svg.explain { cursor: help; }
   .e6b-svg.explain :global([data-part]:hover) { filter: drop-shadow(0 0 3px #3ccbe8); }
   .e6b-svg :global([data-part].hl) { filter: drop-shadow(0 0 3px #3ccbe8) drop-shadow(0 0 5px #3ccbe8); }

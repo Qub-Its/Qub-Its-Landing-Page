@@ -208,7 +208,7 @@
     <clipPath id="e6bWindClip"><rect x={WIN.x} y={WIN.y} width={WIN.w} height={WIN.h} rx="10" /></clipPath>
   </defs>
 
-  <g id="e6bWindFace">
+  <g id="e6bWindFace" class="e6b-face">
     <rect width="400" height="470" fill="#1b2025" />
     <rect x={WIN.x} y={WIN.y} width={WIN.w} height={WIN.h} rx="10" fill="#2a3137" />
 
@@ -281,18 +281,19 @@
 
 <style>
   .e6b-svg { display: block; width: 100%; height: auto; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; }
-  .e6b-svg text { font-family: var(--f-mono, 'B612 Mono', ui-monospace, Menlo, Consolas, monospace); fill: #eef2f5; text-anchor: middle; dominant-baseline: central; }
-  .e6b-svg text.sc { font-size: 7.4px; fill: #fff6df; }
-  .e6b-svg .card text.sc, .e6b-svg text.sc.halo { fill: #c9d3da; font-size: 6.4px; }
-  .e6b-svg text.sc.rose-l { paint-order: stroke; stroke: rgba(20,26,31,0.7); stroke-width: 2px; stroke-linejoin: round; }
-  .e6b-svg text.sc.big { font-size: 9.5px; font-weight: 700; }
-  .e6b-svg text.sc.card { fill: #f3a533; }
-  .e6b-svg text.dl { font-size: 7px; fill: #3ccbe8; }
-  .e6b-svg text.ix { font-size: 5.6px; fill: #f3a533; letter-spacing: 0.05em; }
-  .e6b-svg text.halo { paint-order: stroke; stroke: #2a3137; stroke-width: 2.5px; stroke-linejoin: round; }
-  .e6b-svg .tk { stroke: #eef2f5; fill: none; }
-  .e6b-svg .arc { stroke: #d5dde3; fill: none; }
-  .e6b-svg .drift { stroke: #3ccbe8; fill: none; }
+  /* Drawing rules hang on the root group (not .e6b-svg) so the magnifier's <use> copy gets them too. */
+  .e6b-face text { font-family: var(--f-mono, 'B612 Mono', ui-monospace, Menlo, Consolas, monospace); fill: #eef2f5; text-anchor: middle; dominant-baseline: central; }
+  .e6b-face text.sc { font-size: 7.4px; fill: #fff6df; }
+  .e6b-face .card text.sc, .e6b-face text.sc.halo { fill: #c9d3da; font-size: 6.4px; }
+  .e6b-face text.sc.rose-l { paint-order: stroke; stroke: rgba(20,26,31,0.7); stroke-width: 2px; stroke-linejoin: round; }
+  .e6b-face text.sc.big { font-size: 9.5px; font-weight: 700; }
+  .e6b-face text.sc.card { fill: #f3a533; }
+  .e6b-face text.dl { font-size: 7px; fill: #3ccbe8; }
+  .e6b-face text.ix { font-size: 5.6px; fill: #f3a533; letter-spacing: 0.05em; }
+  .e6b-face text.halo { paint-order: stroke; stroke: #2a3137; stroke-width: 2.5px; stroke-linejoin: round; }
+  .e6b-face .tk { stroke: #eef2f5; fill: none; }
+  .e6b-face .arc { stroke: #d5dde3; fill: none; }
+  .e6b-face .drift { stroke: #3ccbe8; fill: none; }
   .e6b-svg.explain { cursor: help; }
   .e6b-svg.explain :global([data-part]:hover) { filter: drop-shadow(0 0 3px #3ccbe8); }
   .e6b-svg :global([data-part].hl) { filter: drop-shadow(0 0 3px #3ccbe8) drop-shadow(0 0 5px #3ccbe8); }
