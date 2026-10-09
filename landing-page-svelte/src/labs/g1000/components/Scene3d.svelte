@@ -97,8 +97,8 @@
   {#if label}<span class="s3d-label">{tr(label, lang)}</span>{/if}
   {#if pickable && status === 'ready'}
     <span class="s3d-hint">{t.pick3d}</span>
-    <div class="sr-only s3d-picks" role="group" aria-label={t.pick3d}>
-      {#each LRUS as l}<button type="button" onclick={() => onpick(l.part)}>{l.model} — {tr(l.name, lang)}</button>{/each}
+    <div class="s3d-picks" role="group" aria-label={t.pick3d}>
+      {#each LRUS as l}<button type="button" class="sr-only" onclick={() => onpick(l.part)}>{l.model} — {tr(l.name, lang)}</button>{/each}
     </div>
   {/if}
 </div>
