@@ -84,21 +84,31 @@ export async function createPlanMap(canvas, { onLabels, debugFail = false } = {}
       s.position.copy(v3(m)); routeGroup.add(s);
     }
     // ground + grid sized to the route
-    const g = span * 4; ground.scale.set(g, g, 1);
+    const g = span * 2.2; ground.scale.set(g, g, 1);
     if (grid) { scene.remove(grid); grid.geometry.dispose(); grid.material.dispose(); }
     grid = new GridHelper(g, Math.max(2, Math.round(g / 50)), 0x2a3640, 0x232d35); grid.position.y = 0.02; scene.add(grid);
   }
 
+  // Camera beside the route (perpendicular to origin→destination), raised ~28°, so the vertical profile reads as a
+  // side view and the route fills the width.
   function fit() {
     if (!route || !route.points.length) return;
-    const xs = route.points.map((p) => p.x), zs = route.points.map((p) => p.z);
+    const pts = route.points, a = pts[0], b = pts[pts.length - 1];
+    const xs = pts.map((p) => p.x), zs = pts.map((p) => p.z);
     const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cz = (Math.min(...zs) + Math.max(...zs)) / 2;
-    const span = Math.max(60, Math.max(...xs) - Math.min(...xs), Math.max(...zs) - Math.min(...zs));
-    const dir = new Vector3(-0.55, 0.62, 0.58).normalize();
-    const dist = (span * 0.75) / Math.tan((cam.fov * Math.PI) / 360) / Math.min(1, cam.aspect) ;
-    cam.position.set(cx + dir.x * dist, dir.y * dist, cz + dir.z * dist);
-    cam.lookAt(cx, toY(route.crzFt || 0) * 0.3, cz);
-    cam.far = dist * 6; cam.updateProjectionMatrix();
+    let dx = b.x - a.x, dz = b.z - a.z;
+    const len = Math.hypot(dx, dz);
+    if (len < 1e-6) { dx = 1; dz = 0; } else { dx /= len; dz /= len; }
+    const px = -dz, pz = dx; // perpendicular, to the right of the route direction
+    const along = Math.max(...pts.map((p) => Math.abs((p.x - cx) * dx + (p.z - cz) * dz)));
+    const across = Math.max(...pts.map((p) => Math.abs((p.x - cx) * px + (p.z - cz) * pz)));
+    const vfov = (cam.fov * Math.PI) / 180, hfov = 2 * Math.atan(Math.tan(vfov / 2) * cam.aspect);
+    const top = toY(Math.max(route.crzFt || 0, ...pts.map((p) => p.altFt)));
+    const dist = Math.max(40, (along * 1.15) / Math.tan(hfov / 2), ((top + across) * 1.3) / Math.tan(vfov / 2));
+    const el = (28 * Math.PI) / 180;
+    cam.position.set(cx + px * dist * Math.cos(el), top / 2 + dist * Math.sin(el), cz + pz * dist * Math.cos(el));
+    cam.lookAt(cx, top / 2, cz);
+    cam.far = dist * 8; cam.updateProjectionMatrix();
   }
 
   function emitLabels() {
@@ -106,12 +116,17 @@ export async function createPlanMap(canvas, { onLabels, debugFail = false } = {}
     if (!route) { onLabels([]); return; }
     cam.updateMatrixWorld();
     const out = [], v = new Vector3();
+    // Skip a label that would overlap one already placed (airports first, then waypoints, then T/C, T/D).
     const add = (id, text, p, kind) => {
       v.set(p.x, toY(p.altFt), p.z).project(cam);
       if (v.z > 1 || Math.abs(v.x) > 1.1 || Math.abs(v.y) > 1.1) return;
-      out.push({ id, text, kind, x: ((v.x + 1) / 2) * size.w, y: ((1 - v.y) / 2) * size.h });
+      const x = ((v.x + 1) / 2) * size.w, y = ((1 - v.y) / 2) * size.h;
+      if (out.some((o) => Math.abs(o.x - x) < 7 * Math.max(o.text.length, text.length) && Math.abs(o.y - y) < 14)) return;
+      out.push({ id, text, kind, x, y });
     };
-    for (const p of route.points) add(p.id, p.id, p, p.kind);
+    const pts = route.points;
+    for (const p of pts.filter((q) => q.kind === 'orig' || q.kind === 'dest')) add(p.id, p.id, p, p.kind);
+    for (const p of pts.filter((q) => q.kind !== 'orig' && q.kind !== 'dest')) add(p.id, p.id, p, p.kind);
     if (route.toc) add('TOC', 'T/C', route.toc, 'toc');
     if (route.tod) add('TOD', 'T/D', route.tod, 'tod');
     onLabels(out);
