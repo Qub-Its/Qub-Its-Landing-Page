@@ -176,6 +176,11 @@
     else if (e.key === 'Escape' || e.key === 'Backspace') { send({ type: 'key', gdu, id: 'clr' }); e.preventDefault(); }
   }
 
+  // Mouse/touch clicks must not focus GDU controls (their own Enter handler would fire on the next Enter).
+  function onMouseDown(e) {
+    if (e.target.closest?.('.g1000 svg [tabindex]')) e.preventDefault();
+  }
+
   // ---- feedback (shared with the other trainers, same Web3Forms key; lazy chunk, only when a key is set)
   const feedbackKey = import.meta.env.VITE_WEB3FORMS_FEEDBACK_KEY;
 
@@ -185,13 +190,14 @@
     startLoop();
     const timer = setInterval(evaluate, 250);
     document.addEventListener('keydown', onKey);
+    document.addEventListener('mousedown', onMouseDown, true);
     if (feedbackKey) {
       tick()
         .then(() => import('../shared/feedback/feedback-panel.js'))
         .then((m) => m.mountFeedback({ key: feedbackKey }))
         .catch(() => {});
     }
-    return () => { stopLoop(); clearInterval(timer); document.removeEventListener('keydown', onKey); clearTimeout(toastTimer); };
+    return () => { stopLoop(); clearInterval(timer); document.removeEventListener('keydown', onKey); document.removeEventListener('mousedown', onMouseDown, true); clearTimeout(toastTimer); };
   });
 </script>
 
