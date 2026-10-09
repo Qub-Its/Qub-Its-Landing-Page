@@ -8,7 +8,7 @@ eye point, and it moves in to the target screen. The target screen shows a styli
 plain green), the other displays a dim "powered" tint, a nose `bulkhead` closes the cabin below the glareshield,
 and portrait screens widen the vertical FOV (`fovFor`, ≤ 80°). Time starts at the first animation frame, and the
 overlay always fades out (it catches the click after a skipping tap). Fourth MVP2 sub-project from `2026-10-09-pfd-trainer-design.md`
-(done: MCDU Vite migration, PFD 3D exterior view, MCDU 3D F-PLN map; later: PFD Build mode).
+(done: MCDU Vite migration, PFD 3D exterior view, MCDU 3D F-PLN map; PFD Build mode moved to MVP3).
 
 All paths are relative to `landing-page-svelte/` unless stated.
 
