@@ -14,10 +14,10 @@ export const LRUS = [
   { id: 'ahrs', part: 'lru.ahrs', model: 'GRS 77', name: { es: 'AHRS: actitud y rumbo', en: 'AHRS: attitude and heading' }, pos: [-0.5, -0.5, -0.6], size: [0.3, 0.15, 0.3] },
   { id: 'gmu', part: 'lru.gmu', model: 'GMU 44', name: { es: 'Magnetómetro', en: 'Magnetometer' }, pos: [-1.6, -0.4, -1.2], size: [0.18, 0.08, 0.18] },
   { id: 'adc', part: 'lru.adc', model: 'GDC 74A', name: { es: 'Computadora de datos de aire', en: 'Air data computer' }, pos: [0.5, -0.5, -0.6], size: [0.3, 0.15, 0.3] },
-  { id: 'pitot', part: 'lru.pitot', model: 'Pitot / estática', name: { es: 'Pitot, estática y OAT', en: 'Pitot, static and OAT' }, pos: [1.6, -0.4, -1.2], size: [0.1, 0.1, 0.35] },
+  { id: 'pitot', part: 'lru.pitot', model: 'Pitot / static / OAT', name: { es: 'Pitot, estática y OAT', en: 'Pitot, static and OAT' }, pos: [1.6, -0.4, -1.2], size: [0.1, 0.1, 0.35] },
   { id: 'gea', part: 'lru.gea', model: 'GEA 71', name: { es: 'Unidad de motor (EIS)', en: 'Engine unit (EIS)' }, pos: [1.4, 0.3, -0.9], size: [0.3, 0.12, 0.25] },
   { id: 'gtx', part: 'lru.gtx', model: 'GTX 33', name: { es: 'Transponder', en: 'Transponder' }, pos: [-1.4, 0.3, -0.9], size: [0.3, 0.12, 0.25] },
-  { id: 'ant', part: 'lru.ant', model: 'GA 56 / antenas', name: { es: 'Antenas GPS, COM y NAV', en: 'GPS, COM and NAV antennas' }, pos: [0, 0.9, -1.5], size: [0.3, 0.05, 0.2] },
+  { id: 'ant', part: 'lru.ant', model: 'GA 56 / COM / NAV', name: { es: 'Antenas GPS, COM y NAV', en: 'GPS, COM and NAV antennas' }, pos: [0, 0.9, -1.5], size: [0.3, 0.05, 0.2] },
 ];
 
 /** Data flows (lesson 1 cues and the "what feeds what" story). */
