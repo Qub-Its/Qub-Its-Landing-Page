@@ -36,7 +36,7 @@ flight training.
    They are checked live against the flight state.
 
 Explore and Fly are one live screen: "Modo explicar" toggles whether a click explains or not. Exercises are a
-side-panel tab. MVP2 adds **Construir / Build** (assemble the PFD piece by piece).
+side-panel tab. MVP3 adds **Construir / Build** (assemble the PFD piece by piece).
 
 ## PFD content (A320, MVP1)
 
@@ -130,6 +130,7 @@ Build mode, 3D, 737 skin, flight plan from the MCDU, wind, failures, alternate/d
 
 - **MVP2:** (MCDU migration done 2026-10-08, see `2026-10-08-mcdu-vite-migration-design.md`) light migration of the MCDU Trainer to a Vite entry (shared feedback module, no inject script);
   3D "exterior view" (done 2026-10-08 with plain three.js, not Threlte — see 2026-10-08-pfd-exterior-3d-design.md) 3D aircraft synced with the PFD attitude + FPV/AoA vectors, 3D F-PLN in the MCDU (done 2026-10-08, see 2026-10-08-mcdu-fpln-3d-design.md)
-  Trainer, shared cockpit fly-in intro (done 2026-10-09, see 2026-10-09-cockpit-flyin-intro-design.md); Build mode.
-- **MVP3:** Boeing 737 skin and A320/737 comparison; MCDU flight plan flown by the PFD (shared
+  Trainer, shared cockpit fly-in intro (done 2026-10-09, see 2026-10-09-cockpit-flyin-intro-design.md). MVP2 complete;
+  Build mode moved to MVP3 (2026-10-09).
+- **MVP3:** Build mode (assemble the PFD piece by piece); Boeing 737 skin and A320/737 comparison; MCDU flight plan flown by the PFD (shared
   `localStorage` state); advanced scenarios (unusual attitudes, alpha floor, go-around).
