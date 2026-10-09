@@ -1,5 +1,5 @@
-// Feedback panel for the MCDU trainer. The Web3Forms key is written into <meta name="feedback-key"> at build time
-// (scripts/inject-feedback-key.mjs); without it the Feedback button stays hidden.
+// Feedback panel shared by the MCDU and PFD trainers (Web3Forms). Call mountFeedback({ key }) once the page has a
+// hidden #feedbackBtn; without a key (VITE_WEB3FORMS_FEEDBACK_KEY unset) it does nothing and the button stays hidden.
 import { validate, isBot, createCooldown, buildPayload, submit, loadHcaptcha, LIMITS, HCAPTCHA_SITEKEY } from './feedback.js';
 
 const LANG = /^\/en(\/|$)/.test(location.pathname) || new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'es';
@@ -23,11 +23,14 @@ const copy = {
 };
 const t = copy[LANG];
 
-const accessKey = document.querySelector('meta[name="feedback-key"]')?.content.trim();
-const openButton = document.getElementById('feedbackBtn');
-if (accessKey && openButton) init();
+/** Wires #feedbackBtn to the feedback dialog. No-op without a key or without the button. */
+export function mountFeedback({ key } = {}) {
+  const accessKey = (key || '').trim();
+  const openButton = document.getElementById('feedbackBtn');
+  if (accessKey && openButton) init(accessKey, openButton);
+}
 
-function init() {
+function init(accessKey, openButton) {
   document.body.insertAdjacentHTML('beforeend', `
 <div class="fb-backdrop" id="fbBackdrop" hidden></div>
 <dialog class="fb-dialog" id="fbDialog" aria-modal="true" aria-labelledby="fbTitle">

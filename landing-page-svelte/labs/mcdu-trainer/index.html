@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Simulador interactivo y gratuito del MCDU del Airbus A320: aprende INIT, F-PLN, PERF y RAD NAV con una guía de teclas y ejercicios por niveles.">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+<meta name="theme-color" content="#141a1f">
+<title>Entrenador MCDU A320 | Qub-its Labs</title>
+<link rel="canonical" href="https://www.qub-its.com/labs/mcdu-trainer/">
+<link rel="alternate" hreflang="es" href="https://www.qub-its.com/labs/mcdu-trainer/">
+<link rel="alternate" hreflang="en" href="https://www.qub-its.com/en/labs/mcdu-trainer/">
+<link rel="alternate" hreflang="x-default" href="https://www.qub-its.com/labs/mcdu-trainer/">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<meta property="og:locale" content="es_ES">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Qub-its">
+<meta property="og:title" content="Entrenador MCDU A320 | Qub-its Labs">
+<meta property="og:description" content="Aprende a usar el MCDU del A320 con un simulador interactivo y ejercicios por niveles.">
+<meta property="og:url" content="https://www.qub-its.com/labs/mcdu-trainer/">
+<meta property="og:image" content="https://www.qub-its.com/images/logo.png">
+<meta property="og:image:width" content="2401">
+<meta property="og:image:height" content="988">
+<meta property="og:image:alt" content="Logo de Qub-its">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Entrenador MCDU A320 | Qub-its Labs">
+<meta name="twitter:description" content="Aprende a usar el MCDU del A320 con un simulador interactivo y ejercicios por niveles.">
+<meta name="twitter:image" content="https://www.qub-its.com/images/logo.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","@id":"https://www.qub-its.com/labs/mcdu-trainer/#app","name":"Entrenador MCDU A320","url":"https://www.qub-its.com/labs/mcdu-trainer/","description":"Simulador interactivo y gratuito del MCDU del Airbus A320 con guía de teclas y ejercicios por niveles.","applicationCategory":"EducationalApplication","operatingSystem":"Web","browserRequirements":"Requires JavaScript","inLanguage":"es","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"publisher":{"@id":"https://www.qub-its.com/#organization"},"isPartOf":{"@id":"https://www.qub-its.com/#website"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Qub-its","item":"https://www.qub-its.com/"},{"@type":"ListItem","position":2,"name":"Labs","item":"https://www.qub-its.com/#labs"},{"@type":"ListItem","position":3,"name":"Entrenador MCDU A320","item":"https://www.qub-its.com/labs/mcdu-trainer/"}]}]}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=B612:wght@400;700&family=B612+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+</head>
+<body>
+
+<dialog class="fb-dialog gl-dialog" id="glDialog" aria-labelledby="glTitle">
+  <div class="gl-body">
+    <div class="gl-top">
+    <div class="fb-head"><h2 id="glTitle" data-i18n="glossary">Glosario</h2><button type="button" class="fb-close" id="glClose" aria-label="Cerrar" data-i18n-attr="aria-label:close">×</button></div>
+    <label class="sr-only" for="glSearch" data-i18n="glSearch">Buscar término</label>
+    <input class="gl-search" id="glSearch" type="search" autocomplete="off" spellcheck="false" placeholder="Buscar término" data-i18n-attr="placeholder:glSearch" aria-controls="glList">
+    <p class="gl-count" id="glCount" aria-live="polite"></p>
+    </div>
+    <dl class="gl-list" id="glList"></dl>
+    <p class="gl-empty" id="glEmpty" hidden data-i18n="glEmpty">Sin resultados.</p>
+  </div>
+</dialog>
+
+<header class="top">
+  <div class="brand">
+    <span class="plate">FMGC</span>
+    <div>
+      <h1 data-i18n="title">Entrenador MCDU A320</h1>
+      <p data-i18n="subtitle">Simulador interactivo del Multipurpose Control &amp; Display Unit · datos de navegación ficticios</p>
+    </div>
+  </div>
+  <div class="top-actions">
+    <button class="btn" id="explainBtn" aria-pressed="false" title="Cuando está activo, pulsar una tecla la explica en vez de ejecutarla" data-i18n="explain" data-i18n-attr="title:explainTitle">? Modo explicar</button>
+    <button class="btn ghost" id="resetBtn" data-i18n="reset">Reiniciar MCDU</button>
+    <button class="btn mobile-only" data-open="guide" data-i18n="guide">Guía</button>
+    <button class="btn mobile-only" data-open="ex" data-i18n="exercises">Ejercicios</button>
+    <button class="btn" id="glossaryBtn" type="button" aria-haspopup="dialog" data-i18n="glossary">Glosario</button>
+    <button class="btn" id="feedbackBtn" type="button" hidden>Feedback</button>
+    <a class="btn" id="langLink" href="/en/labs/mcdu-trainer/" lang="en" aria-label="Switch to English">EN</a>
+    <a class="btn ghost" id="backLink" href="/#labs" data-i18n="back">← Qub-its</a>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="sim" aria-label="Simulador" data-i18n-attr="aria-label:simLabel">
+    <div class="taskbar" id="taskbar"></div>
+
+    <div class="mcdu" id="mcdu">
+      <div class="scr-wrap">
+        <div class="lskcol" id="lskL"></div>
+        <div class="screen" role="img" aria-label="Pantalla del MCDU" data-i18n-attr="aria-label:screenLabel"><div class="rows" id="rows"></div></div>
+        <div class="lskcol" id="lskR"></div>
+      </div>
+      <div class="fkeys" id="fkeys"></div>
+      <div class="lower">
+        <div class="pad3" id="pad3"></div>
+        <div class="pad5" id="pad5"></div>
+      </div>
+    </div>
+    <p class="kbd-note" data-i18n-html="kbdNote">Teclado físico: letras, números, <kbd>/</kbd> <kbd>.</kbd> <kbd>espacio</kbd> · <kbd>⌫</kbd> = CLR · <kbd>Supr</kbd> = borrar todo · flechas = ← → ↑ ↓</p>
+  </section>
+
+  <aside class="panel" id="panel" aria-label="Guía y ejercicios" data-i18n-attr="aria-label:panelLabel">
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" id="tabGuide" aria-selected="true" aria-controls="guideBody" data-i18n="guide">Guía</button>
+      <button class="tab" role="tab" id="tabEx" aria-selected="false" aria-controls="exBody" data-i18n="exercises">Ejercicios</button>
+      <button class="close-sheet" id="closeSheet" aria-label="Cerrar panel" data-i18n-attr="aria-label:closePanel">×</button>
+    </div>
+
+    <div class="tabbody" id="guideBody" role="tabpanel">
+      <section class="inspector" id="inspector" aria-live="polite"></section>
+
+      <section class="pagehelp">
+        <h2 id="pgTitle">Esta página</h2>
+        <p class="desc" id="pgDesc"></p>
+        <ul class="fields" id="pgFields"></ul>
+      </section>
+
+      <section>
+        <h2 data-i18n="colors">Colores de la pantalla</h2>
+        <div class="legend">
+          <div><b style="color:var(--s-a)">□□□</b><span data-i18n="legend1">Ámbar: dato obligatorio o acción pendiente</span></div>
+          <div><b style="color:var(--s-c)">[ ] 35</b><span data-i18n="legend2">Cian: campo que el piloto puede modificar</span></div>
+          <div><b style="color:var(--s-g)">FL350</b><span data-i18n="legend3">Verde: dato calculado o activo</span></div>
+          <div><b style="color:var(--s-w)">&lt;RETURN</b><span data-i18n="legend4">Blanco: títulos, etiquetas y opciones</span></div>
+          <div><b style="color:var(--s-y)">TMPY</b><span data-i18n="legend5">Amarillo: plan temporal sin confirmar</span></div>
+          <div><b style="color:var(--s-m)">250/FL240</b><span data-i18n="legend6">Magenta: restricciones de velocidad o altitud</span></div>
+        </div>
+      </section>
+
+      <section class="concepts">
+        <h2 data-i18n="howTo">Cómo se usa</h2>
+        <details open><summary data-i18n-html="c1S">Scratchpad y LSK: el ciclo básico</summary><div data-i18n-html="c1B">Todo lo que escribes aparece en la última línea (scratchpad). Para llevarlo a un campo, pulsa la tecla de selección de línea (LSK) junto a ese campo. Ejemplo: escribe <code>MROC/KMIA</code> y pulsa R1 en INIT A. Si el dato no es válido el scratchpad muestra un mensaje; bórralo con CLR.</div></details>
+        <details><summary data-i18n-html="c2S">Símbolos &lt; y &gt;</summary><div data-i18n-html="c2B">Una opción con <code>&lt;</code> o <code>&gt;</code> abre otra página. Con <code>*</code> ejecuta una acción (INSERT*). <code>←ERASE</code> descarta un cambio temporal.</div></details>
+        <details><summary data-i18n-html="c3S">Plan temporal (TMPY)</summary><div data-i18n-html="c3B">Las revisiones laterales (insertar un punto, SID, DIR TO, cambiar destino) se preparan en un plan temporal amarillo. No afectan al plan activo hasta pulsar <code>INSERT*</code>. <code>←ERASE</code> lo descarta.</div></details>
+        <details><summary data-i18n-html="c4S">Borrar un campo con CLR</summary><div data-i18n-html="c4B">Con el scratchpad vacío, CLR escribe <code>CLR</code>. Pulsa después el LSK del campo para borrarlo (por ejemplo, un waypoint o una discontinuidad del F-PLN). CLR con texto borra un carácter; mantenlo presionado para borrar todo.</div></details>
+        <details><summary data-i18n-html="c5S">Mensajes del scratchpad</summary><div data-i18n-html="c5B"><ul class="msgs">
+          <li><code>FORMAT ERROR</code><span>El formato no corresponde al campo.</span></li>
+          <li><code>NOT IN DATABASE</code><span>El identificador no existe en la base de datos.</span></li>
+          <li><code>ENTRY OUT OF RANGE</code><span>El valor está fuera de los límites permitidos.</span></li>
+          <li><code>NOT ALLOWED</code><span>Esa acción no se puede hacer en ese campo.</span></li>
+          <li><code>NOT AVAILABLE</code><span>Función no simulada en este entrenador.</span></li>
+          <li><code>V1/VR/V2 DISAGREE</code><span>Las velocidades no cumplen V1 ≤ VR ≤ V2.</span></li>
+        </ul></div></details>
+        <details><summary data-i18n-html="c6S">Base de datos de este entrenador</summary><div data-i18n-html="c6B">Aeropuertos: <code>MROC MRLB KMIA KFLL MPTO MMUN</code>. Waypoints: <code>ESPOX TALUK BOLOS GUSKE URSUS PIKIS SELVA NAVAS TORTU ROLEX</code>. VOR: <code>TIO 116.40 · LIB 114.10 · MIA 115.90 · DHP 113.30 · FLL 114.40</code>. Ruta de compañía: <code>MROCKMIA1</code>. Las coordenadas, frecuencias y procedimientos son ficticios: no los uses para navegación real.</div></details>
+      </section>
+    </div>
+
+    <div class="tabbody" id="exBody" role="tabpanel" hidden>
+      <section>
+        <h2 data-i18n="levels">Niveles</h2>
+        <p class="note" style="margin-bottom:10px" data-i18n="levelsNote">Todos los niveles están abiertos: puedes saltar al que quieras. Al iniciar un nivel, el MCDU se precarga con lo que ese nivel necesita.</p>
+        <div class="levels" id="levels"></div>
+      </section>
+      <section class="lvcard" id="lvcard"></section>
+      <p class="note" data-i18n="progressNote">No hay base de datos: el progreso vive solo en esta pestaña y se reinicia al recargar la página.</p>
+    </div>
+  </aside>
+</main>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script type="module" src="/src/labs/mcdu/main.js"></script>
+
+</body>
+</html>
