@@ -15,6 +15,7 @@
   import Exercises from './components/Exercises.svelte';
   import TaskBar from './components/TaskBar.svelte';
   import Glossary from './components/Glossary.svelte';
+  import { maybeIntro } from '../shared/intro/intro.js';
   import { PARTS } from './content/parts.js';
   import { EXERCISES, tasksOf, loadProgress, saveProgress, newCtx, createRunner } from './content/exercises.js';
   import { flight, start, stop, loadScenario, onTick } from './lib/flight.svelte.js';
@@ -245,6 +246,7 @@
   <div class="top-actions">
     <button class="btn" type="button" aria-pressed={explain} title={t.explainTitle} onclick={toggleExplain}>{t.explain}</button>
     <button class="btn" type="button" data-3d aria-pressed={view3d.open} title={t.view3dTitle} onclick={toggle3d}>{t.view3d}</button>
+    <button class="btn" type="button" data-intro title={t.introTitle} onclick={() => maybeIntro({ target: 'pfd', lang, force: true })}>{t.intro}</button>
     <button class="btn mobile-only" type="button" onclick={() => openPanel('guide')}>{t.guide}</button>
     <button class="btn mobile-only" type="button" onclick={() => openPanel('ex')}>{t.exercises}</button>
     <button class="btn" type="button" aria-haspopup="dialog" onclick={() => (glossaryOpen = true)}>{t.glossary}</button>

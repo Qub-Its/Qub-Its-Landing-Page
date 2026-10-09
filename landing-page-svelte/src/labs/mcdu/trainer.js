@@ -1146,7 +1146,7 @@ const STATIC_EN={
  subtitle:'Interactive Multipurpose Control & Display Unit simulator · fictional navigation data',
  explain:'? Explain mode',explainTitle:'When on, pressing a key explains it instead of running it',
  reset:'Reset MCDU',guide:'Guide',exercises:'Exercises',back:'← Qub-its',
- glossary:'Glossary',glSearch:'Search terms',glEmpty:'No results.',close:'Close',
+ glossary:'Glossary',intro:'Intro',introTitle:'Watch cockpit intro',glSearch:'Search terms',glEmpty:'No results.',close:'Close',
  simLabel:'Simulator',screenLabel:'MCDU screen',panelLabel:'Guide and exercises',closePanel:'Close panel',
  kbdNote:'Physical keyboard: letters, numbers, <kbd>/</kbd> <kbd>.</kbd> <kbd>space</kbd> · <kbd>⌫</kbd> = CLR · <kbd>Delete</kbd> = clear all · arrows = ← → ↑ ↓',
  colors:'Screen colors',
