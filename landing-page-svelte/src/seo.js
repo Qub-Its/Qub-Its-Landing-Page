@@ -82,5 +82,25 @@ export const seo = {
       ogDescription: 'Learn the E6B flight computer with an interactive simulator, level-based exercises and practice.',
       imageAlt: 'Qub-its logo'
     }
+  },
+  g1000: {
+    es: {
+      lang: 'es',
+      ogLocale: 'es_ES',
+      url: `${siteUrl}/labs/g1000-trainer/`,
+      title: 'Curso G1000 · Garmin G1000 interactivo | Qub-its Labs',
+      description: 'Curso gratuito del Garmin G1000 de un C172 con simulador interactivo y escenas 3D: arquitectura, PFD, encendido, transponder, COM, navegación VOR/GPS, MFD y plan de vuelo.',
+      ogDescription: 'Aprende el Garmin G1000 con un curso guiado, un simulador interactivo y escenas 3D.',
+      imageAlt: 'Logo de Qub-its'
+    },
+    en: {
+      lang: 'en',
+      ogLocale: 'en_US',
+      url: `${siteUrl}/en/labs/g1000-trainer/`,
+      title: 'G1000 Course · Interactive Garmin G1000 | Qub-its Labs',
+      description: 'Free Garmin G1000 course for the C172 with an interactive simulator and 3D scenes: architecture, PFD, power-up, transponder, COM, VOR/GPS navigation, MFD and flight plan.',
+      ogDescription: 'Learn the Garmin G1000 with a guided course, an interactive simulator and 3D scenes.',
+      imageAlt: 'Qub-its logo'
+    }
   }
 };

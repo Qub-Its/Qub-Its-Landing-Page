@@ -37,6 +37,18 @@
       "destination": "/en/labs/e6b-trainer/index.html"
     },
     {
+      "source": "/labs/g1000-trainer",
+      "destination": "/labs/g1000-trainer/index.html"
+    },
+    {
+      "source": "/en/labs/g1000-trainer",
+      "destination": "/en/labs/g1000-trainer/index.html"
+    },
+    {
+      "source": "/en/labs/g1000-trainer/",
+      "destination": "/en/labs/g1000-trainer/index.html"
+    },
+    {
       "source": "/en",
       "destination": "/en/index.html"
     },

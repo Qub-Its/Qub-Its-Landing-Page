@@ -92,3 +92,13 @@ write('en/labs/e6b-trainer/index.html', localizeHead(readSpanish('labs/e6b-train
   labs.item = `${seo.home.en.url}#labs`;
   Object.assign(page, { name: 'E6B Flight Computer Trainer', item: e6b.url });
 }));
+
+const g1000 = seo.g1000.en;
+write('en/labs/g1000-trainer/index.html', localizeHead(readSpanish('labs/g1000-trainer/index.html', seo.g1000.es), g1000, (graph) => {
+  const course = byType(graph, 'Course');
+  Object.assign(course, { '@id': `${g1000.url}#course`, name: 'G1000 Course', url: g1000.url, description: g1000.description, inLanguage: 'en' });
+  const [site, labs, page] = byType(graph, 'BreadcrumbList').itemListElement;
+  site.item = seo.home.en.url;
+  labs.item = `${seo.home.en.url}#labs`;
+  Object.assign(page, { name: 'G1000 Course', item: g1000.url });
+}));
