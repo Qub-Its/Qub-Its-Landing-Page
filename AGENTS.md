@@ -54,6 +54,10 @@ Both trainers have a "Feedback" button that submits to Web3Forms. Shared module 
 
 - 3D map tab ("Mapa 3D"): `trainer.js` publishes a plain-data `mcdu:plan` snapshot after every interaction (also `window.__mcduPlan`) and fires `mcdu:tab` from `setTab`. `src/labs/mcdu/fpln3d/`: `route.js` (pure projection + simplified profile, `node scripts/check-mcdu-fpln3d.mjs`), `map.js` (the only module importing `three`, lazy), `tab.js` (eager, three-free wiring). Renders only while the tab is selected, on screen and visible; `?debug3d` exposes `window.__mcduMap()`, `?debug3d=nowebgl` forces the fallback.
 
+## Cockpit Intro
+
+Both trainers play a short 3D fly-in on first visit (`localStorage` `qubits.labs.introSeen`, shared) and from a header "Intro" button. `src/labs/shared/intro/`: `intro.js` (eager overlay + decision via `decide.js`), `flyin.js` (the only intro module importing `three`, lazy), `path.js` (pure camera path); flight deck model in `src/labs/shared/three/cockpit.js`. Skipped without WebGL, with reduced motion (auto only) or if three takes > 2 s. `?intro=0` suppresses, `?intro=1` forces, `?debug3d` exposes `window.__intro()`. Checks: `node scripts/check-intro.mjs`. Smoke tests that load a trainer should add `intro=0`. Overlay classes are `labs-intro*` (`.intro` is taken by the level cards).
+
 ## PFD Trainer
 
 `/labs/pfd-trainer/` is a Svelte 5 page (Vite entry `labs/pfd-trainer/index.html` → `src/labs/pfd/`); the MCDU trainer is a vanilla-JS Vite entry (`src/labs/mcdu/`). Design: `docs/superpowers/specs/2026-10-09-pfd-trainer-design.md`; plan: `docs/superpowers/plans/2026-10-09-pfd-trainer.md`.

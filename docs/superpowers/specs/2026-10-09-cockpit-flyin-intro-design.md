@@ -1,6 +1,7 @@
 # Labs — cockpit fly-in intro (MVP2, part 4)
 
-Status: approved in conversation (2026-10-09). Fourth MVP2 sub-project from `2026-10-09-pfd-trainer-design.md`
+Status: implemented (2026-10-09). Implementation notes: overlay classes are `labs-intro*` (`.intro` already styles the
+level cards); `buildA320`'s nose cone is open-ended, because its base disc walled off the flight deck from inside. Fourth MVP2 sub-project from `2026-10-09-pfd-trainer-design.md`
 (done: MCDU Vite migration, PFD 3D exterior view, MCDU 3D F-PLN map; later: PFD Build mode).
 
 All paths are relative to `landing-page-svelte/` unless stated.
