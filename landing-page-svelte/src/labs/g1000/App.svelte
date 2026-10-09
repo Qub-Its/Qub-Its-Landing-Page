@@ -178,7 +178,10 @@
 
   // Mouse/touch clicks must not focus GDU controls (their own Enter handler would fire on the next Enter).
   function onMouseDown(e) {
-    if (e.target.closest?.('.g1000 svg [tabindex]')) e.preventDefault();
+    if (!e.target.closest?.('.g1000 svg')) return;
+    const a = /** @type {HTMLElement|null} */ (document.activeElement);
+    if (a && a !== document.body && !a.closest?.('.g1000 svg')) a.blur();
+    if (e.target.closest('.g1000 svg [tabindex]')) e.preventDefault();
   }
 
   // ---- feedback (shared with the other trainers, same Web3Forms key; lazy chunk, only when a key is set)
