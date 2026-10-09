@@ -14,6 +14,15 @@
   const R_IN = $derived(dual ? 22 : 36);
   let drag = /** @type {null|{ring: 'outer'|'inner', y0: number, moved: boolean, id: number}} */ (null);
   let spin = $state(0);
+  let el = $state(/** @type {SVGGElement|null} */ (null));
+  // Chrome ignores touch-action on SVG <g> and Svelte registers touch listeners as passive: block page scroll
+  // with a non-passive touchmove while a knob drag is active.
+  $effect(() => {
+    if (!el) return;
+    const block = (/** @type {TouchEvent} */ e) => { if (drag) e.preventDefault(); };
+    el.addEventListener('touchmove', block, { passive: false });
+    return () => el?.removeEventListener('touchmove', block);
+  });
 
   /** @param {PointerEvent} e */
   function ringAt(e) {
@@ -67,7 +76,7 @@
   }
 </script>
 
-<g class="knob" data-part={part} role="button" tabindex="0" aria-label={label}
+<g bind:this={el} class="knob" data-part={part} role="button" tabindex="0" aria-label={label}
   onpointerdown={down} onpointermove={move} onpointerup={up} onpointercancel={() => (drag = null)} onwheel={wheel} onkeydown={key}
   style="cursor:ns-resize;touch-action:none">
   {#if highlight}<circle cx={x} cy={y} r={R_OUT + 8} fill="none" stroke={C.cyan} stroke-width="4" class="hl" />{/if}
