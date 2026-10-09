@@ -35,33 +35,45 @@
   });
   const convGroups = ['convNaut', 'convFuel', 'convLength'].map((g) => ({ g, items: conv.filter((c) => c.group === g) }));
 
-  // TAS window (PA ticks every 1000 ft on the disc, opening r 110-130) and DA window (r 62-92).
-  const TAS_A1 = paAngle(20000) - 4, TAS_A2 = paAngle(0) + 4;
+  // TAS window (r 100-132) and DA window (r 62-92). In the TAS window the PA scale (disc, ticks hang inwards from
+  // r 118) and the OAT scale (base, ticks grow outwards from r 118) touch at r 118, where the alignment is read.
+  const TAS_A1 = paAngle(20000) - 12, TAS_A2 = paAngle(0) + 8; // the extra 8 deg at the PA 20 end hold the OAT caption
   const DA_A1 = daAngle(20000) - 4, DA_A2 = daAngle(-2000) + 4;
-  const tasHole = sector(CX, CY, 110, 130, TAS_A1, TAS_A2);
+  const R_TAS = 118;
+  const tasHole = sector(CX, CY, 100, 132, TAS_A1, TAS_A2);
   const daHole = sector(CX, CY, 62, 92, DA_A1, DA_A2);
-  let paTicks = '';
-  const paLabels = [];
-  for (let pa = 0; pa <= 20000; pa += 1000) {
-    paTicks += seg(CX, CY, 110, pa % 2000 ? 106.5 : 104.5, paAngle(pa));
-    if (pa % 2000 === 0 && pa >= 4000) paLabels.push(label(CX, CY, 98.5, paAngle(pa), pa / 1000));
-  }
-  let daTicks = '';
-  const daLabels = [];
-  for (let h = -2000; h <= 20000; h += 1000) {
-    daTicks += seg(CX, CY, 92, h % 5000 === 0 ? 98 : 95.5, daAngle(h));
-    if (h % 5000 === 0 && h >= 0) daLabels.push(label(CX, CY, 104, daAngle(h), h / 1000));
-  }
-  const paCap = label(CX, CY, 88.5, (TAS_A1 + TAS_A2) / 2, 'PRESS ALT x1000');
+  const { paTicks, paLabels } = (() => {
+    let d = '';
+    const labels = [];
+    for (let pa = 0; pa <= 20000; pa += 1000) {
+      d += seg(CX, CY, R_TAS, pa % 2000 ? R_TAS - 4.5 : R_TAS - 8, paAngle(pa));
+      if (pa % 2000 === 0) labels.push(label(CX, CY, 106, paAngle(pa), pa / 1000));
+    }
+    return { paTicks: d, paLabels: labels };
+  })();
+  const { daTicks, daLabels } = (() => {
+    let d = '';
+    const labels = [];
+    for (let h = -2000; h <= 20000; h += 1000) {
+      d += seg(CX, CY, 92, h % 5000 === 0 ? 98 : 95.5, daAngle(h));
+      if (h % 5000 === 0 && h >= 0) labels.push(label(CX, CY, 104, daAngle(h), h / 1000));
+    }
+    return { daTicks: d, daLabels: labels };
+  })();
+  const paCap = label(CX, CY, 94, (paAngle(20000) + paAngle(0)) / 2, 'PRESS ALT ×1000');
+  const oatCap = label(CX, CY, 125, TAS_A1 + 4.5, 'OAT °C');
   const daCap = label(CX, CY, 111, (DA_A1 + DA_A2) / 2, 'DENS ALT x1000');
 
-  // Base layers seen through the windows: OAT arc (-40..+40 C) and the fixed DA index.
-  let oatTicks = '';
-  const oatLabels = [];
-  for (let c = -40; c <= 40; c += 5) {
-    oatTicks += seg(CX, CY, 110, c % 20 === 0 ? 120 : c % 10 === 0 ? 116.5 : 114, oatAngle(c));
-    if (c % 20 === 0) oatLabels.push(label(CX, CY, 125, oatAngle(c), c));
-  }
+  // Base layers seen through the windows: OAT arc (-40..+40 C, ticks and labels every 20 C) and the fixed DA index.
+  const { oatTicks, oatLabels } = (() => {
+    let d = '';
+    const labels = [];
+    for (let c = -40; c <= 40; c += 5) {
+      d += seg(CX, CY, R_TAS, c % 20 === 0 ? R_TAS + 8 : c % 10 === 0 ? R_TAS + 5.5 : R_TAS + 3.5, oatAngle(c));
+      if (c % 20 === 0) labels.push(label(CX, CY, 128, oatAngle(c), c));
+    }
+    return { oatTicks: d, oatLabels: labels };
+  })();
   const [dix1, diy1] = pt(CX, CY, 92, DA_INDEX);
   const [dix2, diy2] = pt(CX, CY, 80, DA_INDEX - 3);
   const [dix3, diy3] = pt(CX, CY, 80, DA_INDEX + 3);
@@ -83,17 +95,25 @@
   // Temperature strip (y 410-460): linear C over F aligned through cToF.
   const SX0 = 24, SX1 = 376, C0 = -40, C1 = 50;
   const sx = (c) => f(SX0 + ((c - C0) / (C1 - C0)) * (SX1 - SX0));
-  let cTicks = '', fTicks = '';
-  const cLabels = [], fLabels = [];
-  for (let c = C0; c <= C1; c += 5) {
-    cTicks += `M${sx(c)} 434V${c % 10 === 0 ? 424 : 428.5}`;
-    if (c % 10 === 0) cLabels.push({ x: sx(c), y: 420, t: c });
-  }
-  for (let F = -40; F <= cToF(C1); F += 10) {
-    const c = ((F - 32) * 5) / 9;
-    fTicks += `M${sx(c)} 434V${F % 20 === 0 ? 444 : 440}`;
-    if (F % 20 === 0) fLabels.push({ x: sx(c), y: 454, t: F });
-  }
+  const { cTicks, cLabels } = (() => {
+    let d = '';
+    const labels = [];
+    for (let c = C0; c <= C1; c += 5) {
+      d += `M${sx(c)} 434V${c % 10 === 0 ? 424 : 428.5}`;
+      if (c % 10 === 0) labels.push({ x: sx(c), y: 420, t: c });
+    }
+    return { cTicks: d, cLabels: labels };
+  })();
+  const { fTicks, fLabels } = (() => {
+    let d = '';
+    const labels = [];
+    for (let F = -40; F <= cToF(C1); F += 10) {
+      const c = ((F - 32) * 5) / 9;
+      d += `M${sx(c)} 434V${F % 20 === 0 ? 444 : 440}`;
+      if (F % 20 === 0) labels.push({ x: sx(c), y: 454, t: F });
+    }
+    return { fTicks: d, fLabels: labels };
+  })();
 
   const I18N = {
     es: {
@@ -253,6 +273,7 @@
         <path d={paTicks} class="tk" stroke-width="0.9" />
         {#each paLabels as l}<text x={l.x} y={l.y} transform={l.tr} class="sc">{l.t}</text>{/each}
         <text x={paCap.x} y={paCap.y} transform={paCap.tr} class="cap">{paCap.t}</text>
+        <text x={oatCap.x} y={oatCap.y} transform={oatCap.tr} class="cap">{oatCap.t}</text>
       </g>
       <g data-part="daWindow">
         <path d={daHole} fill="#2a3137" stroke="#0f1316" stroke-width="1.2" />
@@ -265,7 +286,7 @@
     <!-- base layers seen only through the windows -->
     <g clip-path="url(#e6bTasClip)" pointer-events="none">
       <path d={oatTicks} class="tk" stroke-width="0.9" />
-      {#each oatLabels as l}<text x={l.x} y={l.y} transform={l.tr} class="sc">{l.t}</text>{/each}
+      {#each oatLabels as l}<text x={l.x} y={l.y} transform={l.tr} class="sc oat">{l.t}</text>{/each}
       <path d={daIndexLine} stroke="#f3a533" stroke-width="1.6" fill="none" />
       <path d={daIndexTri} fill="#f3a533" />
     </g>
@@ -303,6 +324,7 @@
   .e6b-svg { display: block; width: 100%; height: auto; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; }
   .e6b-svg text { font-family: var(--f-mono, 'B612 Mono', ui-monospace, Menlo, Consolas, monospace); fill: #eef2f5; text-anchor: middle; dominant-baseline: central; }
   .e6b-svg text.sc { font-size: 7.6px; }
+  .e6b-svg text.sc.oat { font-size: 5.6px; }
   .e6b-svg text.hr { font-size: 6px; fill: #f3a533; fill-opacity: 0.9; }
   .e6b-svg text.cv { font-size: 5.4px; fill: #3ccbe8; }
   .e6b-svg text.ix { font-size: 5px; fill: #f3a533; }

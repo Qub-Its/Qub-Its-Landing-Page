@@ -98,6 +98,15 @@
     sheetOpen = false;
   }
 
+  /** Closing a demo during a check exercise puts the setup back (the demo left the solution on the instrument). */
+  function closeDemo() {
+    demo = null;
+    if (task?.check && status === 'active') {
+      resetState();
+      applyState(task.setup ?? {});
+    }
+  }
+
   // ---- practice (the problem itself lives in Practice.svelte; here only its prompt for the task strip)
   let practicePrompt = $state('');
 
@@ -267,7 +276,7 @@
       onsolved={complete} onshowme={() => task && showMe(task.demo, task.setup)} />
 
     {#key demo?.id}
-      {#if demo}<DemoBar {lang} steps={demo.steps} setup={demo.setup} onclose={() => (demo = null)} />{/if}
+      {#if demo}<DemoBar {lang} steps={demo.steps} setup={demo.setup} onclose={closeDemo} />{/if}
     {/key}
 
     <E6b s={e6b} {explain} {highlight} {onpart} {lang} />

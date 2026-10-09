@@ -10,31 +10,38 @@
   const DR_HALF = 45;
 
   // Slide card, drawn around its own origin (0,0) = the card centre of the arcs; up is -y.
-  let arcThin = '', arcThick = '', arcHit = '';
-  const arcLabels = [];
-  for (let v = SP_MIN; v <= SP_MAX; v += 2) {
-    const r = f(v * U);
-    const [x1, y1] = pt(0, 0, r, -SP_HALF);
-    const [x2, y2] = pt(0, 0, r, SP_HALF);
-    const d = `M${x1} ${y1}A${r} ${r} 0 0 1 ${x2} ${y2}`;
-    if (v % 10 === 0) {
-      arcThick += d;
-      arcHit += d;
-      for (const a of [0, -30, 30]) {
-        const [x, y] = pt(0, 0, r, a);
-        arcLabels.push({ x, y: a === 0 ? y + 0 : y, t: v, tr: `rotate(${a} ${x} ${y})`, c: a === 0 });
-      }
-    } else arcThin += d;
-  }
-  let drThin = '', drThick = '', drHit = '';
-  for (let a = -DR_HALF; a <= DR_HALF; a++) {
-    if (a === 0) continue;
-    const s = seg(0, 0, SP_MIN * U, SP_MAX * U, a);
-    if (a % 5 === 0) {
-      drThick += s;
-      drHit += s;
-    } else drThin += s;
-  }
+  const { arcThin, arcThick, arcHit, arcLabels } = (() => {
+    let thin = '', thick = '', hit = '';
+    const labels = [];
+    for (let v = SP_MIN; v <= SP_MAX; v += 2) {
+      const r = f(v * U);
+      const [x1, y1] = pt(0, 0, r, -SP_HALF);
+      const [x2, y2] = pt(0, 0, r, SP_HALF);
+      const d = `M${x1} ${y1}A${r} ${r} 0 0 1 ${x2} ${y2}`;
+      if (v % 10 === 0) {
+        thick += d;
+        hit += d;
+        // The centre-line labels sit to the left of the amber line, the others on their own arc.
+        for (const a of [0, -30, 30]) {
+          const [x, y] = pt(0, 0, r, a);
+          labels.push({ x: a === 0 ? x - 7 : x, y, t: v, tr: `rotate(${a} ${a === 0 ? x - 7 : x} ${y})`, c: a === 0 });
+        }
+      } else thin += d;
+    }
+    return { arcThin: thin, arcThick: thick, arcHit: hit, arcLabels: labels };
+  })();
+  const { drThin, drThick, drHit } = (() => {
+    let thin = '', thick = '', hit = '';
+    for (let a = -DR_HALF; a <= DR_HALF; a++) {
+      if (a === 0) continue;
+      const s = seg(0, 0, SP_MIN * U, SP_MAX * U, a);
+      if (a % 5 === 0) {
+        thick += s;
+        hit += s;
+      } else thin += s;
+    }
+    return { drThin: thin, drThick: thick, drHit: hit };
+  })();
   const drCentre = seg(0, 0, SP_MIN * U, SP_MAX * U, 0);
   const driftLabelAngles = [];
   for (let a = -DR_HALF; a <= DR_HALF; a += 5) if (a !== 0) driftLabelAngles.push(a);
@@ -43,23 +50,29 @@
   const framePath = `M0 0H400V470H0Z M${WIN.x + 10} ${WIN.y}H${WIN.x + WIN.w - 10}Q${WIN.x + WIN.w} ${WIN.y} ${WIN.x + WIN.w} ${WIN.y + 10}V${WIN.y + WIN.h - 10}Q${WIN.x + WIN.w} ${WIN.y + WIN.h} ${WIN.x + WIN.w - 10} ${WIN.y + WIN.h}H${WIN.x + 10}Q${WIN.x} ${WIN.y + WIN.h} ${WIN.x} ${WIN.y + WIN.h - 10}V${WIN.y + 10}Q${WIN.x} ${WIN.y} ${WIN.x + 10} ${WIN.y}Z`;
   const [ti1x, ti1y] = pt(CX, CY, RD + 1, 0);
   const trueIndex = `M${ti1x} ${ti1y}L${ti1x - 6} ${ti1y - 13}L${ti1x + 6} ${ti1y - 13}Z`;
-  let dsTicks = '';
-  const dsLabels = [];
-  for (let a = -DR_HALF; a <= DR_HALF; a++) {
-    if (a === 0) continue;
-    if (a % 5 === 0) dsTicks += seg(CX, CY, RD + 3, RD + (a % 15 === 0 ? 11 : 8), a);
-    else dsTicks += seg(CX, CY, RD + 3, RD + 6, a);
-    if (a % 15 === 0) dsLabels.push(label(CX, CY, RD + 19, a, `${Math.abs(a)}${a < 0 ? 'L' : 'R'}`));
-  }
+  const { dsTicks, dsLabels } = (() => {
+    let d = '';
+    const labels = [];
+    for (let a = -DR_HALF; a <= DR_HALF; a++) {
+      if (a === 0) continue;
+      if (a % 5 === 0) d += seg(CX, CY, RD + 3, RD + (a % 15 === 0 ? 11 : 8), a);
+      else d += seg(CX, CY, RD + 3, RD + 6, a);
+      if (a % 15 === 0) labels.push(label(CX, CY, RD + 19, a, `${Math.abs(a)}${a < 0 ? 'L' : 'R'}`));
+    }
+    return { dsTicks: d, dsLabels: labels };
+  })();
 
   // Azimuth rose: a tick every degree, longer every 5 / 10, a label every 10 (value / 10) and N E S W.
-  let roseMinor = '', roseMid = '', roseMajor = '';
+  const { roseMinor, roseMid, roseMajor } = (() => {
+    let minor = '', mid = '', major = '';
+    for (let a = 0; a < 360; a++) {
+      if (a % 10 === 0) major += seg(CX, CY, RD, RD - 11, a);
+      else if (a % 5 === 0) mid += seg(CX, CY, RD, RD - 7.5, a);
+      else minor += seg(CX, CY, RD, RD - 4.5, a);
+    }
+    return { roseMinor: minor, roseMid: mid, roseMajor: major };
+  })();
   const roseLabels = [];
-  for (let a = 0; a < 360; a++) {
-    if (a % 10 === 0) roseMajor += seg(CX, CY, RD, RD - 11, a);
-    else if (a % 5 === 0) roseMid += seg(CX, CY, RD, RD - 7.5, a);
-    else roseMinor += seg(CX, CY, RD, RD - 4.5, a);
-  }
   for (let a = 0; a < 360; a += 10) {
     const card = { 0: 'N', 90: 'E', 180: 'S', 270: 'W' }[a];
     const [x, y] = pt(CX, CY, RD - 22, a);
@@ -104,15 +117,25 @@
 
   const originY = $derived(CY + s.slide * U);
   const dots = $derived(s.dots.map((d) => dotScreen(d, s.dir)));
-  // Drift labels sit at a fixed screen height (below the disc, or above it when the card is low) along each line, wherever the card is.
-  const driftLabels = $derived(
-    driftLabelAngles.map((a) => {
-      const y = originY - 352 >= SP_MIN * U + 4 ? 352 : 24;
-      const dist = (originY - y) / Math.cos((a * Math.PI) / 180);
-      const x = f(CX + Math.tan((a * Math.PI) / 180) * (originY - y));
-      return { a, x, y, t: Math.abs(a), show: dist >= SP_MIN * U && dist <= SP_MAX * U && x > WIN.x + 14 && x < WIN.x + WIN.w - 14 };
-    })
-  );
+  // Drift labels sit on the lines in a row halfway between two speed arcs (so no speed label touches them), in the
+  // free zone below the disc or well inside it: never in the ring of the rose labels (r 112-158) nor under the
+  // frame drift scale (from d = 121 on, where the lines are far enough apart). The row is the one that keeps the most labels visible for the current slide.
+  const driftLabels = $derived.by(() => {
+    let best = [];
+    let bestN = -1;
+    for (let d = 121; d < SP_MAX * U; d += 2 * U * 5) {
+      const row = driftLabelAngles.map((a) => {
+        const t = (a * Math.PI) / 180;
+        const x = f(CX + Math.sin(t) * d), y = f(originY - Math.cos(t) * d);
+        const r = Math.hypot(x - CX, y - CY);
+        const show = x > WIN.x + 14 && x < WIN.x + WIN.w - 14 && y > WIN.y + 8 && y < WIN.y + WIN.h - 8 && (r < 112 || r > 158);
+        return { a, x, y, t: Math.abs(a), show };
+      });
+      const n = row.filter((l) => l.show).length;
+      if (n > bestN) { best = row; bestN = n; }
+    }
+    return best;
+  });
 
   function pick(event) {
     if (!explain) return;
@@ -266,7 +289,7 @@
   .e6b-svg text.sc.card { fill: #f3a533; }
   .e6b-svg text.dl { font-size: 7px; fill: #3ccbe8; }
   .e6b-svg text.ix { font-size: 5.6px; fill: #f3a533; letter-spacing: 0.05em; }
-  .e6b-svg text.halo { paint-order: stroke; stroke: #2a3137; stroke-width: 2.4px; stroke-linejoin: round; }
+  .e6b-svg text.halo { paint-order: stroke; stroke: #2a3137; stroke-width: 2.5px; stroke-linejoin: round; }
   .e6b-svg .tk { stroke: #eef2f5; fill: none; }
   .e6b-svg .arc { stroke: #d5dde3; fill: none; }
   .e6b-svg .drift { stroke: #3ccbe8; fill: none; }
