@@ -1,6 +1,6 @@
 # PFD Trainer — 3D exterior view (MVP2, part 2)
 
-Status: approved in conversation (2026-10-08). Second MVP2 sub-project from `2026-10-09-pfd-trainer-design.md`
+Status: implemented (2026-10-08). Second MVP2 sub-project from `2026-10-09-pfd-trainer-design.md`
 (done: MCDU Vite migration; later: 3D F-PLN in the MCDU, cockpit fly-in intro, Build mode).
 
 All paths are relative to `landing-page-svelte/` unless stated.
