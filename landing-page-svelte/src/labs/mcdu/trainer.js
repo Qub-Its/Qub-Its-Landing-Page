@@ -986,7 +986,15 @@ function checkTasks(){
   while(i<L.tasks.length&&L.tasks[i].ok()){ i++; adv=true; }
   if(adv){ prog[active]=i; hintOpen=false; whyOpen=false; toast(i===L.tasks.length?UI.lvlDone(active+1):UI.taskDone); renderLevels(); document.dispatchEvent(new CustomEvent('mcdu:task-complete')); }
 }
-function after(){ checkTasks(); render(); syncTip(); }
+/* Plain-data copy of the visible flight plan for the 3D map tab (fpln3d/tab.js), sent after every interaction. */
+function planSnapshot(){
+  const items=clone(plan()), dest=items.find(x=>x.kind==='dest')?.id;
+  const appr=S.arr.appr&&dest?(APPRS[dest]||[]).find(a=>a.n===S.arr.appr):null;
+  const ids=[...new Set(items.filter(x=>x.kind==='orig'||x.kind==='dest').map(x=>x.id))].filter(id=>AP[id]);
+  return {items,tmpy:!!S.tmpy,crz:S.init.crz,depRwy:S.dep.rwy,arrRwy:appr?appr.rwy:null,airports:Object.fromEntries(ids.map(id=>[id,clone(AP[id])]))};
+}
+function publishPlan(){ const snap=planSnapshot(); window.__mcduPlan=snap; document.dispatchEvent(new CustomEvent('mcdu:plan',{detail:snap})); }
+function after(){ checkTasks(); render(); syncTip(); publishPlan(); }
 
 const tb=document.getElementById('taskbar');
 function renderTaskbar(){
@@ -1031,11 +1039,16 @@ function renderLevels(){
    PANEL, TOAST, EVENTS
    ========================================================= */
 const panel=document.getElementById('panel');
-function setTab(t){ const g=t==='guide'; document.getElementById('tabGuide').setAttribute('aria-selected',g); document.getElementById('tabEx').setAttribute('aria-selected',!g); document.getElementById('guideBody').hidden=!g; document.getElementById('exBody').hidden=g; }
+function setTab(t){
+  const tabs={guide:['tabGuide','guideBody'],ex:['tabEx','exBody'],map:['tabMap','mapBody']};
+  for(const [k,[tab,body]] of Object.entries(tabs)){ document.getElementById(tab).setAttribute('aria-selected',k===t); document.getElementById(body).hidden=k!==t; }
+  document.dispatchEvent(new CustomEvent('mcdu:tab',{detail:t}));
+}
 function openPanel(t){ setTab(t); panel.classList.add('open'); }
 function closePanel(){ panel.classList.remove('open'); }
 document.getElementById('tabGuide').onclick=()=>setTab('guide');
 document.getElementById('tabEx').onclick=()=>setTab('ex');
+document.getElementById('tabMap').onclick=()=>setTab('map');
 document.getElementById('closeSheet').onclick=closePanel;
 document.addEventListener('click',e=>{ const o=e.target.closest('[data-open]'); if(o) openPanel(o.dataset.open); });
 
@@ -1124,6 +1137,11 @@ document.getElementById('resetBtn').onclick=()=>{ const ex=S.explain; S=fresh();
    I18N — English overrides (Spanish is the inline default)
    ========================================================= */
 const STATIC_EN={
+ map3d:'3D map',mapLoading:'Loading 3D map…',mapNoWebgl:'Your browser does not support WebGL: the 3D map is unavailable.',
+ mapError:'The 3D map could not be loaded.',mapReload:'Reload page',mapEmpty:'Enter origin and destination in INIT A (e.g. MROC/KMIA → R1) to see the route.',
+ mapFly:'Fly route ▶',mapPause:'Pause',mapActive:'Active plan',mapTmpy:'Temporary plan (TMPY)',
+ mapScale:'Vertical scale exaggerated ×20. Simplified profile: climb 2.5 NM per 1000 ft, descent 3 NM per 1000 ft.',
+ mapNoCrz:'No cruise FL: enter it in INIT A (e.g. 350 → L6) to see the vertical profile.',
  title:'A320 MCDU Trainer',
  subtitle:'Interactive Multipurpose Control & Display Unit simulator · fictional navigation data',
  explain:'? Explain mode',explainTitle:'When on, pressing a key explains it instead of running it',
