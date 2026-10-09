@@ -127,6 +127,29 @@ details code, .inspector code{font-family:var(--f-mono);color:var(--cyan);font-s
 .foot p{margin:14px 0 0;color:var(--muted);font-size:12px;max-width:80ch}
 
 .mobile-only{display:none}
+.sim-side{min-width:0;display:flex;flex-direction:column;gap:12px}
+
+/* Desktop: collapsible panel. Collapsed = panel folded into a rail on the right edge. */
+.collapse-panel{background:none;border:0;border-left:1px solid var(--line);color:var(--muted);font-size:20px;line-height:1;padding:0 14px;cursor:pointer}
+.collapse-panel:hover{color:var(--fg)}
+.rail{display:flex;flex-direction:column;gap:6px;align-self:start;position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px}
+.rail-btn{background:none;border:1px solid transparent;border-radius:6px;color:var(--muted);cursor:pointer;padding:12px 6px;
+  font-family:var(--f-ui);font-size:12px;letter-spacing:.12em;text-transform:uppercase;writing-mode:vertical-rl}
+.rail-btn:hover{color:var(--fg);border-color:var(--line);background:var(--panel-2)}
+.rail-chevron{writing-mode:horizontal-tb;font-size:20px;letter-spacing:0;padding:6px}
+@media (min-width: 981px){
+  .layout.collapsed{grid-template-columns:minmax(0,1fr) auto}
+  .layout.collapsed .panel{display:none}
+  .layout.collapsed .sim{width:100%;max-width:560px;justify-self:center}
+}
+/* Wide enough: PFD on the left, FCU + controls on the right, both in view while flying. */
+@media (min-width: 1100px){
+  .layout.collapsed .sim{max-width:none;display:grid;grid-template-columns:minmax(0,560px) minmax(0,1fr);align-items:start;column-gap:20px}
+  .layout.collapsed .sim > :not(.bezel, .sim-side){grid-column:1 / -1}
+  /* Short screens may still scroll to reach flaps/gear: the PFD stays in view meanwhile. */
+  .layout.collapsed .bezel{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px)}
+}
 
 /* Phone / tablet: panel becomes a bottom sheet */
 @media (max-width: 980px){
@@ -135,6 +158,7 @@ details code, .inspector code{font-family:var(--f-mono);color:var(--cyan);font-s
   .panel{position:fixed;left:0;right:0;bottom:0;top:auto;max-height:78vh;border-radius:14px 14px 0 0;transform:translateY(105%);z-index:40;padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 -14px 40px #000a;visibility:hidden;transition:transform .28s ease,visibility 0s .28s}
   .panel.open{transform:translateY(0);visibility:visible;transition:transform .28s ease,visibility 0s}
   .close-sheet{display:block}
+  .collapse-panel,.rail{display:none}
   .mobile-only{display:inline-block}
   .desk-explain{display:none}
   .mobile-explain{display:block}

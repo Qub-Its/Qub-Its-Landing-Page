@@ -54,6 +54,7 @@ Both trainers have a "Feedback" button that submits to Web3Forms. Shared module 
 
 - Contracts: `lib/schema.js` (flight state shape) and `lib/layout.js` (SVG regions, scales, Airbus colours). Instruments in `components/pfd/` are pure views of the state and draw only in their region; clickable parts carry `data-part="<id>"` (content in `content/parts.js`).
 - Simulation is plain JS (`lib/sim.js`, `lib/autoflight.js`, `lib/scenarios.js`); `lib/flight.svelte.js` is the only reactive store and runs the fixed-step loop.
+- Desktop panel collapses to a right-edge rail (`components/PanelRail.svelte`, state in `localStorage` `qubits.pfd.panelCollapsed`); starting a Fly/Automation level collapses it so PFD and controls sit side by side (≥ 1100px, PFD sticky).
 - The English page is written by `scripts/localize-heads.mjs` from `seo.pfd`; in `vite dev`, `/en/labs/pfd-trainer/` falls back to the landing, so test English on a build (`npm run build && npm run preview`).
 - Feedback: with `VITE_WEB3FORMS_FEEDBACK_KEY` set, the page lazy-loads the shared panel (`src/labs/shared/feedback/`).
 - The MCDU trainer promotes the PFD from a left-edge tab (`src/labs/shared/pfd-promo.js`, expands once per session; `?pfdPromo=expand` forces it).

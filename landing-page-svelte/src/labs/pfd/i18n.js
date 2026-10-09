@@ -36,6 +36,8 @@ export const UI = {
     simLabel: 'Simulador',
     panelLabel: 'Guía y ejercicios',
     closePanel: 'Cerrar panel',
+    collapsePanel: 'Contraer panel',
+    railLabel: 'Abrir guía y ejercicios',
     close: 'Cerrar',
     kbdNote: 'Teclado: flechas = sidestick (↑ morro abajo, ↓ morro arriba, ← → alabeo). Con Modo explicar activo, toca cualquier parte del PFD.',
     // inspector / explain card
@@ -108,6 +110,8 @@ export const UI = {
     simLabel: 'Simulator',
     panelLabel: 'Guide and exercises',
     closePanel: 'Close panel',
+    collapsePanel: 'Collapse panel',
+    railLabel: 'Open guide and exercises',
     close: 'Close',
     kbdNote: 'Keyboard: arrow keys = sidestick (↑ nose down, ↓ nose up, ← → roll). With Explain mode on, tap any part of the PFD.',
     explainEmptyTitle: 'Explain mode',
