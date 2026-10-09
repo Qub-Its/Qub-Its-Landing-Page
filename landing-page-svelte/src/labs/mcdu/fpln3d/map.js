@@ -41,12 +41,14 @@ export async function createPlanMap(canvas, { onLabels, debugFail = false } = {}
   const cam = new PerspectiveCamera(40, 1, 1, 20000);
   const size = { w: 1, h: 1 };
   let route = null, color = null, bboxKey = '', flyT = 0, flying = false;
-  let raf = 0, last = 0, frames = 0;
+  let raf = 0, last = 0, frames = 0, renders = 0, rebuilds = 0;
+  const draw = () => { renderer.render(scene, cam); renders++; };
 
   const disposeGroup = (g) => { for (const o of [...g.children]) { g.remove(o); o.traverse((c) => { c.geometry?.dispose?.(); const m = c.material; (Array.isArray(m) ? m : m ? [m] : []).forEach((x) => x.dispose()); }); } };
   const v3 = (p) => new Vector3(p.x, toY(p.altFt), p.z);
 
   function rebuild() {
+    rebuilds++;
     disposeGroup(routeGroup);
     if (!route || route.points.length < 1) return;
     const span = Math.max(50, ...route.points.map((p) => Math.max(Math.abs(p.x), Math.abs(p.z))));
@@ -141,27 +143,35 @@ export async function createPlanMap(canvas, { onLabels, debugFail = false } = {}
     plane.rotation.set(dH > 1e-6 ? Math.atan2(dV, dH) : 0, -p.headingDeg * Math.PI / 180, 0);
   }
 
-  let lastSnap = null;
+  let lastSnap = null, pending = null, appliedKey = '';
+  function apply() {
+    if (!pending) return;
+    const snap = pending;
+    pending = null;
+    const key = JSON.stringify(snap);
+    if (key === appliedKey) return;
+    appliedKey = key;
+    lastSnap = snap;
+    route = buildRoute(snap);
+    color = route.points.length >= 2 ? (snap?.tmpy ? 'yellow' : 'green') : null;
+    rebuild();
+    const fitKey = route.points.map((p) => `${p.x.toFixed(1)},${p.z.toFixed(1)}`).join('|') + '|' + route.crzFt;
+    if (fitKey !== bboxKey) { bboxKey = fitKey; flyT = 0; flying = false; fit(); }
+    placePlane();
+    emitLabels();
+  }
   function frame(now) {
     raf = requestAnimationFrame(frame);
     const dt = last ? Math.min((now - last) / 1000, 0.1) : 0; last = now;
     if (flying) { flyT = Math.min(1, flyT + dt / FLY_S); if (flyT >= 1) flying = false; placePlane(); }
-    renderer.render(scene, cam);
+    draw();
     frames++;
   }
 
   return {
-    setPlan(snap) {
-      lastSnap = snap;
-      route = buildRoute(snap);
-      color = route.points.length >= 2 ? (snap?.tmpy ? 'yellow' : 'green') : null;
-      rebuild();
-      const key = route.points.map((p) => `${p.x.toFixed(1)},${p.z.toFixed(1)}`).join('|') + '|' + route.crzFt;
-      if (key !== bboxKey) { bboxKey = key; flyT = 0; flying = false; fit(); }
-      placePlane();
-      emitLabels();
-      if (!raf) renderer.render(scene, cam);
-    },
+    // Plans arrive on every MCDU key press: keep the latest and apply it only while running (or on start()),
+    // and skip snapshots identical to the one already drawn.
+    setPlan(snap) { pending = snap; if (raf) apply(); },
     fly() { if (!route || route.points.length < 2) return; if (flyT >= 1) flyT = 0; flying = true; },
     pause() { flying = false; },
     resize(w, h) {
@@ -169,9 +179,8 @@ export async function createPlanMap(canvas, { onLabels, debugFail = false } = {}
       size.w = w; size.h = h;
       renderer.setSize(w, h, false);
       cam.aspect = w / h; fit(); emitLabels();
-      if (!raf) renderer.render(scene, cam);
     },
-    start() { if (!raf) { last = 0; raf = requestAnimationFrame(frame); } },
+    start() { if (!raf) { apply(); last = 0; raf = requestAnimationFrame(frame); } },
     stop() { cancelAnimationFrame(raf); raf = 0; },
     dispose() {
       this.stop();
@@ -181,7 +190,7 @@ export async function createPlanMap(canvas, { onLabels, debugFail = false } = {}
     },
     get frames() { return frames; },
     get debug() {
-      return { points: route?.points.length ?? 0, color, flying, t: flyT, plane: plane.position.toArray().map((n) => Math.round(n * 10) / 10) };
+      return { points: route?.points.length ?? 0, color, flying, t: flyT, renders, rebuilds, plane: plane.position.toArray().map((n) => Math.round(n * 10) / 10) };
     },
   };
 }
