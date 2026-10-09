@@ -7,6 +7,8 @@ import { resolve } from 'node:path'
 export default defineConfig({
   plugins: [svelte()],
   build: {
+    // The PFD's lazy 3D chunk (three.js WebGLRenderer, ~570 kB / ~145 kB gzip) is loaded only on demand.
+    chunkSizeWarningLimit: 600,
     rollupOptions: {
       input: {
         main: resolve(import.meta.dirname, 'index.html'),
