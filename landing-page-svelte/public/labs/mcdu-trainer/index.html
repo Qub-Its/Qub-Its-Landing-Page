@@ -1347,7 +1347,7 @@ function startLevel(i){
 function checkTasks(){
   if(active==null) return; const L=LEVELS[active]; let i=prog[active], adv=false;
   while(i<L.tasks.length&&L.tasks[i].ok()){ i++; adv=true; }
-  if(adv){ prog[active]=i; hintOpen=false; whyOpen=false; toast(i===L.tasks.length?UI.lvlDone(active+1):UI.taskDone); renderLevels(); }
+  if(adv){ prog[active]=i; hintOpen=false; whyOpen=false; toast(i===L.tasks.length?UI.lvlDone(active+1):UI.taskDone); renderLevels(); document.dispatchEvent(new CustomEvent('mcdu:task-complete')); }
 }
 function after(){ checkTasks(); render(); syncTip(); }
 
@@ -1736,6 +1736,7 @@ applyLanguage(); buildHardware(); idleInspector(); renderLevels(); after();
 })();
 </script>
 <script type="module" src="/labs/mcdu-trainer/feedback-panel.js"></script>
+<script type="module" src="/labs/shared/pfd-promo.js"></script>
 <!-- Vercel Web Analytics: this page is static (outside the Vite bundle), so it uses the plain script instead of inject(). -->
 <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
 <script defer src="/_vercel/insights/script.js"></script>

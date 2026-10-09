@@ -72,3 +72,13 @@ write('en/labs/mcdu-trainer/index.html', localizeHead(readSpanish('labs/mcdu-tra
   labs.item = `${seo.home.en.url}#labs`;
   Object.assign(page, { name: 'A320 MCDU Trainer', item: mcdu.url });
 }));
+
+const pfd = seo.pfd.en;
+write('en/labs/pfd-trainer/index.html', localizeHead(readSpanish('labs/pfd-trainer/index.html', seo.pfd.es), pfd, (graph) => {
+  const app = byType(graph, 'WebApplication');
+  Object.assign(app, { '@id': `${pfd.url}#app`, name: 'A320 PFD Trainer', url: pfd.url, description: pfd.description, inLanguage: 'en' });
+  const [site, labs, page] = byType(graph, 'BreadcrumbList').itemListElement;
+  site.item = seo.home.en.url;
+  labs.item = `${seo.home.en.url}#labs`;
+  Object.assign(page, { name: 'A320 PFD Trainer', item: pfd.url });
+}));

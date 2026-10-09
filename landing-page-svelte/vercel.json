@@ -13,6 +13,18 @@
       "destination": "/en/labs/mcdu-trainer/index.html"
     },
     {
+      "source": "/labs/pfd-trainer",
+      "destination": "/labs/pfd-trainer/index.html"
+    },
+    {
+      "source": "/en/labs/pfd-trainer",
+      "destination": "/en/labs/pfd-trainer/index.html"
+    },
+    {
+      "source": "/en/labs/pfd-trainer/",
+      "destination": "/en/labs/pfd-trainer/index.html"
+    },
+    {
       "source": "/en",
       "destination": "/en/index.html"
     },
