@@ -1,6 +1,6 @@
 # MCDU Trainer — light migration to a Vite entry (MVP2, part 1)
 
-Status: approved in conversation (2026-10-08). First of the MVP2 sub-projects listed in
+Status: implemented (2026-10-08). First of the MVP2 sub-projects listed in
 `2026-10-09-pfd-trainer-design.md` (then: 3D exterior view, 3D F-PLN, cockpit fly-in intro, Build mode — each
 with its own spec).
 
