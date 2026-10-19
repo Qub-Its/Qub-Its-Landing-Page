@@ -1,5 +1,6 @@
 <script>
   import { seo, siteUrl } from './seo.js';
+  import { historicalPages } from './content/historical-pages.js';
 
   const logo = '/images/logo.png';
   const isEnglish = window.location.pathname === '/en' || window.location.pathname.startsWith('/en/');
@@ -8,15 +9,6 @@
   const languageTarget = isEnglish ? '/' : '/en/';
   const localize = (href) => isEnglish && href.startsWith('/') ? `/en${href}` : href;
   let menuOpen = false;
-
-  const policies = {
-    'locAlert_policy.html': ['LocAlert', 'PRIVACIDAD / LOCALIZACIÓN', 'Tu ubicación se queda contigo.', 'LocAlert utiliza la ubicación del dispositivo para activar alarmas de proximidad. Esa información se procesa localmente y no se almacena en servidores de Qub-its.', [['Información que no recopilamos', 'No recopilamos ni almacenamos historial de ubicaciones, perfiles personales ni datos de uso identificables.'], ['Permisos', 'Puedes administrar los permisos de ubicación y notificaciones desde los ajustes de tu dispositivo.'], ['Terceros', 'Los servicios de mapas pueden aplicar sus propias políticas. Qub-its no conserva los datos procesados por ellos.']]],
-    'locAlarm_policy.html': ['LocAlarm', 'PRIVACIDAD / LOCALIZACIÓN', 'Alarmas cercanas, datos privados.', 'LocAlarm procesa temporalmente la ubicación en tu dispositivo para avisarte al llegar a un destino. No transmite ni guarda esa información en servidores externos.', [['Procesamiento local', 'La ubicación se usa exclusivamente para calcular alarmas de proximidad en tu dispositivo.'], ['Tus controles', 'Puedes revocar permisos de ubicación o notificaciones desde la configuración del sistema.'], ['Contacto', 'Para consultas sobre privacidad, escríbenos a team@qub-its.com.']]],
-    'baby_gun_guin_privacy_policy.html': ['BabyGunGuin', 'PRIVACIDAD / SALUD', 'Privacidad para cada etapa.', 'BabyGunGuin es una herramienta informativa y de organización; no ofrece diagnóstico ni consejo médico. Trataremos la información necesaria para proporcionar las funciones que elijas usar.', [['Información tratada', 'Según las funciones utilizadas, pueden incluirse datos de cuenta, seguimiento, imágenes y datos técnicos de diagnóstico.'], ['Uso y proveedores', 'Usamos la información para operar y proteger el servicio. Algunos proveedores, como Firebase e IA solicitada por ti, pueden procesar datos para esas funciones.'], ['Conservación y derechos', 'Puedes solicitar acceso, corrección o eliminación escribiendo a team@qub-its.com.']]],
-    'baby_gun_guin_delete_account.html': ['BabyGunGuin', 'CUENTA / ELIMINACIÓN', 'Solicita la eliminación de tu cuenta.', 'Puedes pedir la eliminación de tu cuenta y los datos asociados. Revisaremos la solicitud y responderemos conforme a los requisitos aplicables.', [['Cómo solicitarla', 'Envía un correo desde la dirección asociada a tu cuenta a team@qub-its.com con el asunto “Eliminar cuenta BabyGunGuin”.'], ['Qué puede eliminarse', 'La solicitud puede abarcar datos de cuenta, seguimiento, imágenes y otra información asociada. Algunas copias pueden conservarse temporalmente por razones legales o de seguridad.']]],
-    'chrome_site_stats_policy.html': ['Chrome Site Stats', 'PRIVACIDAD / EXTENSIÓN', 'Métricas útiles. Control local.', 'Chrome Site Stats fue diseñada con privacidad por defecto. La información que necesita para sus funciones se procesa localmente en tu navegador.', [['Datos personales', 'La extensión no requiere credenciales, información financiera ni datos personales identificables para sus funciones principales.'], ['Tus decisiones', 'Tú controlas los datos guardados localmente y puedes eliminarlos desde la extensión o el navegador.'], ['Seguridad', 'Aplicamos medidas razonables para proteger el funcionamiento local de la extensión.']]],
-    'biometric-landing.html': ['Qub-its Biometric', 'PRODUCTO / BIOMETRÍA', 'Identidad digital, diseñada para personas.', 'Una experiencia digital segura para simplificar la gestión biométrica y reducir la fricción operativa.', [['Diseño centrado en confianza', 'Flujos claros, interfaces accesibles y decisiones basadas en privacidad desde el inicio.'], ['Hablemos', 'Cuéntanos sobre tu operación y diseñaremos el producto adecuado para tu equipo.']]]
-  };
 
   const translations = {
     es: {
@@ -80,27 +72,45 @@
   };
 
   const copy = translations[locale];
-  const policy = policies[path];
+  const historicalPage = historicalPages[path];
+  const historicalBlocks = historicalPage?.blocks.reduce((blocks, block) => {
+    const previous = blocks[blocks.length - 1];
+    if (block.tag === 'li' && previous?.tag === 'ul') previous.items.push(block.text);
+    else if (block.tag === 'li') blocks.push({ tag: 'ul', items: [block.text] });
+    else blocks.push(block);
+    return blocks;
+  }, []) || [];
+  const deletionEmail = 'mailto:team@qub-its.com?subject=Account%20Deletion%20Request%20-%20BabyGunGuin';
+  const historicalText = (text) => text
+    .replaceAll('formulario de eliminación de cuenta', '<a href="/baby_gun_guin_delete_account.html">formulario de eliminación de cuenta</a>')
+    .replaceAll('team@qub-its.com', '<a href="mailto:team@qub-its.com">team@qub-its.com</a>')
+    .replaceAll('https://calendar.app.google/A4jrFp4inRSPnpa88', '<a href="https://calendar.app.google/A4jrFp4inRSPnpa88">https://calendar.app.google/A4jrFp4inRSPnpa88</a>');
+  const submitDeletionRequest = (event) => {
+    event.preventDefault();
+    const values = new FormData(event.currentTarget);
+    const body = [`Email: ${values.get('email')}`, `Message: ${values.get('message') || ''}`].join('\n');
+    window.location.href = `${deletionEmail}&body=${encodeURIComponent(body)}`;
+  };
   const home = seo.home[locale];
   // Vercel rewrites every unknown path to the SPA, so anything that is neither home nor a policy page is a soft 404.
   const route = window.location.pathname.replace(/^\/en(?=\/|$)/, '').replace(/\/+$/, '');
-  const isUnknownPath = !policy && route !== '' && route !== '/index.html';
-  const pageTitle = policy ? `${policy[0]} | Qub-its` : home.title;
-  const pageDescription = policy ? policy[3] : home.description;
-  const canonicalUrl = policy ? `${siteUrl}${isEnglish ? '/en' : ''}/${path}` : home.url;
-  const robots = policy || isUnknownPath ? 'noindex, follow' : 'index, follow, max-image-preview:large, max-snippet:-1';
+  const isUnknownPath = !historicalPage && route !== '' && route !== '/index.html';
+  const pageTitle = historicalPage ? historicalPage.title : home.title;
+  const pageDescription = historicalPage?.description || home.description;
+  const canonicalUrl = historicalPage ? `${siteUrl}${isEnglish ? '/en' : ''}/${path}` : home.url;
+  const robots = historicalPage || isUnknownPath ? 'noindex, follow' : 'index, follow, max-image-preview:large, max-snippet:-1';
   const setMeta = (selector, value) => document.querySelector(selector)?.setAttribute('content', value);
   document.title = pageTitle;
-  document.documentElement.lang = locale;
+  document.documentElement.lang = path === 'locAlarm_policy.html' ? 'en' : locale;
   document.querySelector('link[rel="canonical"]')?.setAttribute('href', canonicalUrl);
   setMeta('meta[name="description"]', pageDescription);
   setMeta('meta[name="robots"]', robots);
   setMeta('meta[property="og:locale"]', isEnglish ? 'en_US' : 'es_ES');
   setMeta('meta[property="og:title"]', pageTitle);
-  setMeta('meta[property="og:description"]', policy ? pageDescription : home.ogDescription);
+  setMeta('meta[property="og:description"]', historicalPage ? pageDescription : home.ogDescription);
   setMeta('meta[property="og:url"]', canonicalUrl);
   setMeta('meta[name="twitter:title"]', pageTitle);
-  setMeta('meta[name="twitter:description"]', policy ? pageDescription : home.ogDescription);
+  setMeta('meta[name="twitter:description"]', historicalPage ? pageDescription : home.ogDescription);
   setMeta('meta[property="og:locale:alternate"]', isEnglish ? 'es_ES' : 'en_US');
   setMeta('meta[property="og:image:alt"]', home.imageAlt);
 </script>
@@ -128,8 +138,59 @@
   <meta name="twitter:image" content={`${siteUrl}/images/logo.png`} />
 -->
 
-{#if policy}
-  <main class="legal-shell"><a class="brand" href={isEnglish ? '/en/' : '/'}><img src={logo} alt="Qub-its" width="116" height="48" /></a><a class="back" href={isEnglish ? '/en/' : '/'}>{copy.back}</a><a class="language-switch legal-language" href={languageTarget} lang={isEnglish ? 'es' : 'en'} aria-label={isEnglish ? 'Cambiar a español' : 'Switch to English'}>{isEnglish ? 'ES' : 'EN'}</a><p class="eyebrow">{policy[1]}</p><h1>{policy[2]}</h1><p class="legal-intro">{policy[3]}</p><div class="legal-grid">{#each policy[4] as section}<article><span>/{section[0].toLowerCase().replaceAll(' ', '_')}</span><h2>{section[0]}</h2><p>{section[1]}</p></article>{/each}</div><p class="legal-contact">{isEnglish ? 'Questions?' : '¿Preguntas?'} <a href="mailto:team@qub-its.com">team@qub-its.com</a></p></main>
+{#if historicalPage}
+  <main class="legal-shell historical-page" lang={path === 'locAlarm_policy.html' ? 'en' : 'es'}>
+    <a class="brand" href={isEnglish ? '/en/' : '/'}><img src={logo} alt="Qub-its" width="116" height="48" /></a>
+    <a class="back" href={isEnglish ? '/en/' : '/'}>{copy.back}</a>
+    <a class="language-switch legal-language" href={languageTarget} lang={isEnglish ? 'es' : 'en'} aria-label={isEnglish ? 'Cambiar a español' : 'Switch to English'}>{isEnglish ? 'ES' : 'EN'}</a>
+    <h1>{historicalBlocks.find((block) => block.tag === 'h1')?.text || historicalPage.title}</h1>
+    {#if historicalPage.date}<p class="legal-intro historical-date">{historicalPage.date}</p>{/if}
+    <div class="historical-content">
+      {#each historicalBlocks as block, index}
+        {#if block.tag === 'h1'}
+          <!-- The page title is already rendered as the single h1 above. -->
+        {:else if block.tag === 'label' || block.tag === 'button'}
+          <!-- Form labels and action are rendered in the functional form below. -->
+        {:else if block.tag === 'h2'}
+          <h2>{block.text}</h2>
+        {:else if block.tag === 'h3'}
+          <h3>{block.text}</h3>
+        {:else if block.tag === 'h4'}
+          <h4>{block.text}</h4>
+        {:else if block.tag === 'ul'}
+          <ul>{#each block.items as item}<li>{@html historicalText(item)}</li>{/each}</ul>
+        {:else if block.text === '← Volver a la Política de Privacidad'}
+          <p><a href="/baby_gun_guin_privacy_policy.html">{block.text}</a></p>
+        {:else if block.text.startsWith('O responda directamente a este correo')}
+          <p>{block.text}</p>
+        {:else if block.text.startsWith('Agendar Demo Gratuita')}
+          <p><a class="button historical-cta" href="https://calendar.app.google/A4jrFp4inRSPnpa88">{block.text}</a></p>
+        {:else if block.text.startsWith('https://calendar.app.google/')}
+          <p><a href={block.text}>{block.text}</a></p>
+        {:else if block.text.includes('Darse de baja')}
+          <p>{block.text.replace('Darse de baja', '')}<a href="#">Darse de baja</a></p>
+        {:else if block.text.includes('formulario de eliminación de cuenta')}
+          <p>{@html historicalText(block.text)}</p>
+        {:else}
+          <p>{@html historicalText(block.text)}</p>
+        {/if}
+      {/each}
+    </div>
+    {#if path === 'baby_gun_guin_delete_account.html'}
+      <form class="delete-request" onsubmit={submitDeletionRequest}>
+        <label for="delete-email">Correo electrónico de la cuenta *</label>
+        <input id="delete-email" type="email" name="email" required autocomplete="email" />
+        <label for="delete-message">Mensaje adicional (opcional)</label>
+        <textarea id="delete-message" name="message" rows="3"></textarea>
+        <label class="delete-confirm"><input type="checkbox" required /> <span>Entiendo que esta acción es irreversible y que todos mis datos serán eliminados permanentemente. *</span></label>
+        <button type="submit">Enviar solicitud de eliminación</button>
+      </form>
+    {/if}
+    {#if historicalPage.closing}<p class="legal-contact">{historicalPage.closing}</p>{/if}
+    {#if historicalPage.reply}<p class="legal-contact">{historicalPage.reply} <a href={historicalPage.demoUrl}>{historicalPage.demoUrl}</a></p>{/if}
+    {#if path === 'biometric-landing.html'}<p class="legal-contact">Qub-its Inc. · Miami, Florida · <a href="https://www.qub-its.com">www.qub-its.com</a> · <a href="mailto:support@qub-its.com">support@qub-its.com</a></p>{/if}
+    {#if historicalPage.footer}<p class="legal-contact">© 2026 Qub-its Inc. Todos los derechos reservados. · {historicalPage.footer} <a href="mailto:team@qub-its.com?subject=Unsubscribe">Darse de baja</a></p>{/if}
+  </main>
 {:else}
   <header class="site-header"><a class="brand" href={isEnglish ? '/en/' : '/'} aria-label="Qub-its home"><img src={logo} alt="Qub-its" width="116" height="48" /></a><button class="menu-button" aria-label={copy.menu} aria-expanded={menuOpen} onclick={() => menuOpen = !menuOpen}>menu</button><nav class:open={menuOpen} aria-label="Primary navigation"><a href="#studio" onclick={() => menuOpen = false}>{copy.nav[0]}</a><a href="#services" onclick={() => menuOpen = false}>{copy.nav[1]}</a><a href="#work" onclick={() => menuOpen = false}>{copy.nav[2]}</a><a href="#labs" onclick={() => menuOpen = false}>{copy.nav[4]}</a><a class="language-switch" href={languageTarget} lang={isEnglish ? 'es' : 'en'} aria-label={isEnglish ? 'Cambiar a español' : 'Switch to English'}>{isEnglish ? 'ES' : 'EN'}</a><a class="nav-cta" href="#contact" onclick={() => menuOpen = false}>{copy.nav[3]}</a></nav></header>
   <main><section class="hero"><div class="hero-glow"></div><p class="eyebrow">{copy.heroKicker}</p><div class="partner-badge" aria-label={isEnglish ? 'Qub-its was selected as an OpenAI Select Partner' : 'Qub-its fue seleccionado como OpenAI Select Partner'}><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2.5 14.5 9.5 21.5 12 14.5 14.5 12 21.5 9.5 14.5 2.5 12 9.5 9.5 12 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="19" cy="5" r="1" fill="currentColor"/><circle cx="5" cy="19" r="1" fill="currentColor"/></svg><span>{copy.partnerBadge}</span></div><h1>{copy.hero[0]}<br /><em>{copy.hero[1]}</em> {copy.hero[2]}</h1><div class="hero-bottom"><p>{copy.heroDescription}</p><a class="button" href="#contact">{copy.heroCta} <span>↘</span></a></div><div class="terminal" aria-hidden="true"><div class="terminal-top"><i></i><i></i><i></i><span>qubits.system</span></div><p><b>›</b> {copy.terminal[0]}</p><p><b>✓</b> {copy.terminal[1]}</p><p><b>✓</b> {copy.terminal[2]}</p><p><b>✓</b> {copy.terminal[3]}<span class="cursor">_</span></p></div></section>
@@ -138,5 +199,5 @@
   <section class="work section" id="work"><div class="section-heading"><p class="eyebrow">{copy.workKicker}</p><h2>{copy.workTitle[0]}<br /><em>{copy.workTitle[1]}</em></h2></div><div class="work-list">{#each copy.work as project, i}<a href={localize(project[3])} target={project[3].startsWith('http') ? '_blank' : undefined} rel={project[3].startsWith('http') ? 'noreferrer' : undefined}><span class="work-index">0{i + 1}</span><div><p>{project[1]}</p><h3>{project[0]}</h3></div><p class="work-description">{project[2]}</p><span class="arrow">↗</span></a>{/each}</div></section>
   <section class="labs section" id="labs"><div class="section-heading"><p class="eyebrow">{copy.labsKicker}</p><h2>{copy.labsTitle[0]}<br /><em>{copy.labsTitle[1]}</em></h2></div><div class="work-list">{#each copy.labs as lab, i}<a href={localize(lab[3])}><span class="work-index">0{i + 1}</span><div><p>{lab[1]}</p><h3>{lab[0]}</h3></div><p class="work-description">{lab[2]}</p><span class="arrow">↗</span></a>{/each}</div></section>
   <section class="contact section" id="contact"><p class="eyebrow">{copy.contactKicker}</p><h2>{copy.contact[0]}<br />{copy.contact[1]} <em>{copy.contact[2]}</em></h2><a class="contact-email" href="mailto:team@qub-its.com?subject=New%20project%20with%20Qub-its">team@qub-its.com <span>↗</span></a><p class="contact-note">{copy.contactNote}</p></section></main>
-  <footer><a class="brand" href={isEnglish ? '/en/' : '/'}><img src={logo} alt="Qub-its" width="116" height="48" /></a><div class="footer-partner" role="group" aria-label={isEnglish ? 'Qub-its selected as an OpenAI Select Partner' : 'Qub-its fue seleccionado como OpenAI Select Partner'}><div class="footer-partner-badge" role="img" aria-label="OpenAI Select Partner badge"><img src="/images/openai-select-partner-badge.png" alt="" /></div><span>{copy.footerPartner}</span></div><p>© {new Date().getFullYear()} Qub-its Inc.</p><div><a href={localize('/locAlert_policy.html')}>{copy.privacy}</a><a href="mailto:team@qub-its.com">{copy.contactLabel}</a></div></footer>
+  <footer><a class="brand footer-brand" href={isEnglish ? '/en/' : '/'}><img src={logo} alt="Qub-its" width="116" height="48" /></a><div class="footer-partner" role="group" aria-label={isEnglish ? 'Qub-its selected as an OpenAI Select Partner' : 'Qub-its fue seleccionado como OpenAI Select Partner'}><div class="footer-partner-badge" role="img" aria-label="OpenAI Select Partner badge"><img src="/images/openai-select-partner-badge.png" alt="" /></div><span>{copy.footerPartner}</span></div><p>© {new Date().getFullYear()} Qub-its Inc.</p><div class="footer-links"><a href={localize('/locAlert_policy.html')}>{copy.privacy}</a><a href="mailto:team@qub-its.com">{copy.contactLabel}</a></div></footer>
 {/if}
