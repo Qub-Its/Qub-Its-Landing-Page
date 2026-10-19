@@ -7,9 +7,17 @@ Two parallel implementations of the same corporate landing page:
 | Directory | Stack | Status |
 |-----------|-------|--------|
 | `landing-page-svelte/` | Svelte 5 + Vite + Tailwind v4 | Active development |
-| `HTML/` | Bootstrap + jQuery + custom CSS | Production |
+| `HTML/` | Bootstrap + jQuery + custom CSS | Backup only; not part of the official stack |
 
-The root `package.json` (Tailwind/PostCSS/Autoprefixer) only serves the `HTML/` static site. The Svelte project has its own `package.json` and `node_modules`.
+The root `package.json` (Tailwind/PostCSS/Autoprefixer) contains tooling for the `HTML/` backup only. The official Svelte application has its own `package.json` and `node_modules`.
+
+## Production Deployment
+
+Vercel builds and serves the Svelte application: the root `vercel.json` sets `buildCommand` to `npm --prefix landing-page-svelte run build` and `outputDirectory` to `landing-page-svelte/dist`. `landing-page-svelte/` is the production source of truth. `HTML/` is a backup only and is not used by the active Vercel build.
+
+## TODO
+
+- Remove `HTML/` from the application repository and retain it only as a separate backup; do not treat it as part of the official application or stack.
 
 ## Developer Commands
 
