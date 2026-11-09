@@ -2,65 +2,86 @@
   "installCommand": "npm --prefix landing-page-svelte ci",
   "buildCommand": "npm --prefix landing-page-svelte run build",
   "outputDirectory": "landing-page-svelte/dist",
-  "rewrites": [
+  "redirects": [
+    {
+      "source": "/en",
+      "destination": "/en/",
+      "permanent": true
+    },
+    {
+      "source": "/index.html",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/en/index.html",
+      "destination": "/en/",
+      "permanent": true
+    },
     {
       "source": "/labs/mcdu-trainer",
-      "destination": "/labs/mcdu-trainer/index.html"
-    },
-    {
-      "source": "/en/labs/mcdu-trainer",
-      "destination": "/en/labs/mcdu-trainer/index.html"
-    },
-    {
-      "source": "/en/labs/mcdu-trainer/",
-      "destination": "/en/labs/mcdu-trainer/index.html"
+      "destination": "/labs/mcdu-trainer/",
+      "permanent": true
     },
     {
       "source": "/labs/pfd-trainer",
-      "destination": "/labs/pfd-trainer/index.html"
-    },
-    {
-      "source": "/en/labs/pfd-trainer",
-      "destination": "/en/labs/pfd-trainer/index.html"
-    },
-    {
-      "source": "/en/labs/pfd-trainer/",
-      "destination": "/en/labs/pfd-trainer/index.html"
+      "destination": "/labs/pfd-trainer/",
+      "permanent": true
     },
     {
       "source": "/labs/e6b-trainer",
-      "destination": "/labs/e6b-trainer/index.html"
-    },
-    {
-      "source": "/en/labs/e6b-trainer",
-      "destination": "/en/labs/e6b-trainer/index.html"
-    },
-    {
-      "source": "/en/labs/e6b-trainer/",
-      "destination": "/en/labs/e6b-trainer/index.html"
+      "destination": "/labs/e6b-trainer/",
+      "permanent": true
     },
     {
       "source": "/labs/g1000-trainer",
-      "destination": "/labs/g1000-trainer/index.html"
+      "destination": "/labs/g1000-trainer/",
+      "permanent": true
+    },
+    {
+      "source": "/en/labs/mcdu-trainer",
+      "destination": "/en/labs/mcdu-trainer/",
+      "permanent": true
+    },
+    {
+      "source": "/en/labs/pfd-trainer",
+      "destination": "/en/labs/pfd-trainer/",
+      "permanent": true
+    },
+    {
+      "source": "/en/labs/e6b-trainer",
+      "destination": "/en/labs/e6b-trainer/",
+      "permanent": true
     },
     {
       "source": "/en/labs/g1000-trainer",
-      "destination": "/en/labs/g1000-trainer/index.html"
+      "destination": "/en/labs/g1000-trainer/",
+      "permanent": true
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/locAlert_policy.html",
+      "destination": "/index.html"
     },
     {
-      "source": "/en/labs/g1000-trainer/",
-      "destination": "/en/labs/g1000-trainer/index.html"
+      "source": "/locAlarm_policy.html",
+      "destination": "/index.html"
     },
     {
-      "source": "/en",
-      "destination": "/en/index.html"
+      "source": "/baby_gun_guin_privacy_policy.html",
+      "destination": "/index.html"
     },
     {
-      "source": "/en/(.*)",
-      "destination": "/en/index.html"
+      "source": "/baby_gun_guin_delete_account.html",
+      "destination": "/index.html"
     },
     {
-      "source": "/(.*)",
+      "source": "/chrome_site_stats_policy.html",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/biometric-landing.html",
       "destination": "/index.html"
     }
   ]

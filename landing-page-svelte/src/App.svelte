@@ -103,6 +103,22 @@
   document.title = pageTitle;
   document.documentElement.lang = path === 'locAlarm_policy.html' ? 'en' : locale;
   document.querySelector('link[rel="canonical"]')?.setAttribute('href', canonicalUrl);
+  document.querySelectorAll('link[rel="alternate"][hreflang]').forEach((link) => link.remove());
+  if (!isUnknownPath && !historicalPage) {
+    const alternates = [{ lang: 'es', href: seo.home.es.url }, { lang: 'en', href: seo.home.en.url }];
+    for (const alternate of alternates) {
+      const link = document.createElement('link');
+      link.rel = 'alternate';
+      link.hreflang = alternate.lang;
+      link.href = alternate.href;
+      document.head.append(link);
+    }
+    const defaultLink = document.createElement('link');
+    defaultLink.rel = 'alternate';
+    defaultLink.hreflang = 'x-default';
+    defaultLink.href = seo.home.es.url;
+    document.head.append(defaultLink);
+  }
   setMeta('meta[name="description"]', pageDescription);
   setMeta('meta[name="robots"]', robots);
   setMeta('meta[property="og:locale"]', isEnglish ? 'en_US' : 'es_ES');

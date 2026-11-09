@@ -23,6 +23,18 @@ function localizeHead(html, meta, editJsonLd) {
   html = replaceOnce(html, /<html lang="[a-z]+"/, `<html lang="${meta.lang}"`, 'html lang');
   html = replaceOnce(html, /<title>[^<]*<\/title>/, `<title>${attr(meta.title)}</title>`, 'title');
   html = replaceOnce(html, /(<link rel="canonical" href=")[^"]*(")/, `$1${meta.url}$2`, 'canonical');
+  const basePath = meta.url.replace(/^https:\/\/www\.qub-its\.com/, '').replace(/^\/en\//, '/');
+  const spanishUrl = `${seo.home.es.url.replace(/\/$/, '')}${basePath}`;
+  const englishUrl = `${seo.home.en.url.replace(/\/$/, '')}${basePath}`;
+  for (const [lang, href] of [['es', spanishUrl], ['en', englishUrl], ['x-default', spanishUrl]]) {
+    const escapedHref = href.replaceAll('&', '&amp;');
+    const link = new RegExp(`<link rel="alternate" hreflang="${lang}" href="[^"]*"\\s*/?>`);
+    if (link.test(html)) {
+      html = html.replace(link, `<link rel="alternate" hreflang="${lang}" href="${escapedHref}" />`);
+    } else {
+      html = html.replace('</head>', `    <link rel="alternate" hreflang="${lang}" href="${escapedHref}" />\n  </head>`);
+    }
+  }
   html = setMeta(html, 'description', meta.description);
   html = setMeta(html, 'og:locale', meta.ogLocale);
   html = setMeta(html, 'og:locale:alternate', 'es_ES');
